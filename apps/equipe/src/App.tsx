@@ -3,11 +3,10 @@ import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { Logo } from '@murya/commun/logo';
 import { LoginPage } from './LoginPage';
 import { TeamShell } from './TeamShell';
-import { supabase } from './supabase';
 
-export function App() {
-  if (!supabase) return <MissingConfig />;
-  return <AuthGate client={supabase} />;
+export function App({ client }: { client: SupabaseClient | null }) {
+  if (!client) return <MissingConfig />;
+  return <AuthGate client={client} />;
 }
 
 /** Affiche la page de connexion tant que personne n'est connecté. */

@@ -206,6 +206,12 @@ npx supabase db query --linked "insert into public.team_members (user_id, displa
 1. Copiez `.env.example` en `.env.local` et remplissez les valeurs du projet **staging**.
 2. Copiez `api/.dev.vars.example` en `api/.dev.vars` et remplissez les clés R2 **staging**.
 
+**Mode démo de l'espace équipe** (pour travailler l'interface, sans compte ni base) :
+`npm run dev:equipe`, puis ouvrez <http://localhost:5174/?demo>. Toutes les pages s'affichent
+avec des données d'exemple (`apps/equipe/src/demo/`). Vérifiez chaque changement d'interface sur
+téléphone (375 px) et sur grand écran (1440 px et plus) : dans Chrome, touche F12 puis l'icône
+« téléphone et tablette ». Ce mode n'existe pas dans la version en ligne.
+
 ## 5. Déploiement automatique
 
 Dans GitHub, _Settings_ > _Environments_, créez `production` (`staging` existe déjà, voir

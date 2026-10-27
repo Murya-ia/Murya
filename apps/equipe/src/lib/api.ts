@@ -17,6 +17,9 @@ async function call<T>(session: Session, path: string, init: RequestInit = {}): 
 
 /** Adresse d'écoute signée (valable 15 minutes) d'un audio. */
 export async function audioUrl(session: Session, recordingId: string): Promise<string> {
+  if (import.meta.env.DEV && session.access_token === 'demo') {
+    return (await import('../demo/audio')).demoAudioUrl();
+  }
   return (await call<{ url: string }>(session, `/equipe/audio/${recordingId}`)).url;
 }
 
