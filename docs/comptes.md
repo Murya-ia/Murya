@@ -81,6 +81,31 @@ npx wrangler secret put PROOF_CODE --env staging
 3. Plus tard, pour la production : un jeton `api-production` limité à `murya-audio`, et les trois
    premiers secrets avec `--env production` (jamais `PROOF_CODE` en production).
 
+### 2.3 bis Clé secrète Supabase de l'API (fait le 27/10/2026 pour le staging)
+
+L'API appelle les fonctions SQL des voix avec la clé **secrète** Supabase
+(_Project Settings_ > _API Keys_ > _Secret keys_, elle commence par `sb_secret_`).
+Elle donne tous les droits sur la base : seulement dans l'API, jamais dans une interface.
+
+```bash
+npx wrangler secret put SUPABASE_SECRET_KEY --env staging
+```
+
+### 2.3 ter Données de démonstration (staging seulement)
+
+Consentement **brouillon** et 15 phrases de démonstration, pour tester le parcours avant
+d'avoir le vrai texte et les vraies phrases zarma :
+
+```bash
+npx supabase db query --linked -f supabase/seeds/staging-demo.sql
+```
+
+Pour faire passer une voix de test de « test en attente » à « active » (l'écran arrive au J3) :
+
+```bash
+npx supabase db query --linked "update public.speakers set status = 'active', test_reviewed_at = now() where number = 'V001' and language_code = 'dje'"
+```
+
 ### 2.4 Jeton pour GitHub
 
 _My Profile_ > _API Tokens_ > _Create Token_ > modèle **Edit Cloudflare Workers**. Notez le jeton
