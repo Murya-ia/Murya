@@ -147,6 +147,17 @@ describe('fonctions internes', () => {
       );
     });
   });
+
+  it('aucune fonction SECURITY DEFINER du schéma exposé n’est exécutable par un membre connecté', async () => {
+    // Même règle que le contrôle de sécurité de Supabase (lint 0029).
+    const { rows } = await db.query<{ name: string }>(`
+      select p.proname as name
+      from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+      where n.nspname = 'public' and p.prosecdef
+        and has_function_privilege('authenticated', p.oid, 'execute')
+    `);
+    expect(rows).toEqual([]);
+  });
 });
 
 describe('référentiels', () => {
