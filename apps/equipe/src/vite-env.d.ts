@@ -14,3 +14,6 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+/** Commit et date du build, injectés par vite.config.ts. */
+declare const __BUILD_VERSION__: string;

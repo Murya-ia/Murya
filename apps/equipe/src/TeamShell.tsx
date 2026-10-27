@@ -122,6 +122,12 @@ function TopBar({
       <Logo size={28} color="var(--blanc)" />
       {children}
       <span className="barre-droite">
+        <span
+          className="version"
+          title="Version de l'espace équipe (rechargez la page si elle est ancienne)"
+        >
+          v{__BUILD_VERSION__}
+        </span>
         {email}
         <button className="secondaire petit" onClick={onSignOut}>
           Se déconnecter

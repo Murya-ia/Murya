@@ -307,3 +307,42 @@ describe('compteurs de l’écoute', () => {
     expect(Object.values(counts).every((n) => n === 0)).toBe(true);
   });
 });
+
+describe('admins sans exception (décision du 27/10/2026)', () => {
+  it('un admin peut vérifier et trancher les audios des voix qu’il a recrutées', async () => {
+    const ownSpeaker = (await createSpeaker(db, admin)).id;
+    const doubt = await createRecording(db, ownSpeaker, sentences[3]!);
+    await db.query(`update public.recordings set qc_status = 'doute' where id = $1`, [doubt]);
+
+    const counts = await as<{ doutes: number; doutes_vos_recrues: number }>(
+      admin,
+      `select public.review_counts('dje') as r`,
+    );
+    expect(counts.doutes_vos_recrues).toBe(0);
+    expect(counts.doutes).toBeGreaterThanOrEqual(1);
+
+    let item = await claim(admin, 'doute');
+    // D'autres doutes plus anciens peuvent passer avant : on les libère jusqu'à trouver le sien.
+    while (item && item.id !== doubt) {
+      await as(admin, `select public.review_release($1) as r`, [item.id]);
+      await db.query(
+        `update public.recordings set locked_until = now() + interval '1 hour' where id = $1`,
+        [item.id],
+      );
+      item = await claim(admin, 'doute');
+    }
+    expect(item?.id).toBe(doubt);
+    await submit(admin, doubt, 'valide');
+    const { rows } = await db.query<{ qc_status: string }>(
+      `select qc_status from public.recordings where id = $1`,
+      [doubt],
+    );
+    expect(rows[0]!.qc_status).toBe('valide');
+  });
+
+  it('un vérificateur non admin ne peut toujours pas traiter ses propres recrues', async () => {
+    const ownSpeaker = (await createSpeaker(db, bachir)).id;
+    const recording = await createRecording(db, ownSpeaker, sentences[3]!);
+    await expect(submit(bachir, recording, 'valide')).rejects.toThrow('acces_refuse');
+  });
+});
