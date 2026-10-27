@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "voix",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "-w", "@murya/voix"],
+      "port": 5173
+    },
+    {
+      "name": "equipe",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "-w", "@murya/equipe"],
+      "port": 5174
+    }
+  ]
+}
