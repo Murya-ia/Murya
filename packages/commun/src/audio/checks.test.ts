@@ -24,8 +24,17 @@ describe('clientProblems', () => {
   });
 
   it('signale une voix trop faible ou absente', () => {
-    expect(clientProblems({ ...good, speechRmsDbfs: -55 })).toEqual(['inaudible']);
+    expect(clientProblems({ ...good, speechRmsDbfs: -58 })).toEqual(['inaudible']);
     expect(clientProblems({ ...good, speechMs: 0, speechRmsDbfs: -100 })).toEqual(['inaudible']);
+  });
+
+  it('accepte une voix basse mais nette (iPhone 13 Pro, micro brut)', () => {
+    // Mesures réelles du 27/10/2026 : voix -40,8 dBFS, bruit de fond -70,5 dBFS.
+    expect(clientProblems({ ...good, speechRmsDbfs: -40.8, noiseDbfs: -70.5 })).toEqual([]);
+  });
+
+  it('signale une voix noyée dans le bruit, même assez forte', () => {
+    expect(clientProblems({ ...good, speechRmsDbfs: -30, noiseDbfs: -38 })).toEqual(['inaudible']);
   });
 
   it('signale la saturation', () => {

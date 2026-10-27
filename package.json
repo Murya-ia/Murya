@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.12",
+    "@resvg/resvg-wasm": "^2.6.2",
     "@types/node": "^26.6.5",
     "prettier": "^3.9.10",
     "supabase": "^2.122.0",

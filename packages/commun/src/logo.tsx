@@ -1,6 +1,8 @@
-// Symbole Murya (un point et trois ondes), redessiné en SVG à partir de la planche
-// d'identité visuelle. PROVISOIRE : à remplacer par la source vectorielle officielle.
+// Logo officiel Murya (tracés extraits de murya-logo.svg, voir logo-paths.ts).
 
+import { SYMBOL_PATH, SYMBOL_VIEWBOX, WORDMARK_PATH, WORDMARK_VIEWBOX } from './logo-paths';
+
+/** Symbole seul (point + trois ondes). `size` = hauteur en pixels. */
 export function LogoSymbol({
   size = 48,
   color = 'currentColor',
@@ -10,28 +12,35 @@ export function LogoSymbol({
 }) {
   return (
     <svg
-      width={(size * 82) / 120}
+      width={(size * 501) / 489}
       height={size}
-      viewBox="0 0 82 120"
-      fill="none"
+      viewBox={SYMBOL_VIEWBOX}
       role="img"
       aria-label="Murya"
     >
-      <ellipse cx="12" cy="60" rx="8" ry="11" fill={color} />
-      <g stroke={color} strokeWidth="11" strokeLinecap="round">
-        <path d="M25 37.48 A26 26 0 0 1 25 82.52" />
-        <path d="M34 21.89 A44 44 0 0 1 34 98.11" />
-        <path d="M43 6.31 A62 62 0 0 1 43 113.69" />
-      </g>
+      <path fill={color} fillRule="evenodd" d={SYMBOL_PATH} />
     </svg>
   );
 }
 
+/** Symbole + logotype « murya », côte à côte. `size` = hauteur du symbole en pixels. */
 export function Logo({ size = 40, color = 'var(--vert)' }: { size?: number; color?: string }) {
+  const wordHeight = size * 0.55;
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: size * 0.3, color }}>
+    <span
+      style={{ display: 'inline-flex', alignItems: 'center', gap: size * 0.25 }}
+      role="img"
+      aria-label="Murya"
+    >
       <LogoSymbol size={size} color={color} />
-      <span style={{ fontSize: size * 0.8, fontWeight: 800, letterSpacing: '-0.02em' }}>murya</span>
+      <svg
+        width={(wordHeight * 775) / 204}
+        height={wordHeight}
+        viewBox={WORDMARK_VIEWBOX}
+        aria-hidden="true"
+      >
+        <path fill={color} fillRule="evenodd" d={WORDMARK_PATH} />
+      </svg>
     </span>
   );
 }

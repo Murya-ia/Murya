@@ -6,8 +6,9 @@
 const FRAME_MS = 20;
 /** Une trame compte comme « parole » si elle dépasse le bruit de fond d'au moins ce nombre de dB. */
 const SPEECH_ABOVE_NOISE_DB = 15;
-/** …et si elle dépasse ce niveau absolu (évite de prendre du souffle pour de la parole). */
-const SPEECH_MIN_DBFS = -50;
+/** …et si elle dépasse ce niveau absolu (évite de prendre du souffle pour de la parole).
+ * Bas, car le micro « brut » de certains téléphones enregistre faiblement (iPhone : -41 dBFS). */
+const SPEECH_MIN_DBFS = -60;
 /** Un échantillon est considéré écrêté (saturé) au-delà de cette amplitude. */
 const CLIP_LEVEL = 0.99;
 /** Niveau plancher pour éviter log(0) sur un silence numérique parfait. */
