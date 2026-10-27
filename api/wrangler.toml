@@ -36,6 +36,10 @@ R2_BUCKET_AUDIO = "murya-audio-staging"
 SUPABASE_URL = "https://zsjvyiirvpqigqsvwcgy.supabase.co"
 SUPABASE_PUBLISHABLE_KEY = "sb_publishable_cog8d6yufk-QJQLR4t8_QA_S7ecZBjV"
 
+# Toutes les heures : reprise des effacements de fichiers restés en attente (retraits).
+[env.staging.triggers]
+crons = ["17 * * * *"]
+
 [[env.staging.r2_buckets]]
 binding = "AUDIO"
 bucket_name = "murya-audio-staging"
@@ -67,6 +71,9 @@ R2_BUCKET_AUDIO = "murya-audio"
 # À remplir quand le projet Supabase de production sera créé (J7).
 SUPABASE_URL = ""
 SUPABASE_PUBLISHABLE_KEY = ""
+
+[env.production.triggers]
+crons = ["17 * * * *"]
 
 [[env.production.r2_buckets]]
 binding = "AUDIO"

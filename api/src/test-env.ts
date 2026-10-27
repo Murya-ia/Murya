@@ -15,11 +15,18 @@ export function fakeBucket(files: Record<string, Uint8Array> = {}) {
       const part = file.slice(offset, offset + length);
       return { arrayBuffer: async () => part.buffer };
     },
-    async delete(key: string) {
-      delete files[key];
+    async delete(keys: string | string[]) {
+      for (const key of Array.isArray(keys) ? keys : [keys]) delete files[key];
     },
-    async put(key: string, value: ArrayBuffer) {
-      files[key] = new Uint8Array(value);
+    async list({ prefix = '' }: { prefix?: string } = {}) {
+      const objects = Object.keys(files)
+        .filter((key) => key.startsWith(prefix))
+        .map((key) => ({ key }));
+      return { objects, truncated: false };
+    },
+    async put(key: string, value: ArrayBuffer | string) {
+      files[key] =
+        typeof value === 'string' ? new TextEncoder().encode(value) : new Uint8Array(value);
     },
   };
 }

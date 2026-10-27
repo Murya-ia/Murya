@@ -94,3 +94,129 @@ describe('consentement oral', () => {
     expect(calls).toEqual([]);
   });
 });
+
+describe("retrait d'une voix (spec §5.8)", () => {
+  const SPEAKER = '7b6a5c4d-3e2f-4a1b-9c8d-aabbccddeeff';
+  const withdrawal = {
+    numero: 'V012',
+    langue: 'dje',
+    date: '2026-10-30T10:00:00Z',
+    audios: 2,
+    tache: 41,
+    prefixes_audio: ['dje/varie/V012/', 'dje/principale/V012/'],
+    cles_audio: ['dje/varie/V012/dje_V012_S0001_1.wav'],
+    cles_identites: ['consentements-oraux/abc/accord.m4a'],
+  };
+  const files = () => ({
+    'dje/varie/V012/dje_V012_S0001_1.wav': new Uint8Array(4),
+    // Envoi resté à moitié : inconnu de la base, mais dans le dossier de la voix.
+    'dje/varie/V012/dje_V012_S0002_1.wav': new Uint8Array(4),
+    'dje/varie/V013/dje_V013_S0001_1.wav': new Uint8Array(4),
+  });
+  const withdraw = (e: Env, confirmation: unknown = 'V012') =>
+    app.request(
+      `/equipe/retrait/${SPEAKER}`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ confirmation }),
+        headers: { Authorization: 'Bearer jeton', 'Content-Type': 'application/json' },
+      },
+      e,
+    );
+
+  it('demande le retrait à la base avec la session de l’admin, puis efface les fichiers', async () => {
+    const audio = fakeBucket(files());
+    const identites = fakeBucket({ 'consentements-oraux/abc/accord.m4a': new Uint8Array(4) });
+    reply = { body: withdrawal };
+    const res = await withdraw(
+      testEnv({
+        AUDIO: audio as unknown as R2Bucket,
+        IDENTITES: identites as unknown as R2Bucket,
+      }),
+    );
+    expect(await res.json()).toEqual({ numero: 'V012', audios: 2, fichiers_effaces: true });
+    expect(calls[0]).toMatchObject({
+      fn: 'withdraw_speaker',
+      args: { p_speaker_id: SPEAKER, p_confirm_number: 'V012' },
+    });
+    expect(calls[0]!.headers.get('apikey')).toBe('sb_publishable_test');
+    // Tout le dossier de la voix est effacé ; les autres voix ne sont pas touchées.
+    expect(Object.keys(audio.files).sort()).toEqual([
+      'dje/varie/V013/dje_V013_S0001_1.wav',
+      'retraits/dje/V012.json',
+    ]);
+    expect(JSON.parse(new TextDecoder().decode(audio.files['retraits/dje/V012.json']))).toEqual({
+      langue: 'dje',
+      numero: 'V012',
+      date: '2026-10-30T10:00:00Z',
+    });
+    expect(identites.files).toEqual({});
+    // La tâche est marquée faite avec la clé secrète (service), pas avec la session.
+    expect(calls[1]).toMatchObject({ fn: 'worker_job_done', args: { p_job_id: 41 } });
+    expect(calls[1]!.headers.get('apikey')).toBe('sb_secret_test');
+  });
+
+  it('transmet le refus de la base (pas admin, mauvaise confirmation)', async () => {
+    reply = { status: 400, body: { code: 'P0001', message: 'confirmation_incorrecte' } };
+    const res = await withdraw(testEnv(), 'V999');
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ erreur: 'confirmation_incorrecte' });
+    expect(calls).toHaveLength(1);
+  });
+
+  it('si le stockage échoue, la voix reste retirée et la tâche attend la reprise', async () => {
+    const broken = fakeBucket(files());
+    broken.delete = async () => {
+      throw new Error('R2 indisponible');
+    };
+    reply = { body: withdrawal };
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const res = await withdraw(testEnv({ AUDIO: broken as unknown as R2Bucket }));
+    expect(await res.json()).toMatchObject({ numero: 'V012', fichiers_effaces: false });
+    expect(calls.map((c) => c.fn)).toEqual(['withdraw_speaker']);
+  });
+
+  it('refuse une requête mal formée', async () => {
+    expect((await withdraw(testEnv(), 12)).status).toBe(400);
+    expect(calls).toEqual([]);
+  });
+});
+
+describe('tâche planifiée : reprise des effacements', () => {
+  it('prend les tâches en attente, efface, puis marque chaque tâche faite', async () => {
+    const audio = fakeBucket({ 'dje/varie/V020/a.wav': new Uint8Array(1) });
+    const replies: unknown[] = [
+      [
+        {
+          id: 7,
+          payload: {
+            langue: 'dje',
+            numero: 'V020',
+            date: '2026-10-30T10:00:00Z',
+            prefixes_audio: ['dje/varie/V020/'],
+            cles_audio: [],
+            cles_identites: [],
+          },
+        },
+      ],
+      null,
+    ];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        calls.push({
+          fn: String(input).split('/rpc/')[1]!,
+          headers: new Headers(init?.headers),
+          args: JSON.parse(String(init?.body)),
+        });
+        return new Response(JSON.stringify(replies.shift() ?? null));
+      }),
+    );
+    const { processPendingErasures } = await import('../erasure');
+    const stats = await processPendingErasures(testEnv({ AUDIO: audio as unknown as R2Bucket }));
+    expect(stats).toEqual({ faites: 1, echecs: 0 });
+    expect(calls.map((c) => c.fn)).toEqual(['worker_claim_jobs', 'worker_job_done']);
+    expect(calls[0]!.args).toMatchObject({ p_kinds: ['effacer_fichiers'] });
+    expect(Object.keys(audio.files)).toEqual(['retraits/dje/V020.json']);
+  });
+});

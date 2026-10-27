@@ -4,8 +4,9 @@
 
 import { Hono } from 'hono';
 import type { Env } from '../env';
+import { eraseFiles, type ErasurePayload } from '../erasure';
 import { presignUrl } from '../r2';
-import { VoiceError, businessStatus, rpcAsUser } from '../supabase';
+import { VoiceError, businessStatus, rpc, rpcAsUser } from '../supabase';
 import { isUuid } from '../util';
 
 type TeamContext = { Bindings: Env; Variables: { jwt: string } };
@@ -83,4 +84,32 @@ team.post('/consentement-oral', async (c) => {
     await c.env.IDENTITES.delete(key);
     throw error;
   }
+});
+
+/**
+ * Retrait d'une voix (spec §5.8), par un admin qui retape le numéro de la voix pour confirmer.
+ * La base vérifie les droits et efface tout de son côté ; l'API efface ensuite les fichiers.
+ * Si cela échoue, la tâche reste en file et sera reprise par la tâche planifiée.
+ */
+team.post('/retrait/:speakerId', async (c) => {
+  const speakerId = c.req.param('speakerId');
+  const body = (await c.req.json().catch(() => null)) as { confirmation?: unknown } | null;
+  if (!isUuid(speakerId) || typeof body?.confirmation !== 'string') {
+    return c.json({ erreur: 'requete_invalide' }, 400);
+  }
+  const result = await rpcAsUser<ErasurePayload & { tache: number; audios: number }>(
+    c.env,
+    c.get('jwt'),
+    'withdraw_speaker',
+    { p_speaker_id: speakerId, p_confirm_number: body.confirmation },
+  );
+  let filesErased = false;
+  try {
+    await eraseFiles(c.env, result);
+    await rpc(c.env, 'worker_job_done', { p_job_id: result.tache });
+    filesErased = true;
+  } catch (error) {
+    console.error(`retrait : effacement des fichiers à reprendre (${(error as Error).message})`);
+  }
+  return c.json({ numero: result.numero, audios: result.audios, fichiers_effaces: filesErased });
 });

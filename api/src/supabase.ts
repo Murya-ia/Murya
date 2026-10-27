@@ -29,6 +29,8 @@ const BUSINESS_ERRORS: Record<string, number> = {
   enregistrement_inconnu: 404,
   acces_refuse: 403,
   session_expiree: 401,
+  voix_inconnue: 404,
+  confirmation_incorrecte: 400,
 };
 
 export function businessStatus(code: string): number {

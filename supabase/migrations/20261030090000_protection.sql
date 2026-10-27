@@ -286,7 +286,7 @@ begin
 
   insert into public.jobs (kind, payload)
   values ('effacer_fichiers', jsonb_build_object(
-    'langue', v_speaker.language_code, 'numero', v_speaker.number,
+    'langue', v_speaker.language_code, 'numero', v_speaker.number, 'date', now(),
     'prefixes_audio', v_prefixes, 'cles_audio', to_jsonb(v_audio_keys),
     'cles_identites', to_jsonb(v_identity_keys)))
   returning id into v_job;
@@ -300,8 +300,8 @@ begin
 
   return jsonb_build_object(
     'numero', v_speaker.number, 'langue', v_speaker.language_code, 'audios', v_count,
-    'tache', v_job, 'prefixes_audio', v_prefixes, 'cles_audio', to_jsonb(v_audio_keys),
-    'cles_identites', to_jsonb(v_identity_keys));
+    'date', now(), 'tache', v_job, 'prefixes_audio', v_prefixes,
+    'cles_audio', to_jsonb(v_audio_keys), 'cles_identites', to_jsonb(v_identity_keys));
 end $$;
 
 create function public.withdraw_speaker(p_speaker_id uuid, p_confirm_number text) returns jsonb

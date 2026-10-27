@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
 import type { Env } from './env';
+import { processPendingErasures } from './erasure';
 import { checkR2Credentials } from './r2';
 import { proof } from './routes/proof';
 import { team } from './routes/team';
@@ -42,4 +43,16 @@ app.onError((error, c) => {
   return c.json({ erreur: 'erreur_interne' }, 500);
 });
 
-export default app;
+export default {
+  fetch: app.fetch,
+  // Tâche planifiée (wrangler.toml, « crons ») : reprend les effacements de fichiers en attente.
+  async scheduled(_event: ScheduledController, env: Env, ctx: ExecutionContext) {
+    ctx.waitUntil(
+      processPendingErasures(env).then(({ faites, echecs }) => {
+        if (faites || echecs) console.log(`effacements repris : ${faites} faits, ${echecs} échecs`);
+      }),
+    );
+  },
+  // Pour les tests : `app.request(chemin, options, env)`.
+  request: app.request,
+};
