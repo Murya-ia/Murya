@@ -88,31 +88,62 @@ _My Profile_ > _API Tokens_ > _Create Token_ > modèle **Edit Cloudflare Workers
 
 ## 3. Supabase (base de données, connexion de l'équipe)
 
-1. Créez une organisation, puis **deux projets** : `murya-staging` et `murya-production`.
-   Région : **West EU (Paris)** (la plus proche du Niger). Générez un mot de passe de base
-   fort et rangez-le dans le gestionnaire.
-2. Dans chaque projet :
-   - _Authentication_ > _Sign In / Providers_ : **désactivez** « Allow new users to sign up » ;
-     longueur minimale du mot de passe : 10.
-   - _Authentication_ > _URL Configuration_ : _Site URL_ = adresse de l'espace équipe.
-   - _Project Settings_ > _API Keys_ : notez l'URL du projet et la clé **publishable**.
-     La clé **secret** ne sert pas encore (J2) ; ne la mettez jamais dans une interface.
-   - _Connect_ > _Session pooler_ : copiez l'adresse de connexion (avec le mot de passe).
-3. Appliquez le schéma (depuis la racine du dépôt) :
-   ```bash
-   npx supabase db push --db-url "postgresql://…adresse du session pooler…"
-   ```
-4. Créez le premier admin : _Authentication_ > _Users_ > _Add user_ (e-mail + mot de passe,
-   « Auto confirm » coché). Copiez son identifiant (UUID), puis dans _SQL Editor_ :
-   ```sql
-   insert into public.team_members (user_id, display_name, roles)
-   values ('<UUID copié>', 'Prénom', '{admin}');
-   ```
-   Les autres membres sont ajoutés de la même façon, avec leurs rôles
-   (`recruteur`, `verificateur`, `qualite`, `admin` — deux admins au maximum).
+### 3.1 Ce qui est en place (fait le 27/10/2026)
 
-> Le projet gratuit se met **en pause après 7 jours sans activité**. Le staging peut donc
-> s'endormir entre deux séances de travail : il se réveille depuis le tableau de bord.
+| Élément        | Valeur                                                               |
+| -------------- | -------------------------------------------------------------------- |
+| Compte         | `mmmuryaa@gmail.com` (connexion avec le GitHub d'équipe `murya-ai`)  |
+| Organisation   | Murya (offre gratuite)                                               |
+| Projet staging | `murya-staging`, réf. `zsjvyiirvpqigqsvwcgy`, région West EU (Paris) |
+| Adresse API    | https://zsjvyiirvpqigqsvwcgy.supabase.co                             |
+| Mot de passe   | dans Bitwarden (« Supabase – base murya-staging »)                   |
+
+Réglages appliqués dans le tableau de bord :
+
+- à la création : « Automatically expose new tables » **désactivé** (les droits sont donnés
+  par les migrations), « Enable automatic RLS » activé ;
+- _Authentication_ > _Sign In / Providers_ : inscriptions libres **désactivées** ;
+  _Email_ : mot de passe de 10 caractères minimum, lettres et chiffres ;
+- _Authentication_ > _URL Configuration_ : _Site URL_ = adresse de l'espace équipe staging.
+
+Le projet de **production** sera créé de la même façon avant le lancement (J7).
+
+### 3.2 Appliquer les migrations
+
+Une fois par ordinateur, depuis la racine du dépôt (le navigateur s'ouvre pour valider) :
+
+```bash
+npx supabase login
+```
+
+```bash
+npx supabase link --project-ref zsjvyiirvpqigqsvwcgy
+```
+
+Puis, à chaque nouvelle migration :
+
+```bash
+npx supabase db push --linked
+```
+
+Et pour vérifier la sécurité et les performances de la vraie base :
+
+```bash
+npx supabase db advisors --linked --type all
+```
+
+### 3.3 Ajouter un membre de l'équipe
+
+1. _Authentication_ > _Users_ > _Add user_ > _Create new user_ : e-mail du membre,
+   « Auto confirm user » coché ; le membre tape lui-même son mot de passe.
+2. Donner ses rôles (`recruteur`, `verificateur`, `qualite`, `admin` — deux admins au maximum) :
+
+```bash
+npx supabase db query --linked "insert into public.team_members (user_id, display_name, roles) select id, 'Prénom', array['recruteur','verificateur'] from auth.users where email = 'membre@exemple.org'"
+```
+
+> Le projet gratuit se met **en pause après 7 jours sans activité**. Il se réveille depuis le
+> tableau de bord Supabase.
 
 ## 4. Configuration locale
 

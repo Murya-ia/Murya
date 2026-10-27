@@ -178,7 +178,7 @@ Conséquences pour le code :
 
 | Jalon                  | Contenu                                                                                  | Dates indicatives |
 | ---------------------- | ---------------------------------------------------------------------------------------- | ----------------- |
-| J1 Fondations          | dépôt, CI, schéma + RLS + tests, connexion équipe, déploiement, **page de preuve audio** | 28 oct – 6 nov    |
+| J1 Fondations ✓        | dépôt, CI, schéma + RLS + tests, connexion équipe, déploiement, **page de preuve audio** | terminé le 27 oct |
 | J2 Parcours voix       | invitation, consentement, fiche, tutoriel, test, enregistrement, hors ligne              | 9 – 27 nov        |
 | J3 Espace équipe       | import CSV, recrutement, validation des tests, écoute, À refaire                         | 30 nov – 11 déc   |
 | J4 Qualité             | vérifs serveur, double écoute, quotas, alertes, tableau de bord                          | 14 – 18 déc       |
