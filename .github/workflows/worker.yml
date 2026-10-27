@@ -1,0 +1,47 @@
+# Worker Python (vérifications audio côté serveur, spec §6.2), lancé toutes les 15 minutes.
+# Gratuit tant que le dépôt est public. Le délai entre deux lancements n'est pas garanti par
+# GitHub (souvent quelques minutes de plus) : sans conséquence, ces vérifications servent à
+# l'équipe, pas aux voix.
+#
+# Inactif tant que la variable de dépôt WORKER_ENABLED ne vaut pas "true".
+# Environnement GitHub « staging » :
+#   secrets   : SUPABASE_SECRET_KEY, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY
+#   variables : SUPABASE_URL, R2_ACCOUNT_ID, R2_BUCKET_AUDIO
+name: Worker
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: worker-staging
+  cancel-in-progress: false
+
+jobs:
+  verifier-audios:
+    if: vars.WORKER_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: worker/requirements.txt
+      - run: pip install -r worker/requirements.txt
+      - name: Traiter les tâches en attente
+        working-directory: worker
+        run: python -m murya_worker --max-minutes 12
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          R2_ACCOUNT_ID: ${{ vars.R2_ACCOUNT_ID }}
+          R2_BUCKET_AUDIO: ${{ vars.R2_BUCKET_AUDIO }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}

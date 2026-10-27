@@ -1,0 +1,3 @@
+# Dépendances du worker (versions minimales ; Python 3.12 ou plus récent).
+numpy>=2.0
+boto3>=1.35

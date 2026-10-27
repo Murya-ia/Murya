@@ -6,3 +6,5 @@ package-lock.json
 supabase/migrations
 MURYA_SPEC.md
 docs/exemples
+worker/.venv
+worker/.pytest_cache
