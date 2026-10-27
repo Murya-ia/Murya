@@ -116,18 +116,19 @@ Tous les textes de phrases sont normalisés en Unicode **NFC** (contrôlé par l
 
 ## Décisions prises
 
-| Date       | Décision                                                                                                                                                                                           |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 27/10/2026 | Architecture et ordre des jalons validés.                                                                                                                                                          |
-| 27/10/2026 | React + TypeScript pour les deux interfaces.                                                                                                                                                       |
-| 27/10/2026 | Dépôt GitHub **public** (aucun secret ni donnée personnelle dedans).                                                                                                                               |
-| 27/10/2026 | Carte d'équipe disponible : R2 comme stockage principal.                                                                                                                                           |
-| 27/10/2026 | Nom de domaine à acheter (Cloudflare Registrar conseillé). En attendant : adresses `*.workers.dev`.                                                                                                |
-| 27/10/2026 | Par défaut (sauf avis contraire) : budget campagne 5 $/mois + Supabase Pro seulement si nécessaire ; comptes créés avec une adresse e-mail d'équipe partagée, 2FA activée.                         |
-| 27/10/2026 | Téléphone de test iPhone : iPhone 13 Pro. Lancement : le plus tôt possible.                                                                                                                        |
-| 27/10/2026 | Orthographe de référence : arrêté de 1999 (voir « Orthographe zarma » ci-dessous).                                                                                                                 |
-| 27/10/2026 | Cloudflare Pages ayant été fusionné dans Workers, les interfaces sont des Workers « fichiers statiques » (mêmes avantages : CDN, gratuit et illimité). Adresses en `*.murya-api.workers.dev`.      |
-| 27/10/2026 | Consentement complet (cases à cocher) à la première visite, puis **écran de rappel court avec bouton « Écouter »** chaque fois que la voix revient enregistrer (voir « Consentement » ci-dessous). |
+| Date       | Décision                                                                                                                                                                                                                               |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 27/10/2026 | Architecture et ordre des jalons validés.                                                                                                                                                                                              |
+| 27/10/2026 | React + TypeScript pour les deux interfaces.                                                                                                                                                                                           |
+| 27/10/2026 | Dépôt GitHub **public** (aucun secret ni donnée personnelle dedans).                                                                                                                                                                   |
+| 27/10/2026 | Carte d'équipe disponible : R2 comme stockage principal.                                                                                                                                                                               |
+| 27/10/2026 | Nom de domaine à acheter (Cloudflare Registrar conseillé). En attendant : adresses `*.workers.dev`.                                                                                                                                    |
+| 27/10/2026 | Domaine retenu : **murya.chat** (disponible, à acheter). Chaque membre aura une adresse pro `@murya.chat` ; les comptes de l'équipe passeront alors sur ces adresses. En attendant, le compte admin staging utilise une adresse Gmail. |
+| 27/10/2026 | Par défaut (sauf avis contraire) : budget campagne 5 $/mois + Supabase Pro seulement si nécessaire ; comptes créés avec une adresse e-mail d'équipe partagée, 2FA activée.                                                             |
+| 27/10/2026 | Téléphone de test iPhone : iPhone 13 Pro. Lancement : le plus tôt possible.                                                                                                                                                            |
+| 27/10/2026 | Orthographe de référence : arrêté de 1999 (voir « Orthographe zarma » ci-dessous).                                                                                                                                                     |
+| 27/10/2026 | Cloudflare Pages ayant été fusionné dans Workers, les interfaces sont des Workers « fichiers statiques » (mêmes avantages : CDN, gratuit et illimité). Adresses en `*.murya-api.workers.dev`.                                          |
+| 27/10/2026 | Consentement complet (cases à cocher) à la première visite, puis **écran de rappel court avec bouton « Écouter »** chaque fois que la voix revient enregistrer (voir « Consentement » ci-dessous).                                     |
 
 ### Questions encore ouvertes
 
