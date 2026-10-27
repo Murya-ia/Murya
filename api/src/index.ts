@@ -4,6 +4,7 @@ import { secureHeaders } from 'hono/secure-headers';
 import type { Env } from './env';
 import { checkR2Credentials } from './r2';
 import { proof } from './routes/proof';
+import { voice } from './routes/voice';
 import { allowedOrigins } from './util';
 
 const app = new Hono<{ Bindings: Env }>();
@@ -29,6 +30,7 @@ app.get('/sante', async (c) => {
 });
 
 app.route('/preuve', proof);
+app.route('/voix', voice);
 
 app.notFound((c) => c.json({ erreur: 'introuvable' }, 404));
 

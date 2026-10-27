@@ -2,43 +2,10 @@ import { encodeWav } from '@murya/commun';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Env } from './env';
 import app from './index';
+import { testEnv as env } from './test-env';
 import { safeEqual } from './util';
 
 const ID = '3f0c1d2e-4b5a-4c6d-8e7f-001122334455';
-
-/** Faux bucket R2 en mémoire : suffisant pour tester la logique de l'API sans réseau. */
-function fakeBucket(files: Record<string, Uint8Array> = {}) {
-  return {
-    files,
-    async head(key: string) {
-      return files[key] ? { size: files[key].byteLength } : null;
-    },
-    async get(key: string, options?: { range?: { offset: number; length: number } }) {
-      const file = files[key];
-      if (!file) return null;
-      const { offset = 0, length = file.byteLength } = options?.range ?? {};
-      const part = file.slice(offset, offset + length);
-      return { arrayBuffer: async () => part.buffer };
-    },
-    async delete(key: string) {
-      delete files[key];
-    },
-  };
-}
-
-function env(overrides: Partial<Env> = {}, files?: Record<string, Uint8Array>): Env {
-  return {
-    ENVIRONMENT: 'local',
-    ALLOWED_ORIGINS: 'http://localhost:5173',
-    R2_ACCOUNT_ID: 'compte',
-    R2_BUCKET_AUDIO: 'murya-audio-staging',
-    R2_ACCESS_KEY_ID: 'cle',
-    R2_SECRET_ACCESS_KEY: 'secret',
-    PROOF_CODE: 'zarma2027',
-    AUDIO: fakeBucket(files) as unknown as R2Bucket,
-    ...overrides,
-  };
-}
 
 const post = (path: string, body: unknown, e: Env) =>
   app.request(

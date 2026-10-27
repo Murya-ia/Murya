@@ -1,0 +1,48 @@
+// Appel des fonctions SQL de Supabase (PostgREST « rpc ») avec la clé secrète.
+// Seule l'API possède cette clé : les fonctions des voix ne sont exécutables que par elle.
+
+import type { Env } from './env';
+
+/** Erreur « métier » levée par une fonction SQL (ex. `lien_expire`), à renvoyer telle quelle à l'app. */
+export class VoiceError extends Error {
+  constructor(readonly code: string) {
+    super(code);
+  }
+}
+
+/** Erreurs métier connues et code HTTP correspondant. Toute autre erreur SQL = erreur interne. */
+const BUSINESS_ERRORS: Record<string, number> = {
+  lien_inconnu: 401,
+  lien_revoque: 410,
+  lien_expire: 410,
+  consentement_requis: 409,
+  consentement_perime: 409,
+  consentement_incomplet: 400,
+  nom_obligatoire: 400,
+  fiche_requise: 409,
+  fiche_incomplete: 400,
+  phrase_inconnue: 400,
+  phrase_non_attribuee: 409,
+  enregistrement_inconnu: 404,
+};
+
+export function businessStatus(code: string): number {
+  return BUSINESS_ERRORS[code] ?? 500;
+}
+
+export async function rpc<T>(env: Env, fn: string, args: Record<string, unknown>): Promise<T> {
+  const response = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
+    headers: { apikey: env.SUPABASE_SECRET_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify(args),
+  });
+  const text = await response.text();
+  if (response.ok) return (text ? JSON.parse(text) : null) as T;
+
+  // PostgREST renvoie { code, message } ; P0001 = `raise exception` dans nos fonctions.
+  const error = (text ? JSON.parse(text) : {}) as { code?: string; message?: string };
+  if (error.code === 'P0001' && error.message && error.message in BUSINESS_ERRORS) {
+    throw new VoiceError(error.message);
+  }
+  throw new Error(`Supabase ${fn} : ${response.status} ${error.code ?? ''} ${error.message ?? ''}`);
+}

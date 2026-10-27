@@ -6,3 +6,6 @@ R2_ACCESS_KEY_ID=
 R2_SECRET_ACCESS_KEY=
 # Code à saisir sur la page de preuve audio. Laisser vide pour désactiver la page.
 PROOF_CODE=
+# Clé secrète Supabase du projet STAGING (Project Settings > API Keys > Secret keys).
+# Elle donne tous les droits sur la base : jamais dans une interface ni dans un message.
+SUPABASE_SECRET_KEY=

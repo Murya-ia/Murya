@@ -1,8 +1,9 @@
 # Configuration du Worker Cloudflare « API ».
-# Les secrets (clés R2, code de la page de preuve…) ne sont PAS ici :
+# Les secrets (clés R2, clé secrète Supabase, code de la page de preuve…) ne sont PAS ici :
 #   - en local : fichier api/.dev.vars (modèle : api/.dev.vars.example)
 #   - en ligne : `npx wrangler secret put NOM --env staging` (voir docs/comptes.md)
-# Attention : dans Wrangler, chaque environnement doit redéclarer ses variables et ses buckets.
+# Attention : dans Wrangler, chaque environnement doit redéclarer ses variables, ses buckets
+# et ses limites de débit.
 
 name = "murya-api-local"
 main = "src/index.ts"
@@ -12,6 +13,7 @@ compatibility_date = "2026-10-01"
 ENVIRONMENT = "local"
 ALLOWED_ORIGINS = "http://localhost:5173,http://localhost:5174"
 R2_BUCKET_AUDIO = "murya-audio-staging"
+SUPABASE_URL = "https://zsjvyiirvpqigqsvwcgy.supabase.co"
 
 [[r2_buckets]]
 binding = "AUDIO"
@@ -25,10 +27,23 @@ name = "murya-api-staging"
 ENVIRONMENT = "staging"
 ALLOWED_ORIGINS = "https://murya-voix-staging.murya-api.workers.dev,https://murya-equipe-staging.murya-api.workers.dev"
 R2_BUCKET_AUDIO = "murya-audio-staging"
+SUPABASE_URL = "https://zsjvyiirvpqigqsvwcgy.supabase.co"
 
 [[env.staging.r2_buckets]]
 binding = "AUDIO"
 bucket_name = "murya-audio-staging"
+
+# Limites de débit des voix : 120 requêtes par minute et par jeton (une voix active en fait
+# environ 4 par phrase), 1 200 par minute et par adresse IP (adresses partagées des opérateurs).
+[[env.staging.ratelimits]]
+name = "RL_TOKEN"
+namespace_id = "1001"
+simple = { limit = 120, period = 60 }
+
+[[env.staging.ratelimits]]
+name = "RL_IP"
+namespace_id = "1002"
+simple = { limit = 1200, period = 60 }
 
 # ------------------------------------------------------------- production
 [env.production]
@@ -38,7 +53,19 @@ name = "murya-api"
 ENVIRONMENT = "production"
 ALLOWED_ORIGINS = "https://murya-voix.murya-api.workers.dev,https://murya-equipe.murya-api.workers.dev"
 R2_BUCKET_AUDIO = "murya-audio"
+# À remplir quand le projet Supabase de production sera créé (J7).
+SUPABASE_URL = ""
 
 [[env.production.r2_buckets]]
 binding = "AUDIO"
 bucket_name = "murya-audio"
+
+[[env.production.ratelimits]]
+name = "RL_TOKEN"
+namespace_id = "2001"
+simple = { limit = 120, period = 60 }
+
+[[env.production.ratelimits]]
+name = "RL_IP"
+namespace_id = "2002"
+simple = { limit = 1200, period = 60 }
