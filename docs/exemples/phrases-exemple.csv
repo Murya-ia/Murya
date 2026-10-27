@@ -1,0 +1,6 @@
+id,zarma,francais,theme,auteur,relu_par,statut
+EX0001,Ay ga koy habu.,Je vais au marché.,marché,Awa,Bachir,Validée
+EX0002,Ni kaani baani?,As-tu bien dormi ?,salutations,Awa,Bachir,Validée
+EX0003,Phrase pas encore relue.,,essai,Awa,,À relire
+EX0004,Nẽ ga ka (tilde au-dessus : alerte),Exemple d'alerte,essai,Awa,Bachir,Validée
+EX 005,Identifiant avec un espace,Exemple d'erreur,essai,Awa,Bachir,Validée

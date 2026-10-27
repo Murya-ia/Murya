@@ -5,3 +5,4 @@ coverage
 package-lock.json
 supabase/migrations
 MURYA_SPEC.md
+docs/exemples
