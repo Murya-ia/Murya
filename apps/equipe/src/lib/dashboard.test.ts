@@ -82,6 +82,8 @@ describe('mise en forme', () => {
 
   it('heures, pourcentages et ancienneté', () => {
     expect(formatHours(0.25)).toBe('15 min');
+    expect(formatHours(0.003)).toBe('0,2 min');
+    expect(formatHours(0)).toBe('0 min');
     expect(formatHours(3.46)).toBe('3,5 h');
     expect(formatPercent(0.125)).toBe('12,5 %');
     expect(formatPercent(null)).toBe('—');

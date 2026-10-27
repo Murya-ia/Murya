@@ -166,9 +166,13 @@ export function niceTicks(max: number, target = 4): number[] {
   return ticks;
 }
 
-/** Durée lisible à partir d'un nombre d'heures : « 42 min », « 3,5 h ». */
+/** Durée lisible à partir d'un nombre d'heures : « 0,2 min », « 42 min », « 3,5 h ». */
 export function formatHours(hours: number): string {
-  if (hours < 1) return `${Math.round(hours * 60)} min`;
+  const minutes = hours * 60;
+  if (minutes > 0 && minutes < 10) {
+    return `${minutes.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} min`;
+  }
+  if (hours < 1) return `${Math.round(minutes)} min`;
   return `${hours.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} h`;
 }
 
