@@ -218,12 +218,12 @@ describe('tableau de bord (spec §5.1)', () => {
       voix_par_statut: Record<string, number>;
       audios: { recus: number };
       phrases_lectures: { total: number };
-      double_ecoute: { faites: number; desaccords: number };
+      double_ecoute: { part: number; faites: number; desaccords: number };
     }>(verifier, `select data as r from public.dashboard_snapshots where language_code = 'dje'`);
     expect(data.voix_par_statut.inscrite).toBeGreaterThanOrEqual(2);
     expect(data.audios.recus).toBeGreaterThan(0);
     expect(data.phrases_lectures.total).toBe(10);
-    expect(data.double_ecoute).toMatchObject({ faites: 2, desaccords: 1 });
+    expect(data.double_ecoute).toMatchObject({ part: 1, faites: 2, desaccords: 1 });
 
     const outsider = await createMember(db, 'exterieur', null);
     const hidden = await asUser(
@@ -249,10 +249,14 @@ describe('tableau de bord (spec §5.1)', () => {
       [old],
     );
     const data = await sql<{
-      alertes: { voix_trop_de_rejets: { rejets: number }[]; audios_en_attente: { nombre: number } };
+      alertes: {
+        voix_trop_de_rejets: { rejets: number }[];
+        audios_en_attente: { nombre: number; jours: number };
+      };
     }>(`select public.compute_dashboard('dje') as r`);
     expect(data.alertes.voix_trop_de_rejets).toEqual([expect.objectContaining({ rejets: 4 })]);
     expect(data.alertes.audios_en_attente.nombre).toBeGreaterThanOrEqual(1);
+    expect(data.alertes.audios_en_attente.jours).toBe(3);
   });
 
   it("peut être recalculé à la demande par un membre de l'équipe", async () => {
@@ -261,5 +265,38 @@ describe('tableau de bord (spec §5.1)', () => {
     await expect(as(outsider, `select public.refresh_dashboard_now('dje') as r`)).rejects.toThrow(
       'acces_refuse',
     );
+  });
+});
+
+describe('file d’écoute : « Passer » (spec §5.4)', () => {
+  it('ne repropose pas un audio passé pendant la séance', async () => {
+    const voice = (await createSpeaker(db, recruiter)).id;
+    const [first, second] = [
+      await createRecording(db, voice, sentences[0]!),
+      await createRecording(db, voice, sentences[1]!),
+    ];
+    // Les deux plus anciens et suspects : ils passent devant tous les autres.
+    await db.query(
+      `update public.recordings set suspect = true,
+              received_at = case id when $1 then timestamptz '2000-01-01' else timestamptz '2000-01-02' end
+       where id in ($1, $2)`,
+      [first, second],
+    );
+    await db.query(
+      `update public.recordings set locked_by = null, locked_until = null where locked_by = $1`,
+      [verifier],
+    );
+    const claim = (skip: string[]) =>
+      as<{ id: string } | null>(
+        verifier,
+        `select public.review_claim('dje', 'premiere', $1) as r`,
+        [skip],
+      );
+
+    expect((await claim([]))!.id).toBe(first);
+    await as(verifier, `select public.review_release($1) as r`, [first]);
+    expect((await claim([]))!.id).toBe(first);
+    await as(verifier, `select public.review_release($1) as r`, [first]);
+    expect((await claim([first]))!.id).toBe(second);
   });
 });

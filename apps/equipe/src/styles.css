@@ -501,3 +501,207 @@ kbd {
   font-size: 0.75rem;
   opacity: 0.7;
 }
+
+/* ------------------------------------------------------------------ J4 : tableau de bord */
+
+.carte h3 {
+  margin-top: 0;
+}
+
+.tuiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 12px 0 20px;
+}
+
+.tuile {
+  background: var(--blanc);
+  border-radius: var(--rayon);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tuile strong {
+  font-size: 1.8rem;
+  color: var(--noir);
+}
+
+.chiffres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 32px;
+  margin: 8px 0 12px;
+}
+
+.chiffres > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.chiffres strong {
+  font-size: 1.5rem;
+}
+
+.chiffres span {
+  color: var(--gris);
+  font-size: 0.9rem;
+}
+
+.alertes {
+  margin-bottom: 20px;
+}
+
+.alertes p {
+  margin: 4px 0;
+}
+
+/* Graphique */
+.graphique-entete {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.legende {
+  display: flex;
+  gap: 16px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.9rem;
+  color: var(--noir);
+}
+
+.legende li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pastille-serie {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  margin-right: 6px;
+  vertical-align: -1px;
+}
+
+.legende .pastille-serie {
+  margin-right: 0;
+}
+
+.graphique-zone {
+  position: relative;
+  width: 100%;
+}
+
+.graphique-zone svg {
+  display: block;
+  max-width: 100%;
+  overflow: visible;
+}
+
+.graphique-zone text {
+  font-size: 12px;
+  fill: var(--gris);
+}
+
+.graphique-zone .grille {
+  stroke: var(--bordure);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+
+.graphique-zone .axe {
+  stroke: var(--gris);
+  stroke-width: 1;
+}
+
+.graphique-zone rect:focus-visible {
+  outline: none;
+  stroke: var(--noir);
+  stroke-width: 2;
+}
+
+.graphique-zone .semaine.active rect {
+  fill: rgba(17, 17, 17, 0.04);
+}
+
+.info-bulle {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  background: var(--blanc);
+  border: 1px solid var(--bordure);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* Quotas */
+.jauge {
+  display: inline-block;
+  position: relative;
+  width: 80px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--ivoire);
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.jauge span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 4px;
+  background: var(--vert-clair);
+}
+
+.jauge i {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: var(--noir);
+}
+
+.repartitions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.repartitions h4 {
+  margin: 0 0 4px;
+}
+
+.tableau.compact td {
+  padding: 4px 6px;
+}
+
+progress {
+  width: 100%;
+  height: 12px;
+  accent-color: var(--vert-clair);
+}
+
+.indicateurs .serveur {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}

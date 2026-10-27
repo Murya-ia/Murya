@@ -1,6 +1,7 @@
 // Écoute et vérification (spec §5.4) : un audio à la fois, réservé quelques minutes.
 // Raccourcis : Espace = lecture, 1 = Validé, 2 = À corriger, 3 = Rejeté, D = Doute,
-// flèche droite = Passer. Le responsable qualité a aussi la file des « Doutes ».
+// flèche droite = Passer. Le responsable qualité a aussi la file des « Doutes » et celle de
+// la « Double écoute » (spec §5.5), à l'aveugle.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AudioPlayer, type PlayerControl } from '../components/AudioPlayer';
@@ -14,7 +15,7 @@ interface Item {
   prise: number;
   duree_ms: number | null;
   suspect: boolean | null;
-  verifications_serveur: Record<string, unknown> | null;
+  verifications_serveur: ServerChecks | null;
   mesures_navigateur: {
     voix_dbfs?: number;
     bruit_dbfs?: number;
@@ -28,9 +29,37 @@ interface Item {
   phrase: { code: string; texte: string; traduction: string | null; mots: number };
   voix: string;
   avis: { decision: string; motif: string | null; commentaire: string | null }[];
+  double_ecoute?: boolean;
 }
 
-type Mode = 'premiere' | 'doute';
+/** Résultat du worker Python (worker/murya_worker/checks.py). */
+interface ServerChecks {
+  format?: { frequence?: number; canaux?: number; bits?: number; ok: boolean };
+  rsb_db?: number;
+  mots_par_seconde?: number | null;
+  alertes: string[];
+}
+
+const SERVER_ALERTS: Record<string, string> = {
+  format_invalide: 'Format invalide',
+  frequence_inattendue: 'Fréquence inattendue',
+  trop_court: 'Trop court',
+  trop_long: 'Trop long',
+  silence: 'Silence',
+  bruit: 'Bruit',
+  sature: 'Saturé',
+  coupe: 'Coupé au début ou à la fin',
+  debit_anormal: 'Débit de lecture anormal',
+  doublon: 'Doublon d’un autre audio',
+};
+
+type Mode = 'premiere' | 'doute' | 'double';
+
+const MODES: [Mode, string][] = [
+  ['premiere', 'À vérifier'],
+  ['doute', 'Doutes'],
+  ['double', 'Double écoute'],
+];
 type Decision = 'valide' | 'corrige' | 'rejete' | 'doute';
 
 const REASONS: Record<string, string> = {
@@ -46,12 +75,12 @@ const REASONS: Record<string, string> = {
 export function EcoutePage() {
   const { client, has } = useTeam();
   const canArbitrate = has('qualite') || has('admin');
-  // `/ecoute?file=doutes` ouvre directement la file des doutes (lien de l'accueil).
-  const [mode, setMode] = useState<Mode>(() =>
-    canArbitrate && new URLSearchParams(location.search).get('file') === 'doutes'
-      ? 'doute'
-      : 'premiere',
-  );
+  // `/ecoute?file=doutes` ou `?file=double` ouvre directement cette file (liens de l'accueil).
+  const [mode, setMode] = useState<Mode>(() => {
+    const file = new URLSearchParams(location.search).get('file');
+    if (!canArbitrate) return 'premiere';
+    return file === 'doutes' ? 'doute' : file === 'double' ? 'double' : 'premiere';
+  });
   const [counts, setCounts] = useState<ReviewCounts | null>(null);
   const [item, setItem] = useState<Item | null | undefined>(undefined);
   const [pending, setPending] = useState<Decision | null>(null);
@@ -61,6 +90,9 @@ export function EcoutePage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(0);
+  const [outcome, setOutcome] = useState<string | null>(null);
+  // Audios passés pendant cette séance : la file ne les repropose pas.
+  const skipped = useRef<Record<Mode, string[]>>({ premiere: [], doute: [], double: [] });
   const player = useRef<PlayerControl | null>(null);
   const textArea = useRef<HTMLTextAreaElement | null>(null);
 
@@ -70,10 +102,11 @@ export function EcoutePage() {
     setError(null);
     setComment('');
     setReason('');
-    const { data, error: rpcError } = await client.rpc('review_claim', {
-      p_language: LANGUAGE,
-      p_mode: mode,
-    });
+    const p_skip = skipped.current[mode];
+    const { data, error: rpcError } =
+      mode === 'double'
+        ? await client.rpc('double_review_claim', { p_language: LANGUAGE, p_skip })
+        : await client.rpc('review_claim', { p_language: LANGUAGE, p_mode: mode, p_skip });
     void client
       .rpc('review_counts', { p_language: LANGUAGE })
       .then(({ data: c }) => setCounts(c as ReviewCounts));
@@ -95,16 +128,27 @@ export function EcoutePage() {
       if (!item || busy) return;
       setBusy(true);
       setError(null);
-      const { error: rpcError } = await client.rpc('review_submit', {
+      const args = {
         p_recording_id: item.id,
         p_decision: decision,
         p_corrected_text: decision === 'corrige' ? corrected : null,
         p_reject_reason: decision === 'rejete' ? reason || null : null,
         p_comment: comment || null,
-      });
+      };
+      const { data, error: rpcError } = await client.rpc(
+        item.double_ecoute ? 'double_review_submit' : 'review_submit',
+        args,
+      );
       setBusy(false);
       if (rpcError) return setError(errorText(rpcError));
       setDone((n) => n + 1);
+      setOutcome(
+        !item.double_ecoute
+          ? null
+          : data
+            ? 'Même décision que la première écoute.'
+            : 'Désaccord enregistré : votre décision s’applique à l’audio.',
+      );
       void claim();
     },
     [item, busy, client, corrected, reason, comment, claim],
@@ -112,9 +156,11 @@ export function EcoutePage() {
 
   const skip = useCallback(async () => {
     if (!item) return;
+    skipped.current[mode] = [...skipped.current[mode], item.id];
+    setOutcome(null);
     await client.rpc('review_release', { p_recording_id: item.id });
     void claim();
-  }, [item, client, claim]);
+  }, [item, client, claim, mode]);
 
   // « Validé » part tout de suite ; les autres décisions demandent un complément.
   const choose = useCallback(
@@ -137,7 +183,7 @@ export function EcoutePage() {
       } else if (event.key === '1') choose('valide');
       else if (event.key === '2') choose('corrige');
       else if (event.key === '3') choose('rejete');
-      else if (event.key.toLowerCase() === 'd' && item.statut !== 'doute') choose('doute');
+      else if (event.key.toLowerCase() === 'd' && canDoubt(item)) choose('doute');
       else if (event.key === 'ArrowRight') void skip();
     }
     window.addEventListener('keydown', onKey);
@@ -150,37 +196,63 @@ export function EcoutePage() {
         <h1>Écoute</h1>
         {canArbitrate && (
           <div className="onglets">
-            <button
-              className={mode === 'premiere' ? '' : 'secondaire'}
-              onClick={() => setMode('premiere')}
-            >
-              À vérifier
-            </button>
-            <button
-              className={mode === 'doute' ? '' : 'secondaire'}
-              onClick={() => setMode('doute')}
-            >
-              Doutes
-            </button>
+            {MODES.map(([value, label]) => (
+              <button
+                key={value}
+                className={mode === value ? '' : 'secondaire'}
+                onClick={() => {
+                  setOutcome(null);
+                  setMode(value);
+                }}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         )}
       </div>
+      {mode === 'double' && (
+        <p className="aide">
+          Double écoute à l’aveugle : la décision de la première écoute n’est pas montrée. En cas de
+          désaccord, votre décision remplace la sienne.
+        </p>
+      )}
       {done > 0 && <p className="aide">{done} audio(s) vérifié(s) pendant cette séance.</p>}
+      {outcome && <p className="message succes">{outcome}</p>}
       {error && <p className="message erreur">{error}</p>}
 
       {item === undefined && <p>Chargement…</p>}
       {item === null && (
         <section className="carte">
-          <p>Rien à écouter pour le moment.</p>
-          {ownRecruits(
-            mode === 'doute' ? counts?.doutes_vos_recrues : counts?.a_verifier_vos_recrues,
-          ) && (
+          <p>
+            {mode === 'double'
+              ? 'Rien à réécouter pour le moment : le tirage a lieu chaque lundi.'
+              : 'Rien à écouter pour le moment.'}
+          </p>
+          {skipped.current[mode].length > 0 && (
             <p className="aide">
-              {ownRecruits(
-                mode === 'doute' ? counts?.doutes_vos_recrues : counts?.a_verifier_vos_recrues,
-              )}
+              {skipped.current[mode].length} audio(s) passé(s) pendant cette séance.{' '}
+              <button
+                className="lien"
+                onClick={() => {
+                  skipped.current[mode] = [];
+                  void claim();
+                }}
+              >
+                Les reprendre
+              </button>
             </p>
           )}
+          {mode !== 'double' &&
+            ownRecruits(
+              mode === 'doute' ? counts?.doutes_vos_recrues : counts?.a_verifier_vos_recrues,
+            ) && (
+              <p className="aide">
+                {ownRecruits(
+                  mode === 'doute' ? counts?.doutes_vos_recrues : counts?.a_verifier_vos_recrues,
+                )}
+              </p>
+            )}
           <button className="secondaire" onClick={() => void claim()}>
             Vérifier à nouveau
           </button>
@@ -235,7 +307,7 @@ export function EcoutePage() {
             >
               Rejeté <kbd>3</kbd>
             </button>
-            {item.statut !== 'doute' && (
+            {canDoubt(item) && (
               <button className="secondaire" onClick={() => choose('doute')} disabled={busy}>
                 Doute <kbd>D</kbd>
               </button>
@@ -292,6 +364,11 @@ export function EcoutePage() {
   );
 }
 
+/** « Doute » : seulement en première écoute (pas sur un doute, ni en double écoute). */
+function canDoubt(item: Item): boolean {
+  return item.statut !== 'doute' && !item.double_ecoute;
+}
+
 function CommentField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
     <>
@@ -306,7 +383,7 @@ function CommentField({ value, onChange }: { value: string; onChange: (v: string
   );
 }
 
-/** Indicateurs automatiques : mesures du navigateur (et du serveur, au J4). */
+/** Indicateurs automatiques : mesures du navigateur, puis vérifications du serveur. */
 function Indicators({ item }: { item: Item }) {
   const m = item.mesures_navigateur ?? {};
   const seconds = (item.duree_ms ?? 0) / 1000;
@@ -343,7 +420,37 @@ function Indicators({ item }: { item: Item }) {
       {m.valide_quand_meme && (
         <span className="attention">Validé par la voix malgré une alerte</span>
       )}
-      {!item.verifications_serveur && <span className="aide">Vérifications serveur : au J4</span>}
+      <ServerIndicators checks={item.verifications_serveur} />
     </div>
+  );
+}
+
+function ServerIndicators({ checks }: { checks: ServerChecks | null }) {
+  if (!checks) {
+    return (
+      <span className="aide">
+        Vérifications serveur : en attente (le worker passe toutes les 15 min)
+      </span>
+    );
+  }
+  const details = [
+    checks.rsb_db !== undefined && `écart voix/bruit ${Math.round(checks.rsb_db)} dB`,
+    checks.mots_par_seconde != null && `${checks.mots_par_seconde.toLocaleString('fr-FR')} mots/s`,
+    checks.format?.frequence && `${checks.format.frequence / 1000} kHz`,
+  ].filter(Boolean);
+  return (
+    <span className="serveur">
+      Serveur :{' '}
+      {checks.alertes.length === 0 ? (
+        <span className="etape succes">✓ Aucune alerte</span>
+      ) : (
+        checks.alertes.map((a) => (
+          <span key={a} className="etape alerte">
+            ⚠ {SERVER_ALERTS[a] ?? a}
+          </span>
+        ))
+      )}{' '}
+      {details.length > 0 && <span className="aide">({details.join(' · ')})</span>}
+    </span>
   );
 }

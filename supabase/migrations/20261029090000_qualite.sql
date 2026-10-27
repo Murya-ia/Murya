@@ -153,6 +153,71 @@ begin
 end $$;
 
 -- -----------------------------------------------------------------------------
+-- File d'écoute : « Passer » (spec §5.4). Jusqu'ici, un audio passé était libéré puis
+-- aussitôt reproposé (c'est le plus ancien). La page envoie maintenant la liste des audios
+-- passés pendant la séance, que la file saute.
+-- -----------------------------------------------------------------------------
+
+drop function public.review_claim(text, text);
+drop function acces.review_claim(text, text);
+
+create function acces.review_claim(
+  p_language text,
+  p_mode text default 'premiere',
+  p_skip uuid[] default '{}'
+) returns jsonb
+language plpgsql volatile security definer set search_path = '' as $$
+declare
+  v_status text := case when p_mode = 'doute' then 'doute' else 'a_verifier' end;
+  v_minutes integer := coalesce((public.get_setting(p_language, 'review_lock_minutes'))::integer, 5);
+  v_id uuid;
+begin
+  if not acces.is_reviewer() then
+    perform acces.fail('acces_refuse');
+  elsif p_mode = 'doute' and not (acces.has_role('qualite') or acces.has_role('admin')) then
+    perform acces.fail('acces_refuse');
+  end if;
+
+  -- Audio déjà réservé par cette personne (page rechargée) : on le lui redonne.
+  select r.id into v_id
+  from public.recordings r join public.speakers s on s.id = r.speaker_id
+  where r.locked_by = auth.uid() and r.locked_until > now() and r.qc_status = v_status
+    and s.language_code = p_language
+    and r.id <> all(coalesce(p_skip, '{}'))
+  limit 1;
+
+  if v_id is null then
+    select r.id into v_id
+    from public.recordings r join public.speakers s on s.id = r.speaker_id
+    where s.language_code = p_language
+      and r.upload_status = 'recu'
+      and r.qc_status = v_status
+      and acces.can_review_speaker(s.recruiter_id)
+      and (r.locked_until is null or r.locked_until < now())
+      and r.id <> all(coalesce(p_skip, '{}'))
+    order by r.suspect desc nulls last, r.received_at
+    limit 1
+    for update of r skip locked;
+    if v_id is null then
+      return null;
+    end if;
+    update public.recordings
+    set locked_by = auth.uid(), locked_until = now() + make_interval(mins => v_minutes)
+    where id = v_id;
+  end if;
+  return acces.review_item(v_id);
+end $$;
+
+create function public.review_claim(
+  p_language text,
+  p_mode text default 'premiere',
+  p_skip uuid[] default '{}'
+) returns jsonb
+language sql volatile security invoker set search_path = '' as $$
+  select acces.review_claim(p_language, p_mode, p_skip);
+$$;
+
+-- -----------------------------------------------------------------------------
 -- Double écoute (spec §5.5) : chaque semaine, 10 % des audios validés de la semaine
 -- sont réécoutés « à l'aveugle » par le responsable qualité. Le taux de désaccord
 -- mesure la fiabilité des vérifications.
@@ -202,7 +267,8 @@ end $$;
 
 -- File de la double écoute pour le responsable qualité : jamais ses propres décisions,
 -- ni (sauf admin) ses propres recrues. La décision précédente n'est PAS montrée.
-create function acces.double_review_claim(p_language text) returns jsonb
+create function acces.double_review_claim(p_language text, p_skip uuid[] default '{}')
+returns jsonb
 language plpgsql volatile security definer set search_path = '' as $$
 declare
   v_minutes integer := coalesce((public.get_setting(p_language, 'review_lock_minutes'))::integer, 5);
@@ -217,6 +283,7 @@ begin
   join public.speakers s on s.id = r.speaker_id
   where s.language_code = p_language and d.reviewer_id is null
     and r.locked_by = auth.uid() and r.locked_until > now()
+    and r.id <> all(coalesce(p_skip, '{}'))
   limit 1;
   if v_id is null then
     select d.recording_id into v_id
@@ -227,6 +294,7 @@ begin
       and d.first_reviewer_id is distinct from auth.uid()
       and acces.can_review_speaker(s.recruiter_id)
       and (r.locked_until is null or r.locked_until < now())
+      and r.id <> all(coalesce(p_skip, '{}'))
     order by d.selected_at
     limit 1
     for update of r skip locked;
@@ -241,9 +309,10 @@ begin
   return acces.review_item(v_id) || jsonb_build_object('avis', '[]'::jsonb, 'double_ecoute', true);
 end $$;
 
-create function public.double_review_claim(p_language text) returns jsonb
+create function public.double_review_claim(p_language text, p_skip uuid[] default '{}')
+returns jsonb
 language sql volatile security invoker set search_path = '' as $$
-  select acces.double_review_claim(p_language);
+  select acces.double_review_claim(p_language, p_skip);
 $$;
 
 -- Décision de double écoute. En cas de désaccord, la décision du responsable qualité
@@ -348,7 +417,9 @@ language sql stable security definer set search_path = '' as $$
            row_number() over (partition by speaker_id order by reviewed_at desc) as rang
     from recs where qc_status in ('valide', 'corrige', 'rejete')
   ),
-  alert_cfg as (select public.get_setting(p_language, 'alert_rejections') as cfg)
+  alert_cfg as (select public.get_setting(p_language, 'alert_rejections') as cfg),
+  waiting_cfg as (
+    select coalesce((public.get_setting(p_language, 'alert_waiting_days'))::integer, 3) as days)
   select jsonb_build_object(
     'voix_par_statut', jsonb_build_object(
       'invitee', (select count(*) from public.invites i
@@ -436,12 +507,13 @@ language sql stable security definer set search_path = '' as $$
         join speakers s on s.id = x.speaker_id
         where x.rejets > (select (cfg->>'max_rejets')::integer from alert_cfg)),
       'audios_en_attente', (
-        select jsonb_build_object('nombre', count(*), 'plus_ancien', min(received_at))
+        select jsonb_build_object('nombre', count(*), 'plus_ancien', min(received_at),
+                                  'jours', (select days from waiting_cfg))
         from recs where qc_status = 'a_verifier'
-          and received_at < now() - make_interval(
-            days => coalesce((public.get_setting(p_language, 'alert_waiting_days'))::integer, 3)))),
+          and received_at < now() - make_interval(days => (select days from waiting_cfg)))),
     'double_ecoute', (
       select jsonb_build_object(
+        'part', coalesce((public.get_setting(p_language, 'double_review_ratio'))::numeric, 0.1),
         'a_faire', count(*) filter (where d.reviewer_id is null),
         'faites', count(*) filter (where d.reviewer_id is not null),
         'desaccords', count(*) filter (where d.agrees = false),
@@ -529,7 +601,8 @@ begin
   end loop;
   -- Appelables par l'espace équipe (l'implémentation vérifie les rôles).
   foreach f in array array[
-    'acces.double_review_claim(text)', 'public.double_review_claim(text)',
+    'acces.review_claim(text, text, uuid[])', 'public.review_claim(text, text, uuid[])',
+    'acces.double_review_claim(text, uuid[])', 'public.double_review_claim(text, uuid[])',
     'acces.double_review_submit(uuid, text, text, text, text)',
     'public.double_review_submit(uuid, text, text, text, text)',
     'acces.refresh_dashboard_now(text)', 'public.refresh_dashboard_now(text)'

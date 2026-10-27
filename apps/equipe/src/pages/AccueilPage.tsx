@@ -1,10 +1,11 @@
-// Accueil : ce qui attend la personne connectée (tests à écouter, audios à vérifier…).
-// Le tableau de bord complet (heures, quotas, graphiques) arrive au J4.
+// Accueil : ce qui attend la personne connectée (tests à écouter, audios à vérifier…),
+// puis le tableau de bord de la langue (heures, quotas, alertes).
 
 import { useEffect, useState } from 'react';
 import { navigate } from '../lib/router';
 import { LANGUAGE, useTeam } from '../lib/team';
 import { ROLE_LABELS } from '../supabase';
+import { TableauDeBord } from './TableauDeBord';
 
 /** Compteurs de l'écoute : mêmes règles que la file (voir `review_counts` en base). */
 export interface ReviewCounts {
@@ -81,9 +82,7 @@ export function AccueilPage() {
           </button>
         ))}
       </div>
-      <p className="aide">
-        Le tableau de bord (heures, quotas, graphiques) arrive au prochain jalon.
-      </p>
+      <TableauDeBord />
     </>
   );
 }
