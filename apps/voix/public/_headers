@@ -1,0 +1,8 @@
+# En-têtes de sécurité appliqués par Cloudflare Pages à toutes les pages.
+# connect-src autorise https: pour l'instant (API et R2 sur des domaines *.workers.dev /
+# *.r2.cloudflarestorage.com) ; à restreindre quand le nom de domaine sera acheté.
+/*
+  Referrer-Policy: no-referrer
+  X-Content-Type-Options: nosniff
+  Permissions-Policy: microphone=(self), camera=(), geolocation=()
+  Content-Security-Policy: default-src 'self'; connect-src 'self' https:; media-src 'self' blob:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'; base-uri 'self'

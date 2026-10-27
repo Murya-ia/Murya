@@ -1,0 +1,175 @@
+.page {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 16px 16px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.accueil {
+  min-height: 100vh;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.devise {
+  font-size: 1.4rem;
+  margin: 8px 0 0;
+}
+
+.gris {
+  color: var(--gris);
+}
+
+.entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.etiquette {
+  background: var(--vert);
+  color: var(--blanc);
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.consigne {
+  font-size: 1.15rem;
+  margin: 0;
+}
+
+.choix {
+  border: 2px solid var(--bordure);
+  border-radius: var(--rayon);
+  padding: 8px 12px;
+}
+
+.choix label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 400;
+  min-height: 40px;
+  margin: 0;
+}
+
+.choix input {
+  width: 22px;
+  height: 22px;
+  min-height: 0;
+}
+
+.niveau {
+  height: 16px;
+  border-radius: 8px;
+  background: var(--bordure);
+  overflow: hidden;
+}
+
+.niveau-barre {
+  height: 100%;
+  background: var(--gris);
+  transition: width 60ms linear;
+}
+
+.niveau.actif .niveau-barre {
+  background: var(--vert);
+}
+
+.centre {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.bouton-rond {
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(15, 61, 46, 0.3);
+}
+
+.bouton-rond.stop {
+  background: var(--noir);
+}
+
+.carre {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  background: var(--blanc);
+}
+
+.chrono {
+  font-size: 1.1rem;
+  font-variant-numeric: tabular-nums;
+  margin: 12px 0 0;
+}
+
+.carte {
+  background: var(--blanc);
+  border-radius: var(--rayon);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.carte audio {
+  width: 100%;
+}
+
+.message {
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.message.erreur {
+  background: #fbe9e7;
+  color: var(--erreur);
+}
+
+.message.alerte {
+  background: #fff4dc;
+  color: var(--alerte);
+}
+
+.message.succes {
+  background: #e3f0ea;
+  color: var(--succes);
+}
+
+.mesures {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.mesures th {
+  text-align: left;
+  font-weight: 400;
+  color: var(--gris);
+  padding: 4px 0;
+}
+
+.mesures td {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.75rem;
+}
