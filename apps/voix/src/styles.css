@@ -173,3 +173,225 @@ pre {
   word-break: break-word;
   font-size: 0.75rem;
 }
+
+/* ------------------------------------------------------------------ parcours des voix */
+
+.centre-vertical {
+  min-height: 100vh;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.centre-vertical > button {
+  width: 100%;
+}
+
+h1 {
+  font-size: 1.6rem;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.grande-icone {
+  color: var(--vert);
+}
+
+.choix-langue {
+  width: 100%;
+  min-height: 72px;
+  font-size: 1.4rem;
+}
+
+.texte-long {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.aide {
+  color: var(--gris);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.formulaire {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Grandes cases à cocher, faciles à toucher. */
+.case {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-weight: 400;
+  background: var(--blanc);
+  border: 2px solid var(--bordure);
+  border-radius: var(--rayon);
+  padding: 14px;
+  margin: 0;
+}
+
+.case input {
+  width: 28px;
+  height: 28px;
+  min-height: 0;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+/* Choix sous forme de gros boutons (sexe, âge). */
+.choix-boutons {
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.choix-boutons legend {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.choix-boutons label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 0 16px;
+  margin: 0;
+  font-weight: 400;
+  background: var(--blanc);
+  border: 2px solid var(--bordure);
+  border-radius: var(--rayon);
+}
+
+.choix-boutons label.choisi {
+  border-color: var(--vert);
+  background: #e3f0ea;
+  font-weight: 700;
+}
+
+.choix-boutons input {
+  width: 22px;
+  height: 22px;
+  min-height: 0;
+  margin: 0;
+}
+
+.avec-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+button.lien {
+  background: none;
+  color: var(--vert);
+  text-decoration: underline;
+  min-height: 48px;
+  font-weight: 600;
+}
+
+.conseils {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.conseils li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--blanc);
+  border-radius: var(--rayon);
+  padding: 12px 14px;
+  font-size: 1.05rem;
+}
+
+.conseils svg {
+  color: var(--vert);
+  flex-shrink: 0;
+}
+
+.video {
+  width: 100%;
+  border-radius: var(--rayon);
+  background: var(--noir);
+}
+
+/* Bandeau discret : réseau absent, audios en attente d'envoi. */
+.bandeau {
+  background: var(--noir);
+  color: var(--blanc);
+  font-size: 0.9rem;
+  padding: 6px 16px;
+}
+
+.bandeau p {
+  max-width: 560px;
+  margin: 2px auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Écran d'enregistrement */
+.ecran-enregistrement {
+  min-height: 100vh;
+}
+
+.progression {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.progression progress {
+  flex: 1;
+  height: 10px;
+  accent-color: var(--vert);
+}
+
+/* La phrase en très gros (spec §3.6). */
+.phrase {
+  font-size: clamp(1.75rem, 7vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+}
+
+.resultat {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.boutons-resultat {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.boutons-resultat button:last-child:nth-child(3) {
+  grid-column: 1 / -1;
+  min-height: 72px;
+  font-size: 1.2rem;
+}
+
+.message {
+  display: block;
+}
+
+.message svg {
+  vertical-align: middle;
+}

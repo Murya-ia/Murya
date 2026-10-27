@@ -11,6 +11,11 @@ import { ApiError } from './api';
 export interface UploadItem {
   /** UUID généré dans le navigateur : renvoyer le même audio ne crée jamais de doublon. */
   id: string;
+  /**
+   * Jeton de la voix qui a enregistré. Gardé avec chaque audio : sur un téléphone partagé,
+   * si une autre personne ouvre son lien, les audios de la première partent quand même.
+   */
+  token: string;
   sentenceId: number;
   wav: Blob;
   metrics: Record<string, unknown>;

@@ -50,6 +50,7 @@ function fakeTransport() {
 
 const audio = (id: string, createdAt = 1) => ({
   id,
+  token: 'jeton',
   sentenceId: 1,
   wav: new Blob(['RIFF']),
   metrics: {},

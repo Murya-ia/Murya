@@ -14,7 +14,7 @@ import {
 import { Logo } from '@murya/commun/logo';
 import { MicrophoneError, Recorder, type MicrophoneProblem } from '../audio/recorder';
 import { resample } from '../audio/resample';
-import { LevelMeter } from './LevelMeter';
+import { LevelMeter } from '../ui/LevelMeter';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8787';
 const MAX_SECONDS = 20;

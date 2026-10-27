@@ -1,9 +1,10 @@
 import { Logo } from '@murya/commun/logo';
 
-// Page d'accueil provisoire (J1). Le parcours de la voix arrive au J2.
+// Accueil sans lien d'invitation : on explique simplement comment participer.
+// (Pas encore de choix de langue ici : textes en français en attendant la traduction.)
 export function Home() {
   return (
-    <main className="page accueil">
+    <main className="page centre-vertical">
       <Logo size={56} />
       <p className="devise">
         Votre langue.
@@ -12,7 +13,9 @@ export function Home() {
         <br />
         Votre intelligence.
       </p>
-      <p className="gris">La collecte commence bientôt.</p>
+      <p className="gris">
+        Pour participer, ouvrez le lien personnel que vous avez reçu sur WhatsApp.
+      </p>
     </main>
   );
 }
