@@ -1,5 +1,5 @@
 import { encodeWav } from '@murya/commun';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Env } from './env';
 import app from './index';
 import { safeEqual } from './util';
@@ -53,6 +53,39 @@ describe('GET /sante', () => {
     expect(res.status).toBe(200);
     expect(await res.json()).toMatchObject({ ok: true, environnement: 'local' });
     expect(res.headers.get('Referrer-Policy')).toBe('no-referrer');
+  });
+
+  describe('?verifier=r2', () => {
+    afterEach(() => vi.unstubAllGlobals());
+
+    const checkWith = async (status: number, e = env()) => {
+      const fetchMock = vi.fn(async (_input: RequestInfo | URL) => new Response(null, { status }));
+      vi.stubGlobal('fetch', fetchMock);
+      const res = await app.request('/sante?verifier=r2', {}, e);
+      return { res, body: (await res.json()) as Record<string, unknown>, fetchMock };
+    };
+
+    it('signale des clés acceptées quand R2 répond « introuvable » (404)', async () => {
+      const { res, body, fetchMock } = await checkWith(404);
+      expect(res.status).toBe(200);
+      expect(body).toMatchObject({ ok: true, r2: 'ok' });
+      // Une seule lecture, signée, d'un fichier qui n'existe pas : rien n'est créé.
+      const url = new URL(String(fetchMock.mock.calls[0]![0]));
+      expect(url.pathname).toBe('/murya-audio-staging/sante/fichier-absent.txt');
+      expect(url.searchParams.get('X-Amz-Signature')).toBeTruthy();
+    });
+
+    it('signale des clés refusées (403)', async () => {
+      const { res, body } = await checkWith(403);
+      expect(res.status).toBe(503);
+      expect(body).toMatchObject({ ok: false, r2: 'cles_refusees' });
+    });
+
+    it('signale des clés absentes sans appeler R2', async () => {
+      const { body, fetchMock } = await checkWith(404, env({ R2_SECRET_ACCESS_KEY: '' }));
+      expect(body).toMatchObject({ ok: false, r2: 'non_configure' });
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
   });
 });
 

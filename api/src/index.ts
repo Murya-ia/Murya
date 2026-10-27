@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
 import type { Env } from './env';
+import { checkR2Credentials } from './r2';
 import { proof } from './routes/proof';
 import { allowedOrigins } from './util';
 
@@ -19,9 +20,13 @@ app.use('*', (c, next) =>
 app.use('*', secureHeaders({ referrerPolicy: 'no-referrer' }));
 
 // Page de santé (spec §10, observabilité).
-app.get('/sante', (c) =>
-  c.json({ ok: true, environnement: c.env.ENVIRONMENT, heure: new Date().toISOString() }),
-);
+// `/sante?verifier=r2` vérifie en plus les clés R2 (une lecture, sans rien créer).
+app.get('/sante', async (c) => {
+  const health = { environnement: c.env.ENVIRONMENT, heure: new Date().toISOString() };
+  if (c.req.query('verifier') !== 'r2') return c.json({ ok: true, ...health });
+  const r2 = await checkR2Credentials(c.env);
+  return c.json({ ok: r2 === 'ok', ...health, r2 }, r2 === 'ok' ? 200 : 503);
+});
 
 app.route('/preuve', proof);
 

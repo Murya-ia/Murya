@@ -29,3 +29,24 @@ export async function presignUrl(
   const signed = await client.sign(new Request(url, { method }), { aws: { signQuery: true } });
   return signed.url;
 }
+
+export type R2Check = 'ok' | 'cles_refusees' | 'non_configure' | 'injoignable';
+
+/**
+ * Vérifie que les clés R2 de l'API sont acceptées, sans rien créer : on demande avec une URL
+ * signée un fichier qui n'existe pas. Réponse 404 (« introuvable ») = clés acceptées ;
+ * 403 (« interdit ») = clés refusées ou sans droit sur ce bucket.
+ */
+export async function checkR2Credentials(env: Env): Promise<R2Check> {
+  if (!env.R2_ACCOUNT_ID || !env.R2_ACCESS_KEY_ID || !env.R2_SECRET_ACCESS_KEY) {
+    return 'non_configure';
+  }
+  try {
+    const response = await fetch(await presignUrl(env, 'GET', 'sante/fichier-absent.txt', 60));
+    if (response.status === 404) return 'ok';
+    if (response.status === 403) return 'cles_refusees';
+    return 'injoignable';
+  } catch {
+    return 'injoignable';
+  }
+}
