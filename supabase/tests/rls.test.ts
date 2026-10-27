@@ -94,14 +94,16 @@ describe('enregistrements (spec §5.4)', () => {
     );
   });
 
-  it('personne ne peut écrire directement (les écritures passeront par des fonctions)', async () => {
-    await asUser(db, recruiterB, async () => {
-      const { affectedRows } = await db.query(
-        `update public.recordings set qc_status = 'valide' where id = $1`,
-        [normalRecordingOfA],
-      );
-      expect(affectedRows).toBe(0);
-    });
+  it('personne ne peut écrire directement, même un admin (les écritures passeront par des fonctions)', async () => {
+    for (const user of [recruiterB, admin]) {
+      await asUser(db, user, async () => {
+        await expect(
+          db.query(`update public.recordings set qc_status = 'valide' where id = $1`, [
+            normalRecordingOfA,
+          ]),
+        ).rejects.toThrow(/permission denied/);
+      });
+    }
   });
 });
 

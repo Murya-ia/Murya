@@ -7,9 +7,9 @@ create role authenticated nologin;
 create role service_role nologin bypassrls;
 
 grant usage on schema public to anon, authenticated, service_role;
--- Comme dans Supabase : droits par défaut sur les objets créés ensuite (les migrations les restreignent).
-alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
-alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
+-- Comme nos projets Supabase (« Automatically expose new tables » désactivé) : AUCUN droit
+-- automatique sur les tables. Les tests vérifient donc que les migrations donnent elles-mêmes
+-- tous les droits nécessaires. Les fonctions gardent le comportement par défaut de Postgres.
 alter default privileges in schema public grant execute on functions to anon, authenticated, service_role;
 
 create schema auth;
