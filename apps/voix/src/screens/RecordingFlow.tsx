@@ -64,7 +64,15 @@ export function RecordingFlow({
   const redo = data.a_refaire ?? [];
   const settings = session.reglages;
   const principal = session.voix?.principale ?? false;
-  const common = { token, api, queue, settings, principal, onFinished: finished };
+  const common = {
+    token,
+    api,
+    queue,
+    settings,
+    principal,
+    queuePending: queueState.pending,
+    onFinished: finished,
+  };
 
   if (data.etape === 'attente' || (data.etape === 'test' && finishedLocally)) {
     return <WaitingScreen onRefresh={() => void load()} />;

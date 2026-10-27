@@ -68,6 +68,8 @@ const BLOCK_CODES = new Set([
 
 export class UploadQueue {
   private items = new Map<string, UploadItem>();
+  /** Phrases dont l'audio a été confirmé par le serveur depuis l'ouverture de l'app. */
+  private sent = new Set<number>();
   private running = false;
   private paused: string | null = null;
   private timer: ReturnType<typeof setTimeout> | undefined;
@@ -113,9 +115,13 @@ export class UploadQueue {
     };
   }
 
-  /** Phrases dont un audio attend dans le téléphone (pour ne pas les redemander). */
-  get pendingSentenceIds(): Set<number> {
-    return new Set([...this.items.values()].map((i) => i.sentenceId));
+  /**
+   * Phrases déjà enregistrées sur ce téléphone : un audio attend son envoi, ou a été envoyé
+   * depuis l'ouverture de l'app. Elles ne doivent pas être redemandées, même si la dernière
+   * réponse du serveur ne les compte pas encore.
+   */
+  get recordedSentenceIds(): Set<number> {
+    return new Set([...this.sent, ...[...this.items.values()].map((i) => i.sentenceId)]);
   }
 
   private async kick(): Promise<void> {
@@ -156,6 +162,7 @@ export class UploadQueue {
       // Confirmé par le serveur : seulement maintenant on efface l'audio du téléphone.
       await this.store.remove(item.id);
       this.items.delete(item.id);
+      this.sent.add(item.sentenceId);
     } catch (error) {
       const code = error instanceof ApiError ? error.code : null;
       if (code && PAUSE_CODES.has(code)) {

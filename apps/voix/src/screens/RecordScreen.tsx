@@ -48,6 +48,7 @@ export function RecordScreen({
   sentences,
   settings,
   principal,
+  queuePending,
   onFinished,
 }: {
   token: string;
@@ -57,6 +58,8 @@ export function RecordScreen({
   sentences: Sentence[];
   settings: Session['reglages'];
   principal: boolean;
+  /** Nombre d'audios en attente : recalcule les phrases faites quand la file se recharge. */
+  queuePending: number;
   onFinished: () => void;
 }) {
   const t = useT();
@@ -64,13 +67,18 @@ export function RecordScreen({
   const pauseEvery = settings.pause_toutes ?? 50;
   const thresholds = settings.verifications ?? DEFAULT_CLIENT_CHECKS;
 
-  // Phrases déjà faites : enregistrées ou sautées côté serveur, ou en attente d'envoi ici.
-  const [done, setDone] = useState<Set<number>>(() => {
-    const pending = queue.pendingSentenceIds;
-    return new Set(
-      sentences.filter((s) => s.enregistree || s.sautee || pending.has(s.id)).map((s) => s.id),
-    );
-  });
+  // Phrases faites ou sautées sur cet écran depuis son ouverture.
+  const [localDone, setLocalDone] = useState<Set<number>>(() => new Set());
+  // Phrases déjà faites : selon le serveur (la réponse peut arriver après l'affichage, quand
+  // l'app s'ouvre d'abord avec la dernière réponse connue), en attente d'envoi, ou faites ici.
+  const done = useMemo(() => {
+    const recorded = queue.recordedSentenceIds;
+    const ids = sentences
+      .filter((s) => s.enregistree || s.sautee || recorded.has(s.id))
+      .map((s) => s.id);
+    return new Set([...ids, ...localDone]);
+    // queuePending : la file d'envoi se recharge depuis le téléphone après le premier affichage.
+  }, [sentences, localDone, queue, queuePending]);
   const current = useMemo(() => sentences.find((s) => !done.has(s.id)), [sentences, done]);
 
   const [phase, setPhase] = useState<Phase>('pret');
@@ -215,7 +223,7 @@ export function RecordScreen({
   }
 
   function next(sentenceId: number, validatedCount: number) {
-    setDone((previous) => new Set(previous).add(sentenceId));
+    setLocalDone((previous) => new Set(previous).add(sentenceId));
     setTake(null);
     setFailedAttempts(0);
     setValidatedHere(validatedCount);

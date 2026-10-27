@@ -157,6 +157,18 @@ describe('UploadQueue', () => {
     expect(queue.state).toEqual({ pending: 0, blocked: 0, paused: null });
   });
 
+  it('se souvient des phrases enregistrées, en attente comme déjà envoyées', async () => {
+    const net = fakeTransport();
+    net.failures.push({ step: 'prepare', error: offline() });
+    const queue = new UploadQueue(memoryStore(), net.transport);
+    await queue.add({ ...audio('a'), sentenceId: 7 });
+    await flush();
+    expect(queue.recordedSentenceIds).toEqual(new Set([7])); // en attente
+    await vi.advanceTimersByTimeAsync(retryDelay(1));
+    expect(queue.state.pending).toBe(0);
+    expect(queue.recordedSentenceIds).toEqual(new Set([7])); // envoyée : toujours comptée
+  });
+
   it('envoie dans l’ordre d’enregistrement, un à la fois', async () => {
     const net = fakeTransport();
     const queue = new UploadQueue(memoryStore(), net.transport);
