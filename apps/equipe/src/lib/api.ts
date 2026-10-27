@@ -26,3 +26,19 @@ export async function audioUrl(session: Session, recordingId: string): Promise<s
 export function sendOralConsent(session: Session, form: FormData): Promise<{ numero: string }> {
   return call(session, '/equipe/consentement-oral', { method: 'POST', body: form });
 }
+
+/** Retrait d'une voix (admins) : la base efface tout, puis l'API efface ses fichiers. */
+export async function withdrawSpeaker(
+  session: Session,
+  speakerId: string,
+  confirmation: string,
+): Promise<{ numero: string; audios: number; fichiers_effaces: boolean }> {
+  if (import.meta.env.DEV && session.access_token === 'demo') {
+    return { numero: confirmation, audios: 37, fichiers_effaces: true };
+  }
+  return call(session, `/equipe/retrait/${speakerId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ confirmation }),
+  });
+}

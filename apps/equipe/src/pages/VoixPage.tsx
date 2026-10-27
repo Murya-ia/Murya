@@ -2,13 +2,24 @@
 //   - créer un lien d'invitation et l'envoyer sur WhatsApp ;
 //   - suivre chaque voix : contactée → d'accord → test fait → test validé → terminée ;
 //   - écouter le test et le valider, ou demander de le refaire avec un message ;
-//   - enregistrer un consentement oral, révoquer un lien.
+//   - enregistrer un consentement oral, révoquer un lien ;
+//   - demander le retrait d'une voix (recruteur), le confirmer (admin) — voir RetraitVoix.tsx.
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { sendOralConsent } from '../lib/api';
 import { errorText, useTeam } from '../lib/team';
 import { InviteForm } from './InviteForm';
+import {
+  CancelRequestButton,
+  IdentityButton,
+  RequestWithdrawalButton,
+  SpeakerSearch,
+  WithdrawalRequests,
+  WithdrawPanel,
+  type WithdrawalRequest,
+  type WithdrawTarget,
+} from './RetraitVoix';
 
 interface Speaker {
   id: string;
@@ -50,11 +61,13 @@ export function VoixPage() {
   const [progress, setProgress] = useState<Map<string, Progress>>(new Map());
   const [names, setNames] = useState<Map<string, string>>(new Map());
   const [open, setOpen] = useState<{ kind: 'test' | 'oral'; invite: InviteRow } | null>(null);
+  const [requests, setRequests] = useState<WithdrawalRequest[]>([]);
+  const [withdrawTarget, setWithdrawTarget] = useState<WithdrawTarget | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     // La RLS ne renvoie que les invitations du recruteur (toutes pour un admin).
-    const [invitesResult, progressResult, membersResult] = await Promise.all([
+    const [invitesResult, progressResult, membersResult, requestsResult] = await Promise.all([
       client
         .from('invites')
         .select(
@@ -63,6 +76,10 @@ export function VoixPage() {
         .order('created_at', { ascending: false }),
       client.from('speaker_progress').select('*'),
       client.from('team_members').select('user_id, display_name'),
+      client
+        .from('withdrawal_requests')
+        .select('speaker_id, requested_by, requested_at, note')
+        .order('requested_at'),
     ]);
     if (invitesResult.error) return setError(errorText(invitesResult.error));
     setInvites(invitesResult.data as InviteRow[]);
@@ -70,6 +87,7 @@ export function VoixPage() {
     setNames(
       new Map(membersResult.data?.map((m) => [m.user_id as string, m.display_name as string])),
     );
+    setRequests((requestsResult.data as WithdrawalRequest[] | null) ?? []);
   }, [client]);
 
   useEffect(() => {
@@ -88,10 +106,46 @@ export function VoixPage() {
   const speakerOf = (invite: InviteRow): Speaker | null =>
     Array.isArray(invite.speakers) ? (invite.speakers[0] ?? null) : invite.speakers;
 
+  // Numéro et libellé de chaque voix, pour les demandes de retrait.
+  const numbers = useMemo(() => {
+    const map = new Map<string, { number: string; label: string }>();
+    for (const invite of invites ?? []) {
+      const speaker = speakerOf(invite);
+      if (speaker) map.set(speaker.id, { number: speaker.number, label: invite.label });
+    }
+    return map;
+  }, [invites]);
+  const requestOf = new Map(requests.map((r) => [r.speaker_id, r]));
+
+  function openWithdraw(target: WithdrawTarget) {
+    setWithdrawTarget(target);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   return (
     <>
       <h1>Voix</h1>
+      {withdrawTarget && (
+        <WithdrawPanel
+          key={withdrawTarget.id}
+          target={withdrawTarget}
+          onClose={(changed) => {
+            setWithdrawTarget(null);
+            if (changed) void load();
+          }}
+        />
+      )}
+      {has('admin') && (
+        <WithdrawalRequests
+          requests={requests}
+          numbers={numbers}
+          names={names}
+          onWithdraw={openWithdraw}
+          onChanged={() => void load()}
+        />
+      )}
       {has('recruteur') && <InviteForm onCreated={() => void load()} />}
+      {has('admin') && <SpeakerSearch onWithdraw={openWithdraw} />}
       {error && <p className="message erreur">{error}</p>}
 
       <section className="carte">
@@ -125,6 +179,7 @@ export function VoixPage() {
                       ? 'expiré'
                       : `jusqu’au ${new Date(invite.expires_at).toLocaleDateString('fr-FR')}`;
                   const mine = invite.recruiter_id === member.user_id || has('admin');
+                  const request = speaker ? requestOf.get(speaker.id) : undefined;
                   return (
                     <tr key={invite.id}>
                       <td className="titre-ligne-tableau">{invite.label}</td>
@@ -165,6 +220,43 @@ export function VoixPage() {
                         )}
                         {mine && !invite.revoked_at && (
                           <RevokeButton onConfirm={() => void revoke(invite)} />
+                        )}
+                        {speaker && request && (
+                          <>
+                            <span className="etape alerte">Retrait demandé</span>
+                            {(has('admin') || request.requested_by === member.user_id) && (
+                              <CancelRequestButton
+                                speakerId={speaker.id}
+                                onDone={() => void load()}
+                              />
+                            )}
+                          </>
+                        )}
+                        {speaker &&
+                          !request &&
+                          !has('admin') &&
+                          invite.recruiter_id === member.user_id && (
+                            <RequestWithdrawalButton
+                              speakerId={speaker.id}
+                              onDone={() => void load()}
+                            />
+                          )}
+                        {speaker && has('admin') && (
+                          <>
+                            <IdentityButton speakerId={speaker.id} />
+                            <button
+                              className="petit lien danger-texte"
+                              onClick={() =>
+                                openWithdraw({
+                                  id: speaker.id,
+                                  number: speaker.number,
+                                  label: invite.label,
+                                })
+                              }
+                            >
+                              Retirer…
+                            </button>
+                          </>
                         )}
                       </td>
                     </tr>

@@ -97,6 +97,14 @@ const PROGRESS = INVITES.flatMap((invite, i) =>
 
 const TABLES: Record<string, unknown[]> = {
   team_members: MEMBERS,
+  withdrawal_requests: [
+    {
+      speaker_id: 'spk-3',
+      requested_by: MEMBERS[2]!.user_id,
+      requested_at: day(-1),
+      note: 'Elle préfère arrêter.',
+    },
+  ],
   speakers: INVITES.filter((i) => i.speakers?.status === 'test_en_attente').map((i) => i.speakers),
   sentence_flags: [{ sentence_id: 8 }, { sentence_id: 8 }, { sentence_id: 21 }],
   sentences: SENTENCES,
@@ -242,6 +250,28 @@ function reviewItem(mode: string): Record<string, unknown> {
   };
 }
 
+const JOURNAL = [
+  ['retrait_voix', 'Awa', 'V007', { audios: 37 }],
+  ['demande_retrait', 'Mariama', 'V009', {}],
+  ['acces_identite', 'Awa', 'V011', {}],
+  ['recherche_identite', 'Awa', 'dje', { resultats: 1 }],
+  ['audio_corrige', 'Bachir', 'V011 · S0004', {}],
+  ['audio_rejete', 'Bachir', 'V010 · S0012', {}],
+  ['double_ecoute', 'Awa', 'V008 · S0003', { accord: false }],
+  ['test_valide', 'Mariama', 'V011', {}],
+  ['import_phrases', 'Awa', 'dje', { ajoutees: 120, modifiees: 3, erreurs: 0 }],
+  ['phrase_desactivee', 'Awa', 'S0013', {}],
+  ['membre_modifie', 'Awa', 'Bachir', { roles: ['verificateur'], actif: true }],
+  ['test_envoye', 'la voix', 'V012', {}],
+].map(([action, par, cible, details], i) => ({
+  id: 500 - i,
+  date: day(-i * 0.3),
+  action,
+  par,
+  cible,
+  details,
+}));
+
 export function rpcResult(name: string, args: Record<string, unknown>): unknown {
   switch (name) {
     case 'review_counts':
@@ -256,6 +286,23 @@ export function rpcResult(name: string, args: Record<string, unknown>): unknown 
       return { token: 'exemple-de-lien', expires_at: day(14) };
     case 'import_sentences':
       return { importees: 0, mises_a_jour: 0, ignorees: 0 };
+    case 'find_speakers':
+      return [
+        {
+          id: 'spk-1',
+          numero: 'V011',
+          statut: 'active',
+          recruteur: 'Mariama',
+          nom: 'Issa Moussa',
+          contact: '+227 90 00 00 00',
+          consentement_oral: false,
+          retrait_demande: false,
+        },
+      ];
+    case 'speaker_identity':
+      return { nom: 'Issa Moussa', contact: '+227 90 00 00 00', consentement_oral: false };
+    case 'journal':
+      return JOURNAL.filter((e) => !args.p_action || e.action === args.p_action);
     default:
       return null;
   }

@@ -55,6 +55,9 @@ export function errorText(error: { message?: string } | null | undefined): strin
     session_expiree: 'Votre session a expiré : reconnectez-vous.',
     pas_un_audio: 'Ce fichier n’est pas un enregistrement audio.',
     fichier_trop_gros: 'Fichier trop gros (15 Mo au plus).',
+    voix_inconnue: 'Cette voix n’existe plus (déjà retirée ?).',
+    confirmation_incorrecte: 'Le numéro tapé ne correspond pas à la voix.',
+    journal_inalterable: 'Le journal ne peut pas être modifié.',
   };
   return known[code] ?? 'Une erreur est survenue. Réessayez.';
 }

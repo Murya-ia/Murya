@@ -8,6 +8,7 @@ import { navigate, usePath } from './lib/router';
 import { TeamProvider, useTeam } from './lib/team';
 import { AccueilPage } from './pages/AccueilPage';
 import { EcoutePage } from './pages/EcoutePage';
+import { JournalPage } from './pages/JournalPage';
 import { PhrasesPage } from './pages/PhrasesPage';
 import { VoixPage } from './pages/VoixPage';
 import type { Role, TeamMember } from './supabase';
@@ -77,6 +78,7 @@ const PAGES: { path: string; label: string; roles: Role[] | null }[] = [
   { path: '/voix', label: 'Voix', roles: ['recruteur', 'admin'] },
   { path: '/ecoute', label: 'Écoute', roles: ['verificateur', 'qualite', 'admin'] },
   { path: '/phrases', label: 'Phrases', roles: null },
+  { path: '/journal', label: 'Journal', roles: ['admin'] },
 ];
 
 function Navigation() {
@@ -106,6 +108,7 @@ function Page() {
   if (path === '/voix') return <VoixPage />;
   if (path === '/ecoute') return <EcoutePage />;
   if (path === '/phrases') return <PhrasesPage />;
+  if (path === '/journal') return <JournalPage />;
   return <AccueilPage />;
 }
 

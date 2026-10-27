@@ -20,6 +20,7 @@ export function AccueilPage() {
   const [tests, setTests] = useState<number | null>(null);
   const [review, setReview] = useState<ReviewCounts | null>(null);
   const [flags, setFlags] = useState<number | null>(null);
+  const [withdrawals, setWithdrawals] = useState<number | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -34,10 +35,21 @@ export function AccueilPage() {
       setFlags(
         (await client.from('sentence_flags').select('id', { count: 'exact', head: true })).count,
       );
+      setWithdrawals(
+        (
+          await client
+            .from('withdrawal_requests')
+            .select('speaker_id', { count: 'exact', head: true })
+        ).count,
+      );
     })();
   }, [client, member.user_id, has]);
 
   const cards = [
+    // Une demande de retrait passe avant tout le reste (droit à l'effacement).
+    has('admin') && withdrawals
+      ? { n: withdrawals, label: 'demande(s) de retrait à confirmer', path: '/voix', note: null }
+      : null,
     has('recruteur') || has('admin')
       ? { n: tests, label: 'test(s) de voix à écouter', path: '/voix', note: null }
       : null,

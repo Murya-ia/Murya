@@ -446,6 +446,12 @@ textarea {
 /* Tableau « empilé » : sur téléphone, chaque ligne devient une carte (libellé à gauche,
    valeur à droite), pour tout voir sans faire défiler de côté. */
 @media (max-width: 700px) {
+  .tableau.empile,
+  .tableau.empile tbody {
+    display: block;
+    width: 100%;
+  }
+
   .tableau.empile thead {
     display: none;
   }
@@ -469,6 +475,17 @@ textarea {
     gap: 12px;
     border: none;
     padding: 4px 0;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+
+  .tableau.empile td.titre-ligne-tableau {
+    text-align: left;
+  }
+
+  .tableau.empile td::before {
+    flex-shrink: 0;
+    text-align: left;
   }
 
   .tableau.empile td[data-label]::before {
@@ -1074,4 +1091,75 @@ progress {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* ------------------------------------------------------------------ Retrait et journal (J6a) */
+
+.panneau-alerte {
+  border: 2px solid var(--alerte);
+  background: #fffaf0;
+}
+
+.panneau-danger {
+  border: 2px solid var(--erreur);
+}
+
+.panneau-danger ul {
+  padding-left: 20px;
+  margin: 8px 0 16px;
+}
+
+.liste-demandes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.liste-demandes li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding: 10px 12px;
+  background: var(--blanc);
+  border: 1px solid var(--trait);
+  border-radius: 12px;
+}
+
+.liste-demandes p {
+  margin: 2px 0 0;
+}
+
+.demande-retrait {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.demande-retrait input {
+  min-height: 36px;
+  max-width: 220px;
+  padding: 4px 10px;
+}
+
+.identite {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.filtres > div {
+  min-width: min(100%, 220px);
+}
+
+.voir-plus {
+  margin-top: 12px;
+}
+
+.intro {
+  margin-bottom: 16px;
 }
