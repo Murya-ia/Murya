@@ -1,0 +1,8 @@
+# Copier ce fichier en api/.dev.vars (jamais commité) pour lancer l'API en local.
+# Identifiant du compte Cloudflare (tableau de bord Cloudflare > R2 > « Account ID »)
+R2_ACCOUNT_ID=
+# Jeton d'API R2 limité au bucket murya-audio-staging (R2 > Manage API tokens)
+R2_ACCESS_KEY_ID=
+R2_SECRET_ACCESS_KEY=
+# Code à saisir sur la page de preuve audio. Laisser vide pour désactiver la page.
+PROOF_CODE=

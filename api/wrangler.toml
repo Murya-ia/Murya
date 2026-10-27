@@ -1,0 +1,44 @@
+# Configuration du Worker Cloudflare « API ».
+# Les secrets (clés R2, code de la page de preuve…) ne sont PAS ici :
+#   - en local : fichier api/.dev.vars (modèle : api/.dev.vars.example)
+#   - en ligne : `npx wrangler secret put NOM --env staging` (voir docs/comptes.md)
+# Attention : dans Wrangler, chaque environnement doit redéclarer ses variables et ses buckets.
+
+name = "murya-api-local"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+
+[vars]
+ENVIRONMENT = "local"
+ALLOWED_ORIGINS = "http://localhost:5173,http://localhost:5174"
+R2_BUCKET_AUDIO = "murya-audio-staging"
+
+[[r2_buckets]]
+binding = "AUDIO"
+bucket_name = "murya-audio-staging"
+
+# ---------------------------------------------------------------- staging
+[env.staging]
+name = "murya-api-staging"
+
+[env.staging.vars]
+ENVIRONMENT = "staging"
+ALLOWED_ORIGINS = "https://murya-voix-staging.pages.dev,https://murya-equipe-staging.pages.dev"
+R2_BUCKET_AUDIO = "murya-audio-staging"
+
+[[env.staging.r2_buckets]]
+binding = "AUDIO"
+bucket_name = "murya-audio-staging"
+
+# ------------------------------------------------------------- production
+[env.production]
+name = "murya-api"
+
+[env.production.vars]
+ENVIRONMENT = "production"
+ALLOWED_ORIGINS = "https://murya-voix.pages.dev,https://murya-equipe.pages.dev"
+R2_BUCKET_AUDIO = "murya-audio"
+
+[[env.production.r2_buckets]]
+binding = "AUDIO"
+bucket_name = "murya-audio"
