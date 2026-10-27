@@ -18,6 +18,9 @@ export function fakeBucket(files: Record<string, Uint8Array> = {}) {
     async delete(key: string) {
       delete files[key];
     },
+    async put(key: string, value: ArrayBuffer) {
+      files[key] = new Uint8Array(value);
+    },
   };
 }
 
@@ -32,7 +35,9 @@ export function testEnv(overrides: Partial<Env> = {}, files?: Record<string, Uin
     PROOF_CODE: 'zarma2027',
     SUPABASE_URL: 'https://projet.supabase.co',
     SUPABASE_SECRET_KEY: 'sb_secret_test',
+    SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_test',
     AUDIO: fakeBucket(files) as unknown as R2Bucket,
+    IDENTITES: fakeBucket() as unknown as R2Bucket,
     ...overrides,
   };
 }

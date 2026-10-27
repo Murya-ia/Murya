@@ -14,10 +14,16 @@ ENVIRONMENT = "local"
 ALLOWED_ORIGINS = "http://localhost:5173,http://localhost:5174"
 R2_BUCKET_AUDIO = "murya-audio-staging"
 SUPABASE_URL = "https://zsjvyiirvpqigqsvwcgy.supabase.co"
+# Clé PUBLIQUE (faite pour être visible) ; la clé secrète est un secret Wrangler.
+SUPABASE_PUBLISHABLE_KEY = "sb_publishable_cog8d6yufk-QJQLR4t8_QA_S7ecZBjV"
 
 [[r2_buckets]]
 binding = "AUDIO"
 bucket_name = "murya-audio-staging"
+
+[[r2_buckets]]
+binding = "IDENTITES"
+bucket_name = "murya-identites-staging"
 
 # ---------------------------------------------------------------- staging
 [env.staging]
@@ -28,10 +34,15 @@ ENVIRONMENT = "staging"
 ALLOWED_ORIGINS = "https://murya-voix-staging.murya-api.workers.dev,https://murya-equipe-staging.murya-api.workers.dev"
 R2_BUCKET_AUDIO = "murya-audio-staging"
 SUPABASE_URL = "https://zsjvyiirvpqigqsvwcgy.supabase.co"
+SUPABASE_PUBLISHABLE_KEY = "sb_publishable_cog8d6yufk-QJQLR4t8_QA_S7ecZBjV"
 
 [[env.staging.r2_buckets]]
 binding = "AUDIO"
 bucket_name = "murya-audio-staging"
+
+[[env.staging.r2_buckets]]
+binding = "IDENTITES"
+bucket_name = "murya-identites-staging"
 
 # Limites de débit des voix : 120 requêtes par minute et par jeton (une voix active en fait
 # environ 4 par phrase), 1 200 par minute et par adresse IP (adresses partagées des opérateurs).
@@ -55,10 +66,15 @@ ALLOWED_ORIGINS = "https://murya-voix.murya-api.workers.dev,https://murya-equipe
 R2_BUCKET_AUDIO = "murya-audio"
 # À remplir quand le projet Supabase de production sera créé (J7).
 SUPABASE_URL = ""
+SUPABASE_PUBLISHABLE_KEY = ""
 
 [[env.production.r2_buckets]]
 binding = "AUDIO"
 bucket_name = "murya-audio"
+
+[[env.production.r2_buckets]]
+binding = "IDENTITES"
+bucket_name = "murya-identites"
 
 [[env.production.ratelimits]]
 name = "RL_TOKEN"

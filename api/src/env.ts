@@ -13,7 +13,11 @@ export interface Env {
   SUPABASE_URL: string;
   /** Clé secrète Supabase (sb_secret_…) : seulement ici, jamais dans une interface. */
   SUPABASE_SECRET_KEY: string;
+  /** Clé publique Supabase (sb_publishable_…), pour appeler la base avec la session d'un membre. */
+  SUPABASE_PUBLISHABLE_KEY: string;
   AUDIO: R2Bucket;
+  /** Bucket des identités (consentements oraux), séparé des audios des voix. */
+  IDENTITES: R2Bucket;
   /** Limites de débit Cloudflare (facultatives : absentes en local et dans les tests). */
   RL_TOKEN?: RateLimit;
   RL_IP?: RateLimit;

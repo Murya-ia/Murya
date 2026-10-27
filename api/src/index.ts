@@ -4,6 +4,7 @@ import { secureHeaders } from 'hono/secure-headers';
 import type { Env } from './env';
 import { checkR2Credentials } from './r2';
 import { proof } from './routes/proof';
+import { team } from './routes/team';
 import { voice } from './routes/voice';
 import { allowedOrigins } from './util';
 
@@ -31,6 +32,7 @@ app.get('/sante', async (c) => {
 
 app.route('/preuve', proof);
 app.route('/voix', voice);
+app.route('/equipe', team);
 
 app.notFound((c) => c.json({ erreur: 'introuvable' }, 404));
 
