@@ -125,13 +125,39 @@ Tous les textes de phrases sont normalisés en Unicode **NFC** (contrôlé par l
 | 27/10/2026 | Nom de domaine à acheter (Cloudflare Registrar conseillé). En attendant : adresses `*.pages.dev`.                                                                          |
 | 27/10/2026 | Par défaut (sauf avis contraire) : budget campagne 5 $/mois + Supabase Pro seulement si nécessaire ; comptes créés avec une adresse e-mail d'équipe partagée, 2FA activée. |
 
-### Questions encore ouvertes (avant J2)
+| 27/10/2026 | Téléphone de test iPhone : iPhone 13 Pro. Lancement : le plus tôt possible. |
+| 27/10/2026 | Orthographe de référence : arrêté de 1999 (voir « Orthographe zarma » ci-dessous). |
 
-- Orthographe zarma : caractères spéciaux utilisés, CSV réel de ~20 phrases, nombre de phrases validées.
-- Logo : source vectorielle et police (en attendant, symbole redessiné en SVG provisoire).
-- Téléphones de test disponibles et part d'iPhone attendue.
-- Date de lancement et date de début de la voix principale.
-- Traduction zarma de l'interface et audios du consentement.
+### Questions encore ouvertes
+
+- Consentement « avant chaque enregistrement » : à préciser (à chaque retour de la voix ? avant chaque lot ?).
+- Logo : source vectorielle (sera déposée à la racine du dépôt) ; symbole SVG provisoire en attendant.
+- Téléphone Android ancien pour les tests.
+- Date de début de la voix principale.
+- Traduction zarma de l'interface et audios du consentement : pas encore faits.
+- CSV réel d'une vingtaine de phrases ; nombre de phrases déjà validées.
+
+## Orthographe zarma
+
+Référence : **arrêté n° 0215/MEN/SP-CNRE du 19 octobre 1999** fixant l'orthographe du
+soŋay-zarma (31 lettres). Lettres hors alphabet français :
+
+| Lettre           | Majuscule | Unicode (après normalisation NFC) | Remarque                              |
+| ---------------- | --------- | --------------------------------- | ------------------------------------- |
+| ŋ                | Ŋ         | U+014B / U+014A                   | souvent écrit « ng » à tort           |
+| ɲ                | Ɲ         | U+0272 / U+019D                   | souvent écrit « ny » à tort           |
+| ḛ ḭ ṵ (nasales)  | Ḛ Ḭ Ṵ     | 1 caractère (U+1E1B, U+1E2D…)     | tilde **sous** la voyelle             |
+| a̰ o̰ (nasales)    | A̰ O̰       | 2 caractères : lettre + U+0330    | pas de forme précomposée dans Unicode |
+| voyelles longues |           | lettre doublée (aa, a̰a̰…)          | pas de signe spécial                  |
+
+Conséquences pour le code :
+
+- La base normalise en NFC : `ḛ` tapé en deux caractères devient un seul ; `a̰` reste en deux.
+  Ne jamais compter les « lettres » avec `.length` ; les mots se comptent par espaces.
+- L'import CSV (J3) signalera les variantes probables : tilde **au-dessus** (ã ẽ ĩ õ ũ),
+  « ny », « ng », apostrophes différentes (’ et ') — à trancher dans la liste des mots décidés.
+- Affichage : polices système (Noto sur Android, San Francisco sur iPhone). Le rendu du tilde
+  souscrit sera vérifié sur la page de preuve, sur les vrais téléphones.
 
 ## Jalons
 

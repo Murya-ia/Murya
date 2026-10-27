@@ -64,14 +64,15 @@ describe('équipe', () => {
 });
 
 describe('phrases', () => {
-  it('normalisent le texte en Unicode NFC', async () => {
-    // « ẽ » écrit en deux caractères (e + tilde combinant) devient un seul caractère.
-    const id = await createSentence(db, 'S9001', '  Nẽ ga ka  ');
+  it('normalisent le texte en Unicode NFC (voyelles nasales du zarma)', async () => {
+    // « ḛ » tapé en deux caractères (e + tilde souscrit U+0330) devient un seul caractère (U+1E1B).
+    // « a̰ » n'existe pas en un seul caractère dans Unicode : il reste a + U+0330.
+    const id = await createSentence(db, 'S9001', '  Nḛ ka a̰  ');
     const { rows } = await db.query<{ text: string }>(
       `select text from public.sentences where id = $1`,
       [id],
     );
-    expect(rows[0]!.text).toBe('Nẽ ga ka');
+    expect(rows[0]!.text).toBe('Nḛ ka a̰');
   });
 
   it('créent une nouvelle version à chaque changement de texte, sans perdre l’historique', async () => {
