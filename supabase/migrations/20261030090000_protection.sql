@@ -19,6 +19,36 @@ create trigger audit_log_inalterable before update or delete on public.audit_log
 create trigger audit_log_inalterable_vidage before truncate on public.audit_log
   for each statement execute function public.audit_log_inalterable();
 
+-- Actions sensibles faites directement dans les tables (sans passer par une fonction) :
+-- désactiver ou réactiver une phrase, ajouter un membre ou changer ses rôles.
+create function public.journal_phrase_active() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  insert into public.audit_log (actor_id, actor_kind, action, target_type, target_id)
+  values (auth.uid(), case when auth.uid() is null then 'systeme' else 'equipe' end,
+          case when new.active then 'phrase_reactivee' else 'phrase_desactivee' end,
+          'sentence', new.id::text);
+  return new;
+end $$;
+
+create trigger sentences_journal_active after update of active on public.sentences
+  for each row when (old.active is distinct from new.active)
+  execute function public.journal_phrase_active();
+
+create function public.journal_membre() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  insert into public.audit_log (actor_id, actor_kind, action, target_type, target_id, details)
+  values (auth.uid(), case when auth.uid() is null then 'systeme' else 'equipe' end,
+          case when tg_op = 'INSERT' then 'membre_ajoute' else 'membre_modifie' end,
+          'membre', new.user_id::text,
+          jsonb_build_object('roles', new.roles, 'actif', new.active));
+  return new;
+end $$;
+
+create trigger team_members_journal after insert or update of roles, active on public.team_members
+  for each row execute function public.journal_membre();
+
 -- Lecture du journal pour la page « Journal » (admins) : du plus récent au plus ancien,
 -- avec le nom du membre et un libellé lisible de la cible (numéro de voix, phrase…).
 create function acces.journal(
@@ -49,6 +79,8 @@ begin
                                                           then l.target_id else 'voix retirée' end)
                  when 'recording' then coalesce(rs.number || ' · ' || rt.code, 'audio supprimé')
                  when 'language' then l.details->>'langue'
+                 when 'sentence' then coalesce(t.code, 'phrase supprimée')
+                 when 'membre' then coalesce(tm.display_name, 'membre supprimé')
                  else l.target_id end,
       'details', l.details
     ) as e
@@ -63,6 +95,12 @@ begin
      and r.id = case when l.target_id ~ '^[0-9a-f-]{36}$' then l.target_id::uuid end
     left join public.speakers rs on rs.id = r.speaker_id
     left join public.sentences rt on rt.id = r.sentence_id
+    left join public.sentences t
+      on l.target_type = 'sentence'
+     and t.id = case when l.target_id ~ '^[0-9]+$' then l.target_id::bigint end
+    left join public.team_members tm
+      on l.target_type = 'membre'
+     and tm.user_id = case when l.target_id ~ '^[0-9a-f-]{36}$' then l.target_id::uuid end
     where (p_before_id is null or l.id < p_before_id)
       and (p_action is null or l.action = p_action)
       and (p_actor is null or l.actor_id = p_actor)
@@ -314,6 +352,8 @@ $$;
 -- -----------------------------------------------------------------------------
 
 revoke execute on function public.audit_log_inalterable() from public, anon, authenticated;
+revoke execute on function public.journal_phrase_active() from public, anon, authenticated;
+revoke execute on function public.journal_membre() from public, anon, authenticated;
 
 do $$
 declare

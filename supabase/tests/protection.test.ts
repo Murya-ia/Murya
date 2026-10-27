@@ -90,6 +90,27 @@ describe("journal d'activité (spec §5.10)", () => {
     await expect(db.query(`truncate public.audit_log`)).rejects.toThrow('journal_inalterable');
   });
 
+  it('trace la désactivation d’une phrase et les changements de rôles', async () => {
+    const sentence = await createSentence(db, 'J0001', 'Phrase à désactiver');
+    await asUser(db, admin, () =>
+      db.query(`update public.sentences set active = false where id = $1`, [sentence]),
+    );
+    await asUser(db, admin, () =>
+      db.query(
+        `update public.team_members set roles = '{recruteur,verificateur}' where user_id = $1`,
+        [otherRecruiter],
+      ),
+    );
+    const entries = await as<{ action: string; cible: string; par: string }[]>(
+      admin,
+      `select public.journal(null, 2) as r`,
+    );
+    expect(entries).toEqual([
+      expect.objectContaining({ action: 'membre_modifie', cible: 'recruteur2', par: 'admin' }),
+      expect.objectContaining({ action: 'phrase_desactivee', cible: 'J0001', par: 'admin' }),
+    ]);
+  });
+
   it('se lit page par page par un admin seulement, avec des filtres', async () => {
     const page = await as<{ id: number; action: string; par: string }[]>(
       admin,
