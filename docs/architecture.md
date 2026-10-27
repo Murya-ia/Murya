@@ -116,26 +116,39 @@ Tous les textes de phrases sont normalisés en Unicode **NFC** (contrôlé par l
 
 ## Décisions prises
 
-| Date       | Décision                                                                                                                                                                   |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 27/10/2026 | Architecture et ordre des jalons validés.                                                                                                                                  |
-| 27/10/2026 | React + TypeScript pour les deux interfaces.                                                                                                                               |
-| 27/10/2026 | Dépôt GitHub **public** (aucun secret ni donnée personnelle dedans).                                                                                                       |
-| 27/10/2026 | Carte d'équipe disponible : R2 comme stockage principal.                                                                                                                   |
-| 27/10/2026 | Nom de domaine à acheter (Cloudflare Registrar conseillé). En attendant : adresses `*.pages.dev`.                                                                          |
-| 27/10/2026 | Par défaut (sauf avis contraire) : budget campagne 5 $/mois + Supabase Pro seulement si nécessaire ; comptes créés avec une adresse e-mail d'équipe partagée, 2FA activée. |
-
-| 27/10/2026 | Téléphone de test iPhone : iPhone 13 Pro. Lancement : le plus tôt possible. |
-| 27/10/2026 | Orthographe de référence : arrêté de 1999 (voir « Orthographe zarma » ci-dessous). |
+| Date       | Décision                                                                                                                                                                                           |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 27/10/2026 | Architecture et ordre des jalons validés.                                                                                                                                                          |
+| 27/10/2026 | React + TypeScript pour les deux interfaces.                                                                                                                                                       |
+| 27/10/2026 | Dépôt GitHub **public** (aucun secret ni donnée personnelle dedans).                                                                                                                               |
+| 27/10/2026 | Carte d'équipe disponible : R2 comme stockage principal.                                                                                                                                           |
+| 27/10/2026 | Nom de domaine à acheter (Cloudflare Registrar conseillé). En attendant : adresses `*.pages.dev`.                                                                                                  |
+| 27/10/2026 | Par défaut (sauf avis contraire) : budget campagne 5 $/mois + Supabase Pro seulement si nécessaire ; comptes créés avec une adresse e-mail d'équipe partagée, 2FA activée.                         |
+| 27/10/2026 | Téléphone de test iPhone : iPhone 13 Pro. Lancement : le plus tôt possible.                                                                                                                        |
+| 27/10/2026 | Orthographe de référence : arrêté de 1999 (voir « Orthographe zarma » ci-dessous).                                                                                                                 |
+| 27/10/2026 | Consentement complet (cases à cocher) à la première visite, puis **écran de rappel court avec bouton « Écouter »** chaque fois que la voix revient enregistrer (voir « Consentement » ci-dessous). |
 
 ### Questions encore ouvertes
 
-- Consentement « avant chaque enregistrement » : à préciser (à chaque retour de la voix ? avant chaque lot ?).
 - Logo : source vectorielle (sera déposée à la racine du dépôt) ; symbole SVG provisoire en attendant.
 - Téléphone Android ancien pour les tests.
 - Date de début de la voix principale.
 - Traduction zarma de l'interface et audios du consentement : pas encore faits.
 - CSV réel d'une vingtaine de phrases ; nombre de phrases déjà validées.
+
+## Consentement
+
+1. **Première visite** : consentement complet (spec §3.2) — texte versionné, bouton « Écouter »,
+   une case par point, « J'accepte » actif seulement quand tout est coché. Enregistré dans `consents`.
+2. **Chaque retour pour enregistrer** : écran de rappel court, avec bouton « Écouter »
+   (audio pré-enregistré par langue), qui rappelle ce à quoi la voix a consenti et comment se
+   retirer. Bouton « Je continue ». L'heure de confirmation est enregistrée.
+   - « Retour » = ouverture de l'app après plus d'une heure sans activité (réglage
+     `consent_reminder_hours`), pour ne pas réafficher l'écran après un simple rechargement.
+   - Le texte et l'audio du rappel font partie de la version du consentement
+     (`texts.<langue>.rappel`, `audio_keys.<langue>.rappel`) : modifier le rappel = nouvelle version.
+3. **Nouvelle version publiée** : au retour suivant, la voix voit le consentement complet de la
+   nouvelle version, et non le simple rappel.
 
 ## Orthographe zarma
 
