@@ -1,0 +1,58 @@
+# Déploiement : push sur main → staging ; tag v* (ex. v0.1.0) → production.
+# Inactif tant que la variable de dépôt DEPLOY_ENABLED ne vaut pas "true"
+# (à activer une fois les comptes créés, voir docs/comptes.md).
+#
+# Chaque environnement GitHub (staging, production) contient :
+#   secrets   : CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, SUPABASE_DB_URL
+#   variables : VITE_API_URL, VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY
+name: Déploiement
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: ${{ startsWith(github.ref, 'refs/tags/v') && 'production' || 'staging' }}
+    # Un seul déploiement à la fois par environnement, jamais annulé en cours de route.
+    concurrency:
+      group: deploy-${{ startsWith(github.ref, 'refs/tags/v') && 'production' || 'staging' }}
+      cancel-in-progress: false
+    env:
+      TARGET: ${{ startsWith(github.ref, 'refs/tags/v') && 'production' || 'staging' }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+
+      - name: Migrations de la base
+        run: npx supabase db push --db-url "${{ secrets.SUPABASE_DB_URL }}"
+
+      - name: API (Worker)
+        run: npx wrangler deploy --env "$TARGET"
+        working-directory: api
+
+      - name: Build des interfaces
+        run: npm run build -w @murya/voix -w @murya/equipe
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+
+      - name: Interfaces (Cloudflare Pages)
+        run: |
+          suffix=$([ "$TARGET" = production ] && echo "" || echo "-staging")
+          npx wrangler pages deploy apps/voix/dist --project-name "murya-voix$suffix" --branch main
+          npx wrangler pages deploy apps/equipe/dist --project-name "murya-equipe$suffix" --branch main

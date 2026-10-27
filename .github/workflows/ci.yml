@@ -1,0 +1,51 @@
+# Vérifications automatiques à chaque push et pull request.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verifications:
+    name: Format, types, tests, build, budget
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - name: Budget de poids de l'app de la voix
+        run: npm run budget
+
+  migrations-supabase:
+    # Les tests utilisent PGlite ; ici on applique aussi les migrations sur le vrai
+    # Postgres de Supabase (dans Docker) et on lance ses vérifications de sécurité.
+    name: Migrations sur le Postgres de Supabase
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Démarrer Postgres et appliquer les migrations
+        run: |
+          supabase db start
+          supabase db reset --local
+      - name: Vérifier le SQL
+        run: supabase db lint --local --fail-on error
+      - name: Conseils de sécurité de Supabase
+        run: supabase db advisors --local --type security --fail-on error
