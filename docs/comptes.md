@@ -28,62 +28,63 @@ et des données personnelles.
 
 ## 2. Cloudflare (interfaces, API, stockage des audios)
 
-### 2.1 Compte et R2
+### 2.1 Compte, R2 et connexion de Wrangler (fait le 27/10/2026)
 
-1. Créez le compte Cloudflare, puis ouvrez **R2** dans le menu. L'activation de R2 demande
-   d'enregistrer la carte d'équipe (rien n'est facturé sous 10 Go).
-2. Notez l'**Account ID** (affiché sur la page R2).
-3. Créez deux buckets : `murya-audio-staging` et `murya-audio`. Emplacement : _Automatic_.
-   Ne les rendez **jamais** publics.
-4. Pour **chaque** bucket, onglet _Settings_ > _CORS policy_, collez (en adaptant les adresses) :
-   ```json
-   [
-     {
-       "AllowedOrigins": ["http://localhost:5173", "https://murya-voix-staging.pages.dev"],
-       "AllowedMethods": ["PUT", "GET"],
-       "AllowedHeaders": ["Content-Type"],
-       "MaxAgeSeconds": 3600
-     }
-   ]
-   ```
-   Pour `murya-audio`, mettez seulement l'adresse de production de l'app de la voix.
-5. Sur `murya-audio-staging`, _Settings_ > _Object lifecycle rules_ : ajoutez une règle
-   « préfixe `preuve/` → supprimer après 7 jours » (fichiers de la page de preuve).
-6. _R2_ > _Manage API tokens_ > _Create API token_ : permission **Object Read & Write**,
-   limitée au bucket `murya-audio-staging`. Notez l'_Access Key ID_ et le _Secret Access Key_
-   (affichés une seule fois). Refaites-le pour `murya-audio` (production).
-
-### 2.2 Projets Pages (interfaces)
-
-Depuis un terminal à la racine du dépôt :
+1. Compte Cloudflare créé avec l'adresse d'équipe, R2 activé avec la carte d'équipe.
+2. `npx wrangler login` lancé depuis la racine du dépôt (clic sur « Allow »).
+3. Buckets, règles CORS et cycle de vie créés en ligne de commande (à refaire seulement si on
+   recrée un compte) :
 
 ```bash
-npx wrangler login
-npx wrangler pages project create murya-voix-staging --production-branch main
-npx wrangler pages project create murya-equipe-staging --production-branch main
-npx wrangler pages project create murya-voix --production-branch main
-npx wrangler pages project create murya-equipe --production-branch main
+npx wrangler r2 bucket create murya-audio-staging
+npx wrangler r2 bucket create murya-audio
+npx wrangler r2 bucket cors set murya-audio-staging --file infra/r2/cors-staging.json
+npx wrangler r2 bucket cors set murya-audio --file infra/r2/cors-production.json
+npx wrangler r2 bucket lifecycle add murya-audio-staging preuve-7-jours preuve/ --expire-days 7
 ```
 
-Si un nom est déjà pris sur `pages.dev`, Cloudflare affiche l'adresse réellement attribuée :
-reportez-la dans `api/wrangler.toml` (`ALLOWED_ORIGINS`) et dans la règle CORS de R2.
+Les buckets ne sont **jamais** rendus publics. Les adresses autorisées (CORS) sont dans
+`infra/r2/` : à modifier là, puis relancer la commande `cors set`.
 
-### 2.3 Secrets de l'API
+### 2.2 Interfaces et API (Workers)
+
+Cloudflare Pages fait désormais partie des Workers. Les deux interfaces sont donc des Workers
+« fichiers statiques » (gratuits et illimités), configurés dans `apps/voix/wrangler.jsonc` et
+`apps/equipe/wrangler.jsonc`. Le premier `wrangler deploy` crée le Worker. Adresses :
+
+| Élément        | Staging                                            | Production                                 |
+| -------------- | -------------------------------------------------- | ------------------------------------------ |
+| App de la voix | https://murya-voix-staging.murya-api.workers.dev   | https://murya-voix.murya-api.workers.dev   |
+| Espace équipe  | https://murya-equipe-staging.murya-api.workers.dev | https://murya-equipe.murya-api.workers.dev |
+| API            | https://murya-api-staging.murya-api.workers.dev    | https://murya-api.murya-api.workers.dev    |
+
+### 2.3 Clés R2 et secrets de l'API (à faire par l'équipe)
+
+1. Tableau de bord Cloudflare > _R2_ > _Manage API tokens_ > _Create Account API token_ :
+   - nom : `api-staging` ; permission **Object Read & Write** ;
+   - _Specify bucket(s)_ : seulement `murya-audio-staging` ;
+   - à la création, Cloudflare affiche **une seule fois** l'_Access Key ID_ et le
+     _Secret Access Key_ : rangez-les dans Bitwarden.
+2. Dans un terminal, depuis le dossier `api` (Wrangler demande la valeur ; collez-la, elle
+   n'apparaît pas à l'écran — ne la collez **jamais** dans un chat) :
 
 ```bash
-cd api
 npx wrangler secret put R2_ACCOUNT_ID --env staging
 npx wrangler secret put R2_ACCESS_KEY_ID --env staging
 npx wrangler secret put R2_SECRET_ACCESS_KEY --env staging
-npx wrangler secret put PROOF_CODE --env staging      # code de la page de preuve, staging seulement
+npx wrangler secret put PROOF_CODE --env staging
 ```
 
-Puis les trois premiers avec `--env production` (jamais `PROOF_CODE` en production).
+`R2_ACCOUNT_ID` est l'identifiant du compte (page d'accueil de R2, « Account ID »).
+`PROOF_CODE` est un code de votre choix, à donner à l'équipe pour la page de preuve.
+
+3. Plus tard, pour la production : un jeton `api-production` limité à `murya-audio`, et les trois
+   premiers secrets avec `--env production` (jamais `PROOF_CODE` en production).
 
 ### 2.4 Jeton pour GitHub
 
-_My Profile_ > _API Tokens_ > _Create Token_ > modèle **Edit Cloudflare Workers**, puis ajoutez
-la permission _Account_ > _Cloudflare Pages_ > _Edit_. Notez le jeton.
+_My Profile_ > _API Tokens_ > _Create Token_ > modèle **Edit Cloudflare Workers**. Notez le jeton
+(il servira à l'étape 5).
 
 ## 3. Supabase (base de données, connexion de l'équipe)
 
@@ -144,6 +145,6 @@ dépôt `DEPLOY_ENABLED` = `true`.
 ## 6. Plus tard
 
 - **Nom de domaine** (Cloudflare Registrar, ~10–15 $/an) : on remplacera alors les adresses
-  `pages.dev` et `workers.dev`, et on resserrera les règles de sécurité (`_headers`, CORS).
+  `workers.dev`, et on resserrera les règles de sécurité (`_headers`, CORS).
 - **Sentry** (J2), **Resend** pour les e-mails (après achat du domaine),
   **Backblaze B2** pour les sauvegardes (J6a).

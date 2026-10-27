@@ -1,0 +1,19 @@
+{
+  "rules": [
+    {
+      "id": "apps-murya-staging",
+      "allowed": {
+        "origins": [
+          "http://localhost:5173",
+          "http://localhost:5174",
+          "https://murya-voix-staging.murya-api.workers.dev",
+          "https://murya-equipe-staging.murya-api.workers.dev"
+        ],
+        "methods": ["GET", "PUT"],
+        "headers": ["Content-Type"]
+      },
+      "exposeHeaders": ["ETag"],
+      "maxAgeSeconds": 3600
+    }
+  ]
+}

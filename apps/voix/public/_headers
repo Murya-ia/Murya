@@ -1,4 +1,4 @@
-# En-têtes de sécurité appliqués par Cloudflare Pages à toutes les pages.
+# En-têtes de sécurité appliqués par Cloudflare (Worker « fichiers statiques ») à toutes les pages.
 # connect-src autorise https: pour l'instant (API et R2 sur des domaines *.workers.dev /
 # *.r2.cloudflarestorage.com) ; à restreindre quand le nom de domaine sera acheté.
 /*

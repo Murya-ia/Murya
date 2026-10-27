@@ -1,0 +1,14 @@
+// Hébergement de l'espace équipe : Worker « fichiers statiques » (ex-Cloudflare Pages).
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "murya-equipe-local",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application",
+  },
+  "env": {
+    "staging": { "name": "murya-equipe-staging" },
+    "production": { "name": "murya-equipe" },
+  },
+}

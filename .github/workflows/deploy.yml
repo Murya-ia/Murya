@@ -51,8 +51,12 @@ jobs:
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
-      - name: Interfaces (Cloudflare Pages)
-        run: |
-          suffix=$([ "$TARGET" = production ] && echo "" || echo "-staging")
-          npx wrangler pages deploy apps/voix/dist --project-name "murya-voix$suffix" --branch main
-          npx wrangler pages deploy apps/equipe/dist --project-name "murya-equipe$suffix" --branch main
+      # Cloudflare Pages fait désormais partie des Workers : chaque interface est un Worker
+      # « fichiers statiques » (voir apps/*/wrangler.jsonc).
+      - name: Interface de la voix
+        run: npx wrangler deploy --env "$TARGET"
+        working-directory: apps/voix
+
+      - name: Espace équipe
+        run: npx wrangler deploy --env "$TARGET"
+        working-directory: apps/equipe

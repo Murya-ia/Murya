@@ -1,0 +1,17 @@
+// Hébergement de l'app de la voix : Worker « fichiers statiques » (ex-Cloudflare Pages).
+// Aucun code ne tourne côté serveur ici : Cloudflare sert le dossier dist/ depuis son CDN.
+// Les requêtes de fichiers statiques sont gratuites et illimitées.
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "murya-voix-local",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    // Application d'une seule page : toute adresse inconnue renvoie index.html.
+    "not_found_handling": "single-page-application",
+  },
+  "env": {
+    "staging": { "name": "murya-voix-staging" },
+    "production": { "name": "murya-voix" },
+  },
+}

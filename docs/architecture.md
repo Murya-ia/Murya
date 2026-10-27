@@ -7,12 +7,12 @@
 
 ```
 TÉLÉPHONE DE LA VOIX (PWA)
-  ├─ interface (cache hors ligne) ← Cloudflare Pages (CDN, fichiers statiques)
+  ├─ interface (cache hors ligne) ← Cloudflare Workers « fichiers statiques » (CDN)
   ├─ petites requêtes JSON + jeton → API (Cloudflare Worker) ──RPC──→ Supabase Postgres
   └─ fichier WAV, envoi direct    → R2 privé (URL signée 10 min, ne passe pas par l'API)
 
 PC DE L'ÉQUIPE (app équipe)
-  ├─ interface                    ← Cloudflare Pages
+  ├─ interface                    ← Cloudflare Workers « fichiers statiques »
   ├─ données                      → Supabase directement (connexion e-mail + RLS)
   └─ écoute des audios            ← R2 (URL de lecture signée par l'API, 15 min)
 
@@ -102,17 +102,17 @@ Tous les textes de phrases sont normalisés en Unicode **NFC** (contrôlé par l
 
 ## Coûts (paliers vérifiés le 27/10/2026)
 
-| Service            | Gratuit                                                                       | Quand payer                                |
-| ------------------ | ----------------------------------------------------------------------------- | ------------------------------------------ |
-| Cloudflare Pages   | illimité pour les fichiers statiques                                          | jamais                                     |
-| Cloudflare Workers | 100 000 req/jour                                                              | campagne : 5 $/mois (10 M req)             |
-| R2                 | 10 Go-mois, 1 M écritures, 10 M lectures, sortie gratuite                     | 0,015 $/Go/mois au-delà                    |
-| Supabase           | 500 Mo, 2 projets, pause après 1 semaine d'inactivité, pas de sauvegarde auto | Pro 25 $/mois si le test de charge l'exige |
-| GitHub Actions     | illimité (dépôt public)                                                       | jamais                                     |
-| Sentry             | 5 000 erreurs, 1 utilisateur                                                  | inutile                                    |
-| Resend             | 3 000 e-mails/mois, 100/jour                                                  | inutile                                    |
-| Backblaze B2       | 10 Go                                                                         | ~0,006 $/Go/mois au-delà                   |
-| Hugging Face       | 100 Go privés                                                                 | inutile                                    |
+| Service               | Gratuit                                                                       | Quand payer                                |
+| --------------------- | ----------------------------------------------------------------------------- | ------------------------------------------ |
+| Cloudflare (statique) | illimité pour les fichiers statiques                                          | jamais                                     |
+| Cloudflare Workers    | 100 000 req/jour                                                              | campagne : 5 $/mois (10 M req)             |
+| R2                    | 10 Go-mois, 1 M écritures, 10 M lectures, sortie gratuite                     | 0,015 $/Go/mois au-delà                    |
+| Supabase              | 500 Mo, 2 projets, pause après 1 semaine d'inactivité, pas de sauvegarde auto | Pro 25 $/mois si le test de charge l'exige |
+| GitHub Actions        | illimité (dépôt public)                                                       | jamais                                     |
+| Sentry                | 5 000 erreurs, 1 utilisateur                                                  | inutile                                    |
+| Resend                | 3 000 e-mails/mois, 100/jour                                                  | inutile                                    |
+| Backblaze B2          | 10 Go                                                                         | ~0,006 $/Go/mois au-delà                   |
+| Hugging Face          | 100 Go privés                                                                 | inutile                                    |
 
 ## Décisions prises
 
@@ -122,10 +122,11 @@ Tous les textes de phrases sont normalisés en Unicode **NFC** (contrôlé par l
 | 27/10/2026 | React + TypeScript pour les deux interfaces.                                                                                                                                                       |
 | 27/10/2026 | Dépôt GitHub **public** (aucun secret ni donnée personnelle dedans).                                                                                                                               |
 | 27/10/2026 | Carte d'équipe disponible : R2 comme stockage principal.                                                                                                                                           |
-| 27/10/2026 | Nom de domaine à acheter (Cloudflare Registrar conseillé). En attendant : adresses `*.pages.dev`.                                                                                                  |
+| 27/10/2026 | Nom de domaine à acheter (Cloudflare Registrar conseillé). En attendant : adresses `*.workers.dev`.                                                                                                |
 | 27/10/2026 | Par défaut (sauf avis contraire) : budget campagne 5 $/mois + Supabase Pro seulement si nécessaire ; comptes créés avec une adresse e-mail d'équipe partagée, 2FA activée.                         |
 | 27/10/2026 | Téléphone de test iPhone : iPhone 13 Pro. Lancement : le plus tôt possible.                                                                                                                        |
 | 27/10/2026 | Orthographe de référence : arrêté de 1999 (voir « Orthographe zarma » ci-dessous).                                                                                                                 |
+| 27/10/2026 | Cloudflare Pages ayant été fusionné dans Workers, les interfaces sont des Workers « fichiers statiques » (mêmes avantages : CDN, gratuit et illimité). Adresses en `*.murya-api.workers.dev`.      |
 | 27/10/2026 | Consentement complet (cases à cocher) à la première visite, puis **écran de rappel court avec bouton « Écouter »** chaque fois que la voix revient enregistrer (voir « Consentement » ci-dessous). |
 
 ### Questions encore ouvertes

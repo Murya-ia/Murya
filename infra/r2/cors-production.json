@@ -1,0 +1,17 @@
+{
+  "rules": [
+    {
+      "id": "apps-murya-production",
+      "allowed": {
+        "origins": [
+          "https://murya-voix.murya-api.workers.dev",
+          "https://murya-equipe.murya-api.workers.dev"
+        ],
+        "methods": ["GET", "PUT"],
+        "headers": ["Content-Type"]
+      },
+      "exposeHeaders": ["ETag"],
+      "maxAgeSeconds": 3600
+    }
+  ]
+}

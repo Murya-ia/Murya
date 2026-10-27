@@ -1,4 +1,4 @@
-# En-têtes de sécurité appliqués par Cloudflare Pages.
+# En-têtes de sécurité appliqués par Cloudflare (Worker « fichiers statiques »).
 # connect-src : Supabase (*.supabase.co) et l'API ; à restreindre quand le domaine sera acheté.
 /*
   Referrer-Policy: no-referrer
