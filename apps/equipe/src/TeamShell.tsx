@@ -66,6 +66,7 @@ export function TeamShell({ client, session }: { client: SupabaseClient; session
         <main className="contenu">
           <Page />
         </main>
+        <Footer />
       </div>
     </TeamProvider>
   );
@@ -119,20 +120,40 @@ function TopBar({
 }) {
   return (
     <header className="barre">
-      <Logo size={28} color="var(--blanc)" />
+      <a
+        className="barre-logo"
+        href="/"
+        aria-label="Murya — accueil de l'espace équipe"
+        onClick={(e) => {
+          e.preventDefault();
+          navigate('/');
+        }}
+      >
+        <Logo size={28} color="var(--blanc)" />
+      </a>
       {children}
-      <span className="barre-droite">
-        <span
-          className="version"
-          title="Version de l'espace équipe (rechargez la page si elle est ancienne)"
-        >
-          v{__BUILD_VERSION__}
-        </span>
-        {email}
+      <div className="barre-droite">
+        {email && (
+          <span className="utilisateur" title={email}>
+            {email}
+          </span>
+        )}
         <button className="secondaire petit" onClick={onSignOut}>
           Se déconnecter
         </button>
-      </span>
+      </div>
     </header>
+  );
+}
+
+/** Version en bas de page : permet de vérifier qu'on voit bien la dernière mise en ligne. */
+function Footer() {
+  return (
+    <footer className="pied">
+      Murya · espace équipe ·{' '}
+      <span title="Si cette version est ancienne, rechargez la page (Ctrl + F5).">
+        version {__BUILD_VERSION__}
+      </span>
+    </footer>
   );
 }

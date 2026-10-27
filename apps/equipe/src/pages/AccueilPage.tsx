@@ -63,7 +63,7 @@ export function AccueilPage() {
   return (
     <>
       <h1>Bonjour {member.display_name}</h1>
-      <p>
+      <p className="roles">
         Vos rôles :{' '}
         {member.roles.length === 0
           ? 'aucun pour le moment'
@@ -76,9 +76,12 @@ export function AccueilPage() {
       <div className="cartes-compteurs">
         {cards.map((card) => (
           <button key={card.label} className="compteur" onClick={() => navigate(card.path)}>
-            <strong>{card.n ?? '…'}</strong>
+            <strong>{card.n?.toLocaleString('fr-FR') ?? '…'}</strong>
             <span>{card.label}</span>
             {card.note && <small className="aide">{card.note}</small>}
+            <span className="compteur-fleche" aria-hidden="true">
+              →
+            </span>
           </button>
         ))}
       </div>
@@ -90,5 +93,5 @@ export function AccueilPage() {
 /** Les audios de ses propres recrues ne sont jamais proposés : on le dit, sans les compter. */
 export function ownRecruits(n: number | undefined): string | null {
   if (!n) return null;
-  return `+ ${n} de vos recrues : un autre membre doit s’en charger.`;
+  return `+ ${n} de vos recrues, pour un autre membre.`;
 }

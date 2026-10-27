@@ -166,19 +166,20 @@ export function niceTicks(max: number, target = 4): number[] {
   return ticks;
 }
 
-/** Durée lisible à partir d'un nombre d'heures : « 0,2 min », « 42 min », « 3,5 h ». */
+/** Durée lisible à partir d'un nombre d'heures : « 0,2 min », « 42 min », « 3,5 h »
+ * (espace insécable avant l'unité : elle ne passe jamais seule à la ligne). */
 export function formatHours(hours: number): string {
   const minutes = hours * 60;
   if (minutes > 0 && minutes < 10) {
-    return `${minutes.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} min`;
+    return `${minutes.toLocaleString('fr-FR', { maximumFractionDigits: 1 })}\u00a0min`;
   }
-  if (hours < 1) return `${Math.round(minutes)} min`;
-  return `${hours.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} h`;
+  if (hours < 1) return `${Math.round(minutes)}\u00a0min`;
+  return `${hours.toLocaleString('fr-FR', { maximumFractionDigits: 1 })}\u00a0h`;
 }
 
 export function formatPercent(value: number | null): string {
   if (value === null) return '—';
-  return `${(value * 100).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} %`;
+  return `${(value * 100).toLocaleString('fr-FR', { maximumFractionDigits: 1 })}\u00a0%`;
 }
 
 /** « 26 oct. » pour le lundi d'une semaine. */

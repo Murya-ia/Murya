@@ -81,11 +81,11 @@ describe('mise en forme', () => {
   });
 
   it('heures, pourcentages et ancienneté', () => {
-    expect(formatHours(0.25)).toBe('15 min');
-    expect(formatHours(0.003)).toBe('0,2 min');
-    expect(formatHours(0)).toBe('0 min');
-    expect(formatHours(3.46)).toBe('3,5 h');
-    expect(formatPercent(0.125)).toBe('12,5 %');
+    expect(formatHours(0.25)).toBe('15\u00a0min');
+    expect(formatHours(0.003)).toBe('0,2\u00a0min');
+    expect(formatHours(0)).toBe('0\u00a0min');
+    expect(formatHours(3.46)).toBe('3,5\u00a0h');
+    expect(formatPercent(0.125)).toBe('12,5\u00a0%');
     expect(formatPercent(null)).toBe('—');
     const now = new Date('2026-10-27T12:00:00Z');
     expect(since('2026-10-27T11:57:00Z', now)).toBe('il y a 3 min');

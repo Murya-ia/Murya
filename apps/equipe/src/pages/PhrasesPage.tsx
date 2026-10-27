@@ -400,30 +400,32 @@ function OrthographyDecisions() {
         <p className="aide">Aucun mot décidé pour le moment.</p>
       )}
       {decisions && decisions.length > 0 && (
-        <table className="tableau">
-          <thead>
-            <tr>
-              <th>Mot</th>
-              <th>Orthographe retenue</th>
-              <th>Variantes refusées</th>
-              <th>Note</th>
-              <th>Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {decisions.map((d) => (
-              <tr key={d.id}>
-                <td lang="dje">{d.word}</td>
-                <td lang="dje">
-                  <strong>{d.chosen_spelling}</strong>
-                </td>
-                <td lang="dje">{d.rejected_variants.join(', ')}</td>
-                <td>{d.note}</td>
-                <td className="aide">{new Date(d.decided_at).toLocaleDateString('fr-FR')}</td>
+        <div className="tableau-defilant">
+          <table className="tableau">
+            <thead>
+              <tr>
+                <th>Mot</th>
+                <th>Orthographe retenue</th>
+                <th>Variantes refusées</th>
+                <th>Note</th>
+                <th>Date</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {decisions.map((d) => (
+                <tr key={d.id}>
+                  <td lang="dje">{d.word}</td>
+                  <td lang="dje">
+                    <strong>{d.chosen_spelling}</strong>
+                  </td>
+                  <td lang="dje">{d.rejected_variants.join(', ')}</td>
+                  <td>{d.note}</td>
+                  <td className="aide">{new Date(d.decided_at).toLocaleDateString('fr-FR')}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </section>
   );

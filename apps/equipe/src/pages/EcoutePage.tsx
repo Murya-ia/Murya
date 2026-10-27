@@ -383,13 +383,21 @@ function CommentField({ value, onChange }: { value: string; onChange: (v: string
   );
 }
 
+/** Nombre à la française, avec N décimales : « 3,1 ». */
+function fr(n: number, digits: number): string {
+  return n.toLocaleString('fr-FR', {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  });
+}
+
 /** Indicateurs automatiques : mesures du navigateur, puis vérifications du serveur. */
 function Indicators({ item }: { item: Item }) {
   const m = item.mesures_navigateur ?? {};
   const seconds = (item.duree_ms ?? 0) / 1000;
   const wordsPerSecond = seconds > 0 ? item.phrase.mots / seconds : null;
   const facts: [string, string, boolean][] = [
-    ['Durée', `${seconds.toFixed(1)} s`, seconds < 1 || seconds > 20],
+    ['Durée', `${fr(seconds, 1)} s`, seconds < 1 || seconds > 20],
     ['Voix', m.voix_dbfs !== undefined ? `${m.voix_dbfs} dB` : '—', false],
     [
       'Écart avec le bruit',
@@ -400,7 +408,7 @@ function Indicators({ item }: { item: Item }) {
     ],
     [
       'Saturation',
-      m.saturation !== undefined ? `${(m.saturation * 100).toFixed(2)} %` : '—',
+      m.saturation !== undefined ? `${fr(m.saturation * 100, 2)} %` : '—',
       (m.saturation ?? 0) > 0.001,
     ],
     [
@@ -408,7 +416,7 @@ function Indicators({ item }: { item: Item }) {
       `${m.silence_avant_ms ?? '—'} / ${m.silence_apres_ms ?? '—'} ms`,
       false,
     ],
-    ['Mots par seconde (approx.)', wordsPerSecond ? wordsPerSecond.toFixed(1) : '—', false],
+    ['Mots par seconde (approx.)', wordsPerSecond ? fr(wordsPerSecond, 1) : '—', false],
   ];
   return (
     <div className="indicateurs">

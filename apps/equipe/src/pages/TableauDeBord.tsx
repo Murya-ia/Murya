@@ -15,6 +15,9 @@ import {
 import { navigate } from '../lib/router';
 import { errorText, LANGUAGE, useTeam } from '../lib/team';
 
+/** « 9 480 » plutôt que « 9480 ». */
+const nb = (n: number) => n.toLocaleString('fr-FR');
+
 const STATUSES: [keyof Dashboard['voix_par_statut'], string][] = [
   ['invitee', 'Invitées'],
   ['inscrite', 'Inscrites'],
@@ -94,84 +97,60 @@ function Content({
   const double = data.double_ecoute;
 
   return (
-    <>
+    <div className="grille-tdb">
       <Alerts data={data} />
 
-      <div className="tuiles">
+      <div className="tuiles pleine">
         <Tile value={formatHours(data.heures.enregistrees)} label="enregistrées (voix variées)" />
         <Tile value={formatHours(data.heures.validees)} label="validées" />
         <Tile
           value={formatPercent(data.taux_rejet)}
           label="taux de rejet"
-          note={`${data.audios.rejetes} rejeté(s) sur ${data.audios.valides + data.audios.rejetes} audio(s) noté(s)`}
+          note={`${nb(data.audios.rejetes)} rejeté(s) sur ${nb(data.audios.valides + data.audios.rejetes)} audio(s) noté(s)`}
         />
         <Tile
-          value={String(data.audios.recus)}
+          value={nb(data.audios.recus)}
           label="audio(s) reçu(s)"
-          note={`${data.audios.a_verifier} à vérifier · ${data.audios.doutes} en doute`}
+          note={`${nb(data.audios.a_verifier)} à vérifier · ${nb(data.audios.doutes)} en doute`}
         />
       </div>
 
-      <section className="carte">
+      <section className="carte pleine">
         <h3>Heures par semaine</h3>
         <WeeklyChart weeks={fillWeeks(data.par_semaine, now)} />
       </section>
 
-      <section className="carte">
-        <h3>Voix par statut</h3>
-        <div className="chiffres">
-          {STATUSES.map(([key, label]) => (
-            <div key={key}>
-              <strong>{data.voix_par_statut[key]}</strong>
-              <span>{label}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="carte">
+      <section className="carte pleine">
         <h3>Quotas de diversité</h3>
         {data.repartition.total === 0 ? (
           <p className="aide">Aucune fiche remplie pour le moment.</p>
         ) : (
-          <p className="aide">Sur {data.repartition.total} voix ayant rempli leur fiche.</p>
+          <p className="aide">Sur {nb(data.repartition.total)} voix ayant rempli leur fiche.</p>
         )}
-        <div className="tableau-defilant">
-          <table className="tableau quotas">
-            <thead>
-              <tr>
-                <th>Critère</th>
-                <th>Actuel</th>
-                <th>Objectif</th>
-                <th>État</th>
-              </tr>
-            </thead>
-            <tbody>
-              {quotas.map((q) => (
-                <tr key={q.key}>
-                  <td>{q.label}</td>
-                  <td>
-                    <span className="jauge" aria-hidden="true">
-                      <span style={{ width: `${Math.min(100, (q.actual ?? 0) * 100)}%` }} />
-                      <i style={{ left: `${q.target * 100}%` }} />
-                    </span>
-                    {formatPercent(q.actual)}
-                  </td>
-                  <td>au moins {formatPercent(q.target)}</td>
-                  <td>
-                    {q.reached === null ? (
-                      <span className="etape gris">— Pas de données</span>
-                    ) : q.reached ? (
-                      <span className="etape succes">✓ Atteint</span>
-                    ) : (
-                      <span className="etape alerte">⚠ En dessous</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ul className="quotas">
+          {quotas.map((q) => (
+            <li key={q.key}>
+              <div className="quota-tete">
+                <span>{q.label}</span>
+                {q.reached === null ? (
+                  <span className="etape gris">— Pas de données</span>
+                ) : q.reached ? (
+                  <span className="etape succes">✓ Atteint</span>
+                ) : (
+                  <span className="etape alerte">⚠ En dessous</span>
+                )}
+              </div>
+              <span className="jauge" aria-hidden="true">
+                <span style={{ width: `${Math.min(100, (q.actual ?? 0) * 100)}%` }} />
+                <i style={{ left: `${q.target * 100}%` }} />
+              </span>
+              <div className="quota-chiffres">
+                <strong>{formatPercent(q.actual)}</strong>
+                <span className="aide">objectif : au moins {formatPercent(q.target)}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
         <div className="repartitions">
           <Breakdown title="Sexe" values={data.repartition.sexe} total={data.repartition.total} />
           <Breakdown title="Âge" values={data.repartition.age} total={data.repartition.total} />
@@ -189,8 +168,20 @@ function Content({
       </section>
 
       <section className="carte">
+        <h3>Voix par statut</h3>
+        <div className="chiffres">
+          {STATUSES.map(([key, label]) => (
+            <div key={key}>
+              <strong>{nb(data.voix_par_statut[key])}</strong>
+              <span>{label}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="carte">
         <h3>Phrases et lectures validées</h3>
-        <p className="aide">Sur {reads.total} phrase(s) active(s), hors phrases de test.</p>
+        <p className="aide">Sur {nb(reads.total)} phrase(s) active(s), hors phrases de test.</p>
         <div className="chiffres">
           {(
             [
@@ -201,7 +192,7 @@ function Content({
             ] as const
           ).map(([n, label]) => (
             <div key={label}>
-              <strong>{n}</strong>
+              <strong>{nb(n)}</strong>
               <span>
                 {label} ({formatPercent(reads.total ? n / reads.total : null)})
               </span>
@@ -216,11 +207,16 @@ function Content({
           <p className="aide">Aucune voix principale désignée pour le moment (jalon J5).</p>
         ) : (
           <>
-            <p>
-              Voix n° {principal.numero} : <strong>{principal.validees}</strong> phrase(s)
-              validée(s) sur {principal.total}.
-            </p>
+            <div className="quota-chiffres">
+              <strong>
+                {formatPercent(principal.total ? principal.validees / principal.total : null)}
+              </strong>
+              <span className="aide">
+                {nb(principal.validees)} phrase(s) validée(s) sur {nb(principal.total)}
+              </span>
+            </div>
             <progress max={principal.total || 1} value={principal.validees} />
+            <p className="aide">Voix n° {principal.numero}</p>
           </>
         )}
       </section>
@@ -245,10 +241,10 @@ function Content({
                 {data.par_recruteur.map((r) => (
                   <tr key={r.recruteur}>
                     <td>{r.recruteur}</td>
-                    <td>{r.voix}</td>
-                    <td>{r.actives}</td>
-                    <td>{r.terminees}</td>
-                    <td>{r.audios}</td>
+                    <td>{nb(r.voix)}</td>
+                    <td>{nb(r.actives)}</td>
+                    <td>{nb(r.terminees)}</td>
+                    <td>{nb(r.audios)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -273,11 +269,11 @@ function Content({
           </p>
           <div className="chiffres">
             <div>
-              <strong>{double.a_faire}</strong>
+              <strong>{nb(double.a_faire)}</strong>
               <span>à réécouter</span>
             </div>
             <div>
-              <strong>{double.faites}</strong>
+              <strong>{nb(double.faites)}</strong>
               <span>réécouté(s)</span>
             </div>
             <div>
@@ -302,8 +298,8 @@ function Content({
                   {double.par_verificateur.map((v) => (
                     <tr key={v.verificateur}>
                       <td>{v.verificateur}</td>
-                      <td>{v.faites}</td>
-                      <td>{v.desaccords}</td>
+                      <td>{nb(v.faites)}</td>
+                      <td>{nb(v.desaccords)}</td>
                       <td>{formatPercent(v.faites ? v.desaccords / v.faites : null)}</td>
                     </tr>
                   ))}
@@ -319,15 +315,15 @@ function Content({
           <h3>Vérifications automatiques (worker)</h3>
           <div className="chiffres">
             <div>
-              <strong>{data.taches.en_attente}</strong>
+              <strong>{nb(data.taches.en_attente)}</strong>
               <span>tâche(s) en attente</span>
             </div>
             <div>
-              <strong>{data.taches.en_echec}</strong>
+              <strong>{nb(data.taches.en_echec)}</strong>
               <span>en échec</span>
             </div>
             <div>
-              <strong>{data.audios.suspects}</strong>
+              <strong>{nb(data.audios.suspects)}</strong>
               <span>audio(s) suspect(s)</span>
             </div>
           </div>
@@ -339,7 +335,7 @@ function Content({
           </p>
         </section>
       )}
-    </>
+    </div>
   );
 }
 
@@ -347,7 +343,7 @@ function Alerts({ data }: { data: Dashboard }) {
   const { voix_trop_de_rejets: rejections, audios_en_attente: waiting } = data.alertes;
   if (rejections.length === 0 && waiting.nombre === 0) return null;
   return (
-    <div className="message alerte alertes" role="status">
+    <div className="message alerte alertes pleine" role="status">
       {rejections.map((v) => (
         <p key={v.numero}>
           ⚠ Voix n° {v.numero} : {v.rejets} rejets sur ses {v.sur} derniers audios notés.

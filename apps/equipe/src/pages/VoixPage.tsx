@@ -102,7 +102,7 @@ export function VoixPage() {
           <p className="aide">Aucune invitation pour le moment.</p>
         ) : (
           <div className="tableau-defilant">
-            <table className="tableau">
+            <table className="tableau empile">
               <thead>
                 <tr>
                   <th>Personne</th>
@@ -127,21 +127,25 @@ export function VoixPage() {
                   const mine = invite.recruiter_id === member.user_id || has('admin');
                   return (
                     <tr key={invite.id}>
-                      <td>{invite.label}</td>
-                      <td>
+                      <td className="titre-ligne-tableau">{invite.label}</td>
+                      <td data-label="Voix">
                         {speaker?.number ?? '—'}
                         {speaker?.assisted_reading && (
                           <span className="pastille-discrete">oral</span>
                         )}
                       </td>
-                      <td>
+                      <td data-label="Étape">
                         <span className={`etape ${stage.className}`}>{stage.label}</span>
                       </td>
-                      <td>
+                      <td data-label="Avancement">
                         {p && p.total > 0 ? `${p.enregistrees + p.sautees} / ${p.total}` : '—'}
                       </td>
-                      {has('admin') && <td>{names.get(invite.recruiter_id) ?? '—'}</td>}
-                      <td className="aide">{linkState}</td>
+                      {has('admin') && (
+                        <td data-label="Recruteur">{names.get(invite.recruiter_id) ?? '—'}</td>
+                      )}
+                      <td data-label="Lien" className="aide">
+                        {linkState}
+                      </td>
                       <td className="actions">
                         {mine && speaker?.status === 'test_en_attente' && (
                           <button

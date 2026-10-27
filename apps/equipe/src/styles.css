@@ -1,6 +1,142 @@
+/* Espace équipe. Couleurs de base dans packages/commun/src/theme.css.
+   Pensé pour l'ordinateur ET le téléphone : on vérifie à 375 px et à 1440 px de large. */
+
+:root {
+  --trait: #e7e1cc; /* bordure discrète des cartes */
+  --ombre: 0 1px 2px rgba(15, 61, 46, 0.05), 0 8px 24px -16px rgba(15, 61, 46, 0.25);
+  --vert-pale: #e3f0ea;
+  --ambre-pale: #fff4dc;
+  --rouge-pale: #fbe9e7;
+  --marge: clamp(16px, 3vw, 32px);
+  --largeur: 1240px; /* largeur maximale du contenu */
+}
+
 body {
   font-size: 16px;
 }
+
+h1 {
+  font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.1rem);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin: 0 0 8px;
+}
+
+h2 {
+  font-size: clamp(1.2rem, 1.1rem + 0.4vw, 1.4rem);
+  margin: 0 0 12px;
+}
+
+h3 {
+  font-size: 1.05rem;
+  margin: 0 0 12px;
+}
+
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.aide,
+.gris {
+  color: var(--gris);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* ------------------------------------------------------------------ Boutons */
+
+.mise-en-page button,
+.centre-page button {
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 12px;
+  transition:
+    filter 0.15s,
+    background-color 0.15s,
+    transform 0.15s;
+}
+
+.mise-en-page button:not(:disabled):hover,
+.centre-page button:not(:disabled):hover {
+  filter: brightness(1.15);
+}
+
+.mise-en-page button.secondaire:not(:disabled):hover {
+  filter: none;
+  background: var(--vert-pale);
+}
+
+.mise-en-page button.petit {
+  min-height: 36px;
+  padding: 0 14px;
+  font-size: 0.9rem;
+}
+
+button.danger {
+  background: var(--erreur);
+}
+
+.danger-texte {
+  color: var(--erreur) !important;
+  border-color: var(--erreur) !important;
+}
+
+.mise-en-page button.lien {
+  background: none;
+  color: var(--vert);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 0 8px;
+  min-height: 36px;
+}
+
+.mise-en-page button.lien:not(:disabled):hover {
+  filter: none;
+  background: none;
+  color: var(--vert-clair);
+}
+
+.boutons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+a.bouton {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 12px;
+  background: var(--vert);
+  color: var(--blanc);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+a.bouton:hover {
+  filter: brightness(1.15);
+}
+
+kbd {
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 4px;
+  border: 1px solid currentColor;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+/* Sur un écran tactile, les raccourcis clavier ne servent à rien. */
+@media (hover: none) {
+  kbd {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------------ Connexion */
 
 .centre-page {
   min-height: 100vh;
@@ -15,13 +151,6 @@ body {
   text-align: center;
 }
 
-.carte {
-  background: var(--blanc);
-  border-radius: var(--rayon);
-  padding: 24px;
-  width: 100%;
-}
-
 .formulaire {
   display: flex;
   flex-direction: column;
@@ -29,156 +158,47 @@ body {
   text-align: left;
 }
 
-.aide,
-.gris {
-  color: var(--gris);
-  font-size: 0.9rem;
-  margin: 0;
-}
-
-.message {
-  margin: 0;
-  padding: 12px 16px;
-  border-radius: 12px;
-  font-weight: 600;
-  text-align: left;
-}
-
-.message.erreur {
-  background: #fbe9e7;
-  color: var(--erreur);
-}
-
-.message.alerte {
-  background: #fff4dc;
-  color: var(--alerte);
-}
+/* ------------------------------------------------------------------ Cadre des pages */
 
 .mise-en-page {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .barre {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   background: var(--vert);
   color: var(--blanc);
-  padding: 12px 24px;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas: 'logo nav droite';
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
+  gap: 8px 24px;
+  /* Sur grand écran, le contenu de la barre s'aligne sur la colonne de la page (1240 px). */
+  padding: 10px max(var(--marge), calc((100% - var(--largeur)) / 2 + var(--marge)));
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
 }
 
-.barre-droite {
+.barre-logo {
+  grid-area: logo;
   display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 0.9rem;
-}
-
-button.petit {
-  min-height: 36px;
-  padding: 0 14px;
-  font-size: 0.9rem;
-}
-
-.barre button.secondaire {
-  background: transparent;
-  color: var(--blanc);
-  border-color: var(--blanc);
-}
-
-.contenu {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 24px 16px;
-}
-
-.pastille {
-  display: inline-block;
-  background: var(--vert);
-  color: var(--blanc);
-  border-radius: 999px;
-  padding: 2px 12px;
-  margin-right: 6px;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.carte h2 {
-  margin-top: 0;
-}
-
-.ligne-formulaire {
-  display: flex;
-  gap: 12px;
-  align-items: flex-end;
-  flex-wrap: wrap;
-}
-
-.ligne-formulaire > div {
-  flex: 1;
-  min-width: 240px;
-}
-
-.lien-cree {
-  margin-top: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.lien-invitation {
-  display: block;
-  background: var(--ivoire);
+  color: inherit;
   border-radius: 8px;
-  padding: 10px 12px;
-  word-break: break-all;
-  font-size: 0.9rem;
-}
-
-.boutons {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-a.bouton {
-  display: inline-flex;
-  align-items: center;
-  min-height: 48px;
-  padding: 0 20px;
-  border-radius: var(--rayon);
-  background: var(--vert);
-  color: var(--blanc);
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.aide {
-  color: var(--gris);
-  font-size: 0.9rem;
-  margin: 0;
-}
-
-/* ------------------------------------------------------------------ J3 : pages de l'équipe */
-
-h1 {
-  margin-top: 0;
-}
-
-.contenu {
-  max-width: 1100px;
-}
-
-.carte {
-  margin-bottom: 20px;
 }
 
 .navigation {
+  grid-area: nav;
   display: flex;
   gap: 4px;
-  flex-wrap: wrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.navigation::-webkit-scrollbar {
+  display: none;
 }
 
 .navigation a {
@@ -187,7 +207,11 @@ h1 {
   padding: 8px 14px;
   border-radius: 999px;
   font-weight: 600;
-  opacity: 0.85;
+  white-space: nowrap;
+  opacity: 0.8;
+  transition:
+    background-color 0.15s,
+    opacity 0.15s;
 }
 
 .navigation a.actif,
@@ -196,31 +220,183 @@ h1 {
   opacity: 1;
 }
 
-.cartes-compteurs {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 12px;
-  margin: 16px 0;
+.navigation a:focus-visible,
+.barre-logo:focus-visible {
+  outline: 3px solid var(--blanc);
+  outline-offset: 2px;
 }
 
-button.compteur {
-  background: var(--blanc);
-  color: var(--noir);
-  border: 2px solid var(--bordure);
-  min-height: 96px;
+.barre-droite {
+  grid-area: droite;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.9rem;
+  min-width: 0;
+}
+
+.utilisateur {
+  opacity: 0.85;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.barre button.secondaire {
+  background: transparent;
+  color: var(--blanc);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.barre button.secondaire:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Téléphone : logo et déconnexion en haut, menu en dessous (défilant si besoin). */
+@media (max-width: 760px) {
+  .barre {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'logo droite'
+      'nav nav';
+    padding-bottom: 6px;
+  }
+
+  .utilisateur {
+    display: none;
+  }
+
+  .navigation {
+    margin: 0 calc(-1 * var(--marge));
+    padding: 0 var(--marge) 4px;
+  }
+}
+
+.contenu {
+  flex: 1;
+  width: 100%;
+  max-width: var(--largeur);
+  margin: 0 auto;
+  padding: 28px var(--marge) 40px;
+}
+
+.pied {
+  text-align: center;
+  color: var(--gris);
+  font-size: 0.8rem;
+  padding: 20px var(--marge);
+  border-top: 1px solid var(--trait);
+}
+
+/* ------------------------------------------------------------------ Éléments communs */
+
+.carte {
+  background: var(--blanc);
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+  box-shadow: var(--ombre);
+  padding: clamp(16px, 2.5vw, 24px);
+  margin-bottom: 20px;
+  width: 100%;
+  min-width: 0;
+}
+
+.carte h2 {
+  margin-top: 0;
+}
+
+.titre-ligne {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-bottom: 16px;
+}
+
+.titre-ligne h1,
+.titre-ligne h2,
+.titre-ligne h3 {
+  margin: 0;
+}
+
+.message {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-weight: 600;
   text-align: left;
-  font-weight: 400;
 }
 
-.compteur strong {
-  font-size: 2rem;
-  color: var(--vert);
+.message.erreur {
+  background: var(--rouge-pale);
+  color: var(--erreur);
 }
 
+.message.alerte {
+  background: var(--ambre-pale);
+  color: var(--alerte);
+}
+
+.message.succes {
+  background: var(--vert-pale);
+  color: var(--succes);
+}
+
+.pastille {
+  display: inline-block;
+  background: var(--vert);
+  color: var(--blanc);
+  border-radius: 999px;
+  padding: 2px 12px;
+  margin: 2px 6px 2px 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.pastille-discrete {
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 6px;
+  border: 1px solid var(--bordure);
+  color: var(--gris);
+  font-size: 0.75rem;
+}
+
+.etape {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--ivoire);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.etape.alerte {
+  background: var(--ambre-pale);
+  color: var(--alerte);
+}
+
+.etape.succes {
+  background: var(--vert-pale);
+  color: var(--succes);
+}
+
+.etape.gris {
+  color: var(--gris);
+}
+
+textarea {
+  font: inherit;
+  width: 100%;
+  padding: 8px 12px;
+  border: 2px solid var(--bordure);
+  border-radius: 12px;
+}
+
+/* Tableaux : ils défilent dans leur cadre, jamais la page entière. */
 .tableau-defilant {
   overflow-x: auto;
 }
@@ -240,21 +416,82 @@ button.compteur {
   text-align: left;
   color: var(--gris);
   font-weight: 600;
+  font-size: 0.85rem;
   border-bottom: 2px solid var(--bordure);
   padding: 8px;
   position: sticky;
   top: 0;
   background: var(--blanc);
+  white-space: nowrap;
 }
 
 .tableau td {
-  border-bottom: 1px solid var(--bordure);
+  border-bottom: 1px solid var(--trait);
   padding: 8px;
   vertical-align: middle;
 }
 
+.tableau tbody tr:hover td {
+  background: #fbfaf5;
+}
+
 .tableau tr.inactive td {
   opacity: 0.5;
+}
+
+.tableau.compact td {
+  padding: 4px 6px;
+}
+
+/* Tableau « empilé » : sur téléphone, chaque ligne devient une carte (libellé à gauche,
+   valeur à droite), pour tout voir sans faire défiler de côté. */
+@media (max-width: 700px) {
+  .tableau.empile thead {
+    display: none;
+  }
+
+  .tableau.empile tr {
+    display: block;
+    border: 1px solid var(--trait);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+  }
+
+  .tableau.empile tbody tr:hover td {
+    background: none;
+  }
+
+  .tableau.empile td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    border: none;
+    padding: 4px 0;
+  }
+
+  .tableau.empile td[data-label]::before {
+    content: attr(data-label);
+    color: var(--gris);
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .tableau.empile td.titre-ligne-tableau {
+    font-weight: 700;
+    font-size: 1.05rem;
+    padding-bottom: 6px;
+  }
+
+  .tableau.empile td.actions {
+    justify-content: flex-start;
+    padding-top: 8px;
+  }
+
+  .tableau.empile td.actions:empty {
+    display: none;
+  }
 }
 
 .actions {
@@ -264,184 +501,17 @@ button.compteur {
   justify-content: flex-end;
 }
 
-.etape {
-  display: inline-block;
-  padding: 2px 10px;
-  border-radius: 999px;
-  background: var(--ivoire);
-  font-size: 0.85rem;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.etape.alerte {
-  background: #fff4dc;
-  color: var(--alerte);
-}
-
-.etape.succes {
-  background: #e3f0ea;
-  color: var(--succes);
-}
-
-.etape.gris {
-  color: var(--gris);
-}
-
-.pastille-discrete {
-  margin-left: 6px;
-  padding: 0 6px;
-  border-radius: 6px;
-  border: 1px solid var(--bordure);
-  color: var(--gris);
-  font-size: 0.75rem;
-}
-
-button.danger {
-  background: var(--erreur);
-}
-
-.danger-texte {
-  color: var(--erreur) !important;
-  border-color: var(--erreur) !important;
-}
-
-button.lien {
-  background: none;
-  color: var(--vert);
-  text-decoration: underline;
-  padding: 0 8px;
-}
-
-.panneau {
-  border: 2px solid var(--vert);
-}
-
-.panneau-titre {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.prise-test {
-  margin-bottom: 12px;
-}
-
-.prise-test p {
-  margin: 4px 0;
-}
-
-textarea {
-  font: inherit;
-  width: 100%;
-  padding: 8px 12px;
-  border: 2px solid var(--bordure);
-  border-radius: 12px;
-}
-
-/* Lecteur audio avec forme d'onde */
-.lecteur {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 8px 0;
-}
-
-.lecteur .lecture {
-  width: 56px;
-  height: 56px;
-  min-height: 0;
-  padding: 0;
-  border-radius: 50%;
-  font-size: 1.2rem;
-  flex-shrink: 0;
-}
-
-.lecteur.compact .lecture {
-  width: 40px;
-  height: 40px;
-}
-
-.onde {
-  width: 100%;
-  height: 96px;
-  cursor: pointer;
-  background: var(--ivoire);
-  border-radius: 8px;
-}
-
-.lecteur.compact .onde {
-  height: 48px;
-}
-
-.onde.chargement {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--gris);
-}
-
-/* Vérification */
-.titre-ligne {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.onglets {
-  display: flex;
-  gap: 8px;
-}
-
-.entete-audio {
+/* Formulaires en ligne (invitation, filtres…) */
+.ligne-formulaire {
   display: flex;
   gap: 12px;
-  align-items: center;
+  align-items: flex-end;
   flex-wrap: wrap;
 }
 
-.texte-attendu {
-  font-size: 1.6rem;
-  font-weight: 700;
-  margin: 12px 0 4px;
-}
-
-.indicateurs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 16px;
-  font-size: 0.9rem;
-  margin: 8px 0 16px;
-}
-
-.indicateurs .attention {
-  color: var(--alerte);
-  font-weight: 600;
-}
-
-.decisions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-kbd {
-  margin-left: 6px;
-  padding: 0 6px;
-  border-radius: 4px;
-  border: 1px solid currentColor;
-  font-size: 0.75rem;
-  opacity: 0.7;
-}
-
-.complement {
-  margin-top: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.ligne-formulaire > div {
+  flex: 1;
+  min-width: min(100%, 240px);
 }
 
 .filtres {
@@ -477,85 +547,252 @@ kbd {
   gap: 10px;
 }
 
-.message.succes {
-  background: #e3f0ea;
-  color: var(--succes);
-}
-
 .erreur-ligne {
   color: var(--erreur);
   margin: 2px 0;
 }
 
-.gain {
-  font-size: 0.8rem;
+/* ------------------------------------------------------------------ Accueil */
+
+.roles {
   color: var(--gris);
-  white-space: nowrap;
+  margin: 0 0 20px;
 }
 
-.lecteur {
-  flex-wrap: wrap;
+.cartes-compteurs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+  gap: 12px;
+  margin: 0 0 32px;
 }
 
-.version {
-  font-size: 0.75rem;
-  opacity: 0.7;
+.mise-en-page button.compteur {
+  position: relative;
+  background: var(--blanc);
+  color: var(--noir);
+  border: 1px solid var(--trait);
+  box-shadow: var(--ombre);
+  border-radius: var(--rayon);
+  min-height: 104px;
+  padding: 16px 40px 16px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 2px;
+  text-align: left;
+  font-weight: 400;
 }
 
-/* ------------------------------------------------------------------ J4 : tableau de bord */
+.mise-en-page button.compteur:not(:disabled):hover {
+  filter: none;
+  border-color: var(--vert-clair);
+  transform: translateY(-1px);
+}
 
-.carte h3 {
-  margin-top: 0;
+.compteur strong {
+  font-size: 2rem;
+  line-height: 1.1;
+  color: var(--vert);
+}
+
+.compteur-fleche {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  color: var(--gris);
+  font-size: 1.1rem;
+  transition: transform 0.15s;
+}
+
+.compteur:hover .compteur-fleche {
+  transform: translateX(3px);
+  color: var(--vert);
+}
+
+@media (max-width: 599px) {
+  .cartes-compteurs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mise-en-page button.compteur {
+    min-height: 96px;
+    padding: 12px 28px 12px 14px;
+    font-size: 0.9rem;
+  }
+
+  .compteur strong {
+    font-size: 1.6rem;
+  }
+
+  .compteur-fleche {
+    top: 10px;
+    right: 10px;
+  }
+}
+
+/* ------------------------------------------------------------------ Tableau de bord */
+
+.grille-tdb {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+}
+
+.grille-tdb > * {
+  margin: 0;
+}
+
+/* Grand écran : deux colonnes ; alertes, chiffres clés, graphique et quotas en pleine largeur. */
+@media (min-width: 1000px) {
+  .grille-tdb {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .grille-tdb > .pleine {
+    grid-column: 1 / -1;
+  }
+}
+
+.alertes p {
+  margin: 4px 0;
 }
 
 .tuiles {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
   gap: 12px;
-  margin: 12px 0 20px;
 }
 
 .tuile {
   background: var(--blanc);
+  border: 1px solid var(--trait);
+  box-shadow: var(--ombre);
   border-radius: var(--rayon);
-  padding: 16px 20px;
+  padding: 16px 18px;
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
 
 .tuile strong {
-  font-size: 1.8rem;
-  color: var(--noir);
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
 }
 
+.tuile > span {
+  color: var(--gris);
+}
+
+/* Petits chiffres (statuts des voix, lectures, double écoute…) */
 .chiffres {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px 32px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(116px, 1fr));
+  gap: 10px;
   margin: 8px 0 12px;
 }
 
 .chiffres > div {
   display: flex;
   flex-direction: column;
+  background: var(--ivoire);
+  border-radius: 12px;
+  padding: 10px 12px;
 }
 
 .chiffres strong {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
+  line-height: 1.2;
 }
 
 .chiffres span {
   color: var(--gris);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
-.alertes {
-  margin-bottom: 20px;
+/* Quotas */
+.quotas {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 12px;
 }
 
-.alertes p {
-  margin: 4px 0;
+.quotas li {
+  background: var(--ivoire);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quota-tete {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.quota-chiffres {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+
+.quota-chiffres strong {
+  font-size: 1.4rem;
+}
+
+.jauge {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--blanc);
+  border: 1px solid var(--trait);
+}
+
+.jauge span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 5px;
+  background: var(--vert-clair);
+}
+
+/* Trait noir : l'objectif à atteindre. */
+.jauge i {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--noir);
+}
+
+.repartitions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.repartitions h4 {
+  margin: 0 0 4px;
+}
+
+progress {
+  width: 100%;
+  height: 12px;
+  accent-color: var(--vert-clair);
 }
 
 /* Graphique */
@@ -651,52 +888,151 @@ kbd {
   white-space: nowrap;
 }
 
-/* Quotas */
-.jauge {
-  display: inline-block;
-  position: relative;
-  width: 80px;
-  height: 8px;
-  border-radius: 4px;
-  background: var(--ivoire);
-  margin-right: 8px;
-  vertical-align: middle;
-}
+/* ------------------------------------------------------------------ Voix (recrutement) */
 
-.jauge span {
-  position: absolute;
-  inset: 0 auto 0 0;
-  border-radius: 4px;
-  background: var(--vert-clair);
-}
-
-.jauge i {
-  position: absolute;
-  top: -3px;
-  bottom: -3px;
-  width: 2px;
-  background: var(--noir);
-}
-
-.repartitions {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
+.lien-cree {
   margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.repartitions h4 {
-  margin: 0 0 4px;
+.lien-invitation {
+  display: block;
+  background: var(--ivoire);
+  border-radius: 8px;
+  padding: 10px 12px;
+  word-break: break-all;
+  font-size: 0.9rem;
 }
 
-.tableau.compact td {
-  padding: 4px 6px;
+.panneau {
+  border: 2px solid var(--vert);
 }
 
-progress {
-  width: 100%;
-  height: 12px;
-  accent-color: var(--vert-clair);
+.panneau-titre {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.prise-test {
+  margin-bottom: 12px;
+}
+
+.prise-test p {
+  margin: 4px 0;
+}
+
+/* ------------------------------------------------------------------ Lecteur audio */
+
+.lecteur {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0;
+}
+
+.mise-en-page .lecteur .lecture {
+  width: 56px;
+  height: 56px;
+  min-height: 0;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.mise-en-page .lecteur.compact .lecture {
+  width: 40px;
+  height: 40px;
+}
+
+/* La forme d'onde prend toute la place à côté du bouton de lecture. */
+.onde {
+  flex: 1 1 220px;
+  min-width: 0;
+  height: 96px;
+  cursor: pointer;
+  background: var(--ivoire);
+  border-radius: 8px;
+}
+
+.lecteur.compact .onde {
+  height: 48px;
+}
+
+.onde.chargement {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gris);
+}
+
+.gain {
+  font-size: 0.8rem;
+  color: var(--gris);
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ Écoute */
+
+/* Onglets : une seule pastille, qui défile sur petit écran. */
+.onglets {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  max-width: 100%;
+  overflow-x: auto;
+  background: var(--blanc);
+  border: 1px solid var(--trait);
+  border-radius: 999px;
+  scrollbar-width: none;
+}
+
+.mise-en-page .onglets button {
+  min-height: 36px;
+  border-radius: 999px;
+  padding: 0 16px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  border: none;
+}
+
+.mise-en-page .onglets button.secondaire {
+  background: transparent;
+}
+
+.entete-audio {
+  display: flex;
+  gap: 8px 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.texte-attendu {
+  font-size: clamp(1.3rem, 1rem + 1.5vw, 1.8rem);
+  line-height: 1.3;
+  font-weight: 700;
+  margin: 16px 0 4px;
+}
+
+.indicateurs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  font-size: 0.9rem;
+  margin: 8px 0 16px;
+  padding: 12px 14px;
+  background: var(--ivoire);
+  border-radius: 12px;
+}
+
+.indicateurs .attention {
+  color: var(--alerte);
+  font-weight: 600;
 }
 
 .indicateurs .serveur {
@@ -704,4 +1040,38 @@ progress {
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
+}
+
+.decisions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.mise-en-page .decisions button {
+  min-height: 48px;
+}
+
+/* Téléphone : grands boutons de décision, deux par ligne. */
+@media (max-width: 599px) {
+  .decisions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .decisions button {
+    width: 100%;
+  }
+
+  .decisions button.lien {
+    grid-column: 1 / -1;
+  }
+}
+
+.complement {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }

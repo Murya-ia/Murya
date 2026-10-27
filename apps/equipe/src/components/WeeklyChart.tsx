@@ -30,6 +30,7 @@ export function WeeklyChart({ weeks }: { weeks: Week[] }) {
   useEffect(() => {
     const element = box.current;
     if (!element) return;
+    setWidth(Math.max(280, Math.round(element.getBoundingClientRect().width)));
     const observer = new ResizeObserver(([entry]) => {
       if (entry) setWidth(Math.max(280, Math.round(entry.contentRect.width)));
     });
@@ -48,7 +49,8 @@ export function WeeklyChart({ weeks }: { weeks: Week[] }) {
   const band = plotW / weeks.length;
   const barW = Math.max(3, Math.min(18, (band * 0.7 - GAP) / 2));
   const y = (value: number) => MARGIN.top + plotH - (value * scale * plotH) / top;
-  const labelEvery = band < 44 ? 2 : 1;
+  // Une date toutes les N semaines, pour que les dates ne se chevauchent pas (≈ 56 px chacune).
+  const labelEvery = Math.max(1, Math.ceil(56 / band));
   const hovered = active === null ? null : weeks[active];
 
   return (
