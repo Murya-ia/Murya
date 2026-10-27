@@ -1,0 +1,28 @@
+﻿ID,Zarma,Français,Thème,Auteur,Relu par,Statut,Test
+EXEMPLE-1,"Écrivez ici la phrase en zarma, avec l'orthographe officielle (ŋ, ɲ, a̰, ḛ, ḭ, o̰, ṵ).",Écrivez ici sa traduction en français.,salutations,Prénom de l'auteur,Prénom du relecteur,Exemple,non
+EXEMPLE-2,"Une phrase courte et naturelle, de 4 à 15 mots, qu'on dit vraiment au quotidien.",Une traduction simple et fidèle.,marché,Prénom de l'auteur,Prénom du relecteur,Exemple,non
+T0001,,,test,,,À écrire,oui
+T0002,,,test,,,À écrire,oui
+T0003,,,test,,,À écrire,oui
+T0004,,,test,,,À écrire,oui
+T0005,,,test,,,À écrire,oui
+S0001,,,salutations,,,À écrire,non
+S0002,,,famille,,,À écrire,non
+S0003,,,marché,,,À écrire,non
+S0004,,,santé,,,À écrire,non
+S0005,,,agriculture,,,À écrire,non
+S0006,,,école,,,À écrire,non
+S0007,,,transport,,,À écrire,non
+S0008,,,météo,,,À écrire,non
+S0009,,,cuisine,,,À écrire,non
+S0010,,,travail,,,À écrire,non
+S0011,,,nombres,,,À écrire,non
+S0012,,,temps,,,À écrire,non
+S0013,,,maison,,,À écrire,non
+S0014,,,questions,,,À écrire,non
+S0015,,,émotions,,,À écrire,non
+S0016,,,administration,,,À écrire,non
+S0017,,,religion,,,À écrire,non
+S0018,,,élevage,,,À écrire,non
+S0019,,,eau,,,À écrire,non
+S0020,,,commerce,,,À écrire,non

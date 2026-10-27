@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { csvToObjects, parseCsv } from './csv';
 
@@ -28,5 +30,40 @@ describe('csvToObjects', () => {
         ['S1', 'Bonjour', 'Awa'],
       ]),
     ).toEqual([{ id: 'S1', francais: 'Bonjour', relu_par: 'Awa' }]);
+  });
+});
+
+describe('modèle docs/modele-phrases.csv', () => {
+  // Garde le modèle et l'import synchronisés : si une colonne change, ce test échoue.
+  const rows = csvToObjects(
+    parseCsv(readFileSync(join(import.meta.dirname, '../../../docs/modele-phrases.csv'), 'utf8')),
+  );
+
+  it("a exactement les colonnes attendues par l'import", () => {
+    expect(Object.keys(rows[0]!)).toEqual([
+      'id',
+      'zarma',
+      'francais',
+      'theme',
+      'auteur',
+      'relu_par',
+      'statut',
+      'test',
+    ]);
+  });
+
+  it('prévoit les 5 phrases du test et des identifiants sans espace ni accent', () => {
+    expect(rows.filter((r) => r.test === 'oui').map((r) => r.id)).toEqual([
+      'T0001',
+      'T0002',
+      'T0003',
+      'T0004',
+      'T0005',
+    ]);
+    for (const row of rows) expect(row.id).toMatch(/^[A-Za-z0-9_-]+$/);
+  });
+
+  it("n'importerait rien tel quel (aucune ligne « Validée »)", () => {
+    expect(rows.some((r) => (r.statut ?? '').toLowerCase().startsWith('valid'))).toBe(false);
   });
 });
