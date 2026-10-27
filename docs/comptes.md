@@ -111,6 +111,37 @@ npx supabase db query --linked "update public.speakers set status = 'active', te
 _My Profile_ > _API Tokens_ > _Create Token_ > modèle **Edit Cloudflare Workers**. Notez le jeton
 (il servira à l'étape 5).
 
+### 2.5 Worker des vérifications audio (J4, GitHub Actions)
+
+Le worker Python (`worker/`) vérifie chaque audio reçu (spec §6.2). Il tourne toutes les
+15 minutes sur GitHub Actions (`.github/workflows/worker.yml`), dans l'environnement GitHub
+`staging` (créé le 27/10/2026, utilisable seulement depuis `main`). Ses variables sont déjà en
+place : `SUPABASE_URL`, `R2_ACCOUNT_ID`, `R2_BUCKET_AUDIO`.
+
+Il lui faut trois secrets, à créer **exprès pour lui** (on pourra les révoquer sans toucher à
+l'API) :
+
+1. Cloudflare > _R2_ > _Manage API tokens_ > _Create Account API token_ :
+   - nom : `worker-staging` ; permission **Object Read only** (le worker ne fait que lire) ;
+   - _Specify bucket(s)_ : seulement `murya-audio-staging` ;
+   - gardez l'_Access Key ID_ et le _Secret Access Key_ affichés (une seule fois).
+2. Supabase > _Project Settings_ > _API Keys_ > _Secret keys_ > _New secret key_, nom `worker`
+   (elle commence par `sb_secret_`).
+3. GitHub > _Settings_ > _Environments_ > `staging` > _Add environment secret_, trois fois :
+
+| Secret                 | Valeur                       |
+| ---------------------- | ---------------------------- |
+| `SUPABASE_SECRET_KEY`  | la clé `worker` de l'étape 2 |
+| `R2_ACCESS_KEY_ID`     | Access Key ID de l'étape 1   |
+| `R2_SECRET_ACCESS_KEY` | Secret Access Key            |
+
+4. GitHub > _Settings_ > _Secrets and variables_ > _Actions_ > onglet _Variables_ > _New
+   repository variable_ : `WORKER_ENABLED` = `true`.
+5. Premier lancement à la main : onglet _Actions_ > _Worker_ > _Run workflow_. Le tableau de
+   bord de l'accueil (carte « Vérifications automatiques ») montre ensuite les tâches traitées.
+
+Pour arrêter le worker : passez `WORKER_ENABLED` à `false`.
+
 ## 3. Supabase (base de données, connexion de l'équipe)
 
 ### 3.1 Ce qui est en place (fait le 27/10/2026)
@@ -177,8 +208,8 @@ npx supabase db query --linked "insert into public.team_members (user_id, displa
 
 ## 5. Déploiement automatique
 
-Dans GitHub, _Settings_ > _Environments_, créez `staging` et `production`
-(pour `production`, ajoutez une règle « Required reviewers » avec les deux admins).
+Dans GitHub, _Settings_ > _Environments_, créez `production` (`staging` existe déjà, voir
+2.5) ; pour `production`, ajoutez une règle « Required reviewers » avec les deux admins.
 Dans chacun :
 
 | Type     | Nom                             | Valeur                                                               |

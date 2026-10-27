@@ -28,7 +28,7 @@ WORKER PYTHON (Docker, 1 à N exemplaires)
 | Base (`supabase/`)         | Supabase Postgres                                    | Logique sensible dans des **fonctions SQL transactionnelles**. RLS sur toutes les tables. `pg_cron` pour les tâches périodiques. |
 | Audios                     | R2, buckets privés `audio`, `identites`, `exports`   | Sortie gratuite. Consentements oraux isolés dans leur propre bucket.                                                             |
 | File de tâches             | table `jobs` + `FOR UPDATE SKIP LOCKED`              | Lisible, visible dans Supabase, plusieurs workers possibles.                                                                     |
-| Worker (`worker/`, J4)     | Python, `soundfile` + `numpy`, Docker                | Même image partout. Hébergé sur GitHub Actions (dépôt public = gratuit).                                                         |
+| Worker (`worker/`, J4)     | Python, `wave` + `numpy` + `boto3`, Docker           | Même image partout. Hébergé sur GitHub Actions toutes les 15 min (dépôt public = gratuit).                                       |
 
 ### Pourquoi l'API entre la voix et Supabase ?
 
@@ -61,7 +61,22 @@ attribuées depuis plus de X jours sans enregistrement.
 ### File d'écoute
 
 `prendre_audio_a_ecouter()` réserve un audio 5 minutes, en excluant les voix recrutées par le
-vérificateur. Suspects d'abord, puis par ancienneté.
+vérificateur (sauf pour un admin). Suspects d'abord, puis par ancienneté. « Passer » libère
+l'audio, et la page envoie la liste des audios passés pendant la séance pour ne pas les revoir.
+
+### Qualité (J4)
+
+- **Vérifications serveur** : chaque envoi confirmé crée une tâche `verifier_audio`. Le worker
+  Python prend les tâches (`worker_claim_jobs`), lit le WAV dans R2, mesure format, durée,
+  silence, bruit, saturation, coupure et débit, et enregistre le résultat
+  (`worker_save_checks`, qui ajoute « doublon » si la même empreinte existe déjà). Un audio
+  avec une alerte devient « suspect » et passe en tête de la file d'écoute. Les seuils sont dans
+  le réglage `server_checks`.
+- **Double écoute** : chaque lundi, `pg_cron` tire 10 % des audios validés de la semaine. Le
+  responsable qualité les réécoute sans voir la première décision ; en cas de désaccord, sa
+  décision s'applique.
+- **Tableau de bord** : calculé par la base toutes les 10 minutes (`dashboard_snapshots`), pour
+  que l'accueil reste léger même avec beaucoup de données ; bouton « Recalculer maintenant ».
 
 ## Sécurité et données personnelles
 
@@ -131,6 +146,9 @@ Tous les textes de phrases sont normalisés en Unicode **NFC** (contrôlé par l
 | 27/10/2026 | Orthographe de référence : arrêté de 1999 (voir « Orthographe zarma » ci-dessous).                                                                                                                                                     |
 | 27/10/2026 | Cloudflare Pages ayant été fusionné dans Workers, les interfaces sont des Workers « fichiers statiques » (mêmes avantages : CDN, gratuit et illimité). Adresses en `*.murya-api.workers.dev`.                                          |
 | 27/10/2026 | Consentement complet (cases à cocher) à la première visite, puis **écran de rappel court avec bouton « Écouter »** chaque fois que la voix revient enregistrer (voir « Consentement » ci-dessous).                                     |
+| 27/10/2026 | Worker hébergé sur **GitHub Actions** toutes les 15 min, avec ses propres clés : R2 en **lecture seule** sur le bucket audio, clé secrète Supabase dédiée. Environnement GitHub `staging` limité à la branche `main`.                  |
+| 27/10/2026 | Double écoute : en cas de désaccord, **la décision du responsable qualité remplace** la première. Le taux de désaccord par vérificateur est affiché aux rôles qualité et admin.                                                        |
+| 27/10/2026 | Quotas : « hors de Niamey » compte aussi « autre pays » ; la langue maternelle est comparée au code de la langue collectée (`zarma` pour `dje`). Les parts se calculent sur les voix ayant rempli leur fiche.                          |
 
 ### Questions encore ouvertes
 
@@ -183,7 +201,7 @@ Conséquences pour le code :
 | J1 Fondations ✓        | dépôt, CI, schéma + RLS + tests, connexion équipe, déploiement, **page de preuve audio** | terminé le 27 oct                              |
 | J2 Parcours voix ✓     | invitation, consentement, fiche, tutoriel, test, enregistrement, hors ligne              | construit le 27 oct (test iPhone à faire)      |
 | J3 Espace équipe ✓     | import CSV, recrutement, validation des tests, écoute, À refaire                         | construit le 27 oct (test à 2 membres à faire) |
-| J4 Qualité             | vérifs serveur, double écoute, quotas, alertes, tableau de bord                          | 14 – 18 déc                                    |
+| J4 Qualité ✓           | vérifs serveur, double écoute, quotas, alertes, tableau de bord                          | construit le 27 oct (worker à activer)         |
 | J6a Protection         | sauvegardes + restauration, retrait d'une voix, journal                                  | 21 déc – 3 jan                                 |
 | J7 Charge et lancement | k6 2 000 utilisateurs, test des 5 membres, README                                        | 4 – 15 jan                                     |
 | J5 Voix principale     | séances, audio de référence, verrou                                                      | fin janvier                                    |
