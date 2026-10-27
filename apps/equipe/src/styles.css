@@ -1,0 +1,106 @@
+body {
+  font-size: 16px;
+}
+
+.centre-page {
+  min-height: 100vh;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.carte {
+  background: var(--blanc);
+  border-radius: var(--rayon);
+  padding: 24px;
+  width: 100%;
+}
+
+.formulaire {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: left;
+}
+
+.aide,
+.gris {
+  color: var(--gris);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.message {
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.message.erreur {
+  background: #fbe9e7;
+  color: var(--erreur);
+}
+
+.message.alerte {
+  background: #fff4dc;
+  color: var(--alerte);
+}
+
+.mise-en-page {
+  min-height: 100vh;
+}
+
+.barre {
+  background: var(--vert);
+  color: var(--blanc);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.barre-droite {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.9rem;
+}
+
+button.petit {
+  min-height: 36px;
+  padding: 0 14px;
+  font-size: 0.9rem;
+}
+
+.barre button.secondaire {
+  background: transparent;
+  color: var(--blanc);
+  border-color: var(--blanc);
+}
+
+.contenu {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.pastille {
+  display: inline-block;
+  background: var(--vert);
+  color: var(--blanc);
+  border-radius: 999px;
+  padding: 2px 12px;
+  margin-right: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}

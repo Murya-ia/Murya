@@ -17,6 +17,7 @@
   --rayon: 16px;
   --police: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
   color-scheme: light;
+  accent-color: var(--vert); /* cases à cocher et boutons radio aux couleurs de la marque */
 }
 
 * {
