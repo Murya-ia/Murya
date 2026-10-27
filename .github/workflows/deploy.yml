@@ -4,7 +4,7 @@
 #
 # Chaque environnement GitHub (staging, production) contient :
 #   secrets   : CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, SUPABASE_DB_URL
-#   variables : VITE_API_URL, VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY
+#   variables : VITE_API_URL, VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY, VITE_VOICE_APP_URL
 name: Déploiement
 
 on:
@@ -50,6 +50,7 @@ jobs:
           VITE_API_URL: ${{ vars.VITE_API_URL }}
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_VOICE_APP_URL: ${{ vars.VITE_VOICE_APP_URL }}
 
       # Cloudflare Pages fait désormais partie des Workers : chaque interface est un Worker
       # « fichiers statiques » (voir apps/*/wrangler.jsonc).

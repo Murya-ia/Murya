@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { Logo } from '@murya/commun/logo';
+import { InviteForm } from './InviteForm';
 import { ROLE_LABELS, type TeamMember } from './supabase';
 
 interface Language {
@@ -74,6 +75,9 @@ export function HomePage({ client, session }: { client: SupabaseClient; session:
                     </span>
                   ))}
             </p>
+            {(state.member.roles.includes('recruteur') || state.member.roles.includes('admin')) && (
+              <InviteForm client={client} />
+            )}
             <h2>Langues</h2>
             <ul>
               {state.languages.map((language) => (
@@ -84,7 +88,7 @@ export function HomePage({ client, session }: { client: SupabaseClient; session:
               ))}
             </ul>
             <p className="gris">
-              Le tableau de bord, le recrutement et l'écoute arrivent dans les prochains jalons.
+              Le suivi des voix, la validation des tests et l'écoute arrivent au prochain jalon.
             </p>
           </>
         )}

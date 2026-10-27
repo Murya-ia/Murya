@@ -104,3 +104,59 @@ button.petit {
   font-size: 0.85rem;
   font-weight: 600;
 }
+
+.carte h2 {
+  margin-top: 0;
+}
+
+.ligne-formulaire {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.ligne-formulaire > div {
+  flex: 1;
+  min-width: 240px;
+}
+
+.lien-cree {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lien-invitation {
+  display: block;
+  background: var(--ivoire);
+  border-radius: 8px;
+  padding: 10px 12px;
+  word-break: break-all;
+  font-size: 0.9rem;
+}
+
+.boutons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+a.bouton {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 20px;
+  border-radius: var(--rayon);
+  background: var(--vert);
+  color: var(--blanc);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.aide {
+  color: var(--gris);
+  font-size: 0.9rem;
+  margin: 0;
+}
