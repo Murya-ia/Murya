@@ -1,8 +1,11 @@
-# Murya Collecte
+# Murya
 
-Plateforme de collecte d'enregistrements vocaux pour l'IA vocale Murya, en commençant par le
-**zarma** (`dje`). Des personnes lisent des phrases sur leur téléphone, à distance ; l'équipe
-vérifie chaque audio.
+IA vocale pour les langues locales africaines, en commençant par le zarma.
+
+## Murya Collecte
+
+Ce dépôt contient la plateforme de collecte d'enregistrements vocaux : des personnes lisent des
+phrases en **zarma** (`dje`) sur leur téléphone, à distance ; l'équipe vérifie chaque audio.
 
 - Cahier des charges : [`MURYA_SPEC.md`](MURYA_SPEC.md)
 - Architecture, coûts et décisions : [`docs/architecture.md`](docs/architecture.md)
