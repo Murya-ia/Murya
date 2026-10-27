@@ -356,3 +356,31 @@ describe("retrait d'une voix (spec §5.8)", () => {
     expect(requests.some((e) => e.cible === 'voix retirée')).toBe(true);
   });
 });
+
+describe("restauration d'une sauvegarde plus ancienne qu'un retrait", () => {
+  it('la voix retirée depuis est retirée à nouveau, une seule fois', async () => {
+    const back = await voice('Hadiza Revenue');
+    const reapply = () =>
+      sql<boolean>(`select public.restore_reapply_withdrawal('dje', $1, $2, now()) as r`, [
+        back.number,
+        admin,
+      ]);
+    expect(await reapply()).toBe(true);
+    expect(await count(`public.speakers where id = $1`, [back.id])).toBe(0);
+    expect(await count(`prive.identities where speaker_id = $1`, [back.id])).toBe(0);
+    expect(await count(`public.withdrawals where speaker_number = $1`, [back.number])).toBe(1);
+    expect(
+      await count(`public.audit_log where action = 'retrait_reapplique' and target_id = $1`, [
+        back.number,
+      ]),
+    ).toBe(1);
+    expect(await reapply()).toBe(false);
+    expect(await count(`public.withdrawals where speaker_number = $1`, [back.number])).toBe(1);
+  });
+
+  it("n'est pas appelable par l'équipe", async () => {
+    await expect(
+      as(admin, `select public.restore_reapply_withdrawal('dje', 'V001', null, now()) as r`),
+    ).rejects.toThrow(/permission denied/);
+  });
+});

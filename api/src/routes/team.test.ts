@@ -101,6 +101,7 @@ describe("retrait d'une voix (spec §5.8)", () => {
     numero: 'V012',
     langue: 'dje',
     date: '2026-10-30T10:00:00Z',
+    par: 'admin-1',
     audios: 2,
     tache: 41,
     prefixes_audio: ['dje/varie/V012/', 'dje/principale/V012/'],
@@ -149,6 +150,8 @@ describe("retrait d'une voix (spec §5.8)", () => {
       langue: 'dje',
       numero: 'V012',
       date: '2026-10-30T10:00:00Z',
+      par: 'admin-1',
+      cles_identites: ['consentements-oraux/abc/accord.m4a'],
     });
     expect(identites.files).toEqual({});
     // La tâche est marquée faite avec la clé secrète (service), pas avec la session.
@@ -193,6 +196,7 @@ describe('tâche planifiée : reprise des effacements', () => {
             langue: 'dje',
             numero: 'V020',
             date: '2026-10-30T10:00:00Z',
+            par: 'admin-1',
             prefixes_audio: ['dje/varie/V020/'],
             cles_audio: [],
             cles_identites: [],

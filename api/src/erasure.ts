@@ -10,6 +10,8 @@ export interface ErasurePayload {
   langue: string;
   numero: string;
   date: string;
+  /** Admin qui a retiré la voix (identifiant de membre de l'équipe). */
+  par: string;
   prefixes_audio: string[];
   cles_audio: string[];
   cles_identites: string[];
@@ -40,11 +42,19 @@ export async function eraseFiles(env: Env, payload: ErasurePayload): Promise<num
   await deleteAll(env.AUDIO, [...audioKeys]);
   await deleteAll(env.IDENTITES, payload.cles_identites);
 
-  // Trace minimale (numéro et date, aucune donnée personnelle) : si l'on restaure un jour une
-  // sauvegarde plus ancienne que ce retrait, la voix est retirée à nouveau (docs/sauvegardes.md).
+  // Trace minimale (numéro, date, admin et clés des fichiers d'identité, aucun nom) :
+  //   - la sauvegarde de nuit efface ainsi ses propres copies de ces fichiers ;
+  //   - si l'on restaure un jour une sauvegarde plus ancienne que ce retrait, la voix est
+  //     retirée à nouveau (docs/sauvegardes.md).
   await env.AUDIO.put(
     `retraits/${payload.langue}/${payload.numero}.json`,
-    JSON.stringify({ langue: payload.langue, numero: payload.numero, date: payload.date }),
+    JSON.stringify({
+      langue: payload.langue,
+      numero: payload.numero,
+      date: payload.date,
+      par: payload.par,
+      cles_identites: payload.cles_identites,
+    }),
     { httpMetadata: { contentType: 'application/json' } },
   );
   return audioKeys.size + payload.cles_identites.length;

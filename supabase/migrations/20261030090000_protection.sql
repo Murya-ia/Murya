@@ -273,6 +273,32 @@ $$;
 -- L'admin confirme en retapant le numéro de la voix.
 -- -----------------------------------------------------------------------------
 
+-- Efface une voix de la base : sa contribution aux compteurs de lectures, puis la voix (et,
+-- en cascade, son identité, ses consentements, ses enregistrements, leurs vérifications, ses
+-- lots, ses signalements, sa demande de retrait) et son invitation (qui porte son nom).
+-- Interne : appelée par le retrait et par la restauration d'une sauvegarde.
+create function acces.erase_speaker(v_speaker public.speakers) returns void
+language plpgsql volatile security definer set search_path = '' as $$
+begin
+  -- Compteurs de lectures (spec §7) : on enlève ce que cette voix y avait ajouté.
+  update public.sentences t set validated_reads = greatest(t.validated_reads - x.n, 0)
+  from (select sentence_id, count(*)::integer as n from public.recordings
+        where speaker_id = v_speaker.id and qc_status in ('valide', 'corrige')
+        group by sentence_id) x
+  where t.id = x.sentence_id;
+  update public.sentences t set pending_reads = greatest(t.pending_reads - x.n, 0)
+  from (select a.sentence_id, count(*)::integer as n from public.assignments a
+        where a.speaker_id = v_speaker.id and a.status in ('attribuee', 'enregistree')
+          and not exists (select 1 from public.recordings r
+                          where r.speaker_id = a.speaker_id and r.sentence_id = a.sentence_id
+                            and r.qc_status in ('valide', 'corrige'))
+        group by a.sentence_id) x
+  where t.id = x.sentence_id;
+
+  delete from public.speakers where id = v_speaker.id;
+  delete from public.invites where id = v_speaker.invite_id;
+end $$;
+
 create function acces.withdraw_speaker(p_speaker_id uuid, p_confirm_number text) returns jsonb
 language plpgsql volatile security definer set search_path = '' as $$
 declare
@@ -304,33 +330,17 @@ begin
     format('%s/varie/%s/', v_speaker.language_code, v_speaker.number),
     format('%s/principale/%s/', v_speaker.language_code, v_speaker.number));
 
-  -- Compteurs de lectures (spec §7) : on enlève ce que cette voix y avait ajouté.
-  update public.sentences t set validated_reads = greatest(t.validated_reads - x.n, 0)
-  from (select sentence_id, count(*)::integer as n from public.recordings
-        where speaker_id = v_speaker.id and qc_status in ('valide', 'corrige')
-        group by sentence_id) x
-  where t.id = x.sentence_id;
-  update public.sentences t set pending_reads = greatest(t.pending_reads - x.n, 0)
-  from (select a.sentence_id, count(*)::integer as n from public.assignments a
-        where a.speaker_id = v_speaker.id and a.status in ('attribuee', 'enregistree')
-          and not exists (select 1 from public.recordings r
-                          where r.speaker_id = a.speaker_id and r.sentence_id = a.sentence_id
-                            and r.qc_status in ('valide', 'corrige'))
-        group by a.sentence_id) x
-  where t.id = x.sentence_id;
-
   insert into public.withdrawals (language_code, speaker_number, withdrawn_by)
   values (v_speaker.language_code, v_speaker.number, auth.uid());
 
   insert into public.jobs (kind, payload)
   values ('effacer_fichiers', jsonb_build_object(
     'langue', v_speaker.language_code, 'numero', v_speaker.number, 'date', now(),
-    'prefixes_audio', v_prefixes, 'cles_audio', to_jsonb(v_audio_keys),
+    'par', auth.uid(), 'prefixes_audio', v_prefixes, 'cles_audio', to_jsonb(v_audio_keys),
     'cles_identites', to_jsonb(v_identity_keys)))
   returning id into v_job;
 
-  delete from public.speakers where id = v_speaker.id;
-  delete from public.invites where id = v_speaker.invite_id;
+  perform acces.erase_speaker(v_speaker);
 
   insert into public.audit_log (actor_id, actor_kind, action, target_type, target_id, details)
   values (auth.uid(), 'equipe', 'retrait_voix', 'speaker', v_speaker.number,
@@ -338,7 +348,7 @@ begin
 
   return jsonb_build_object(
     'numero', v_speaker.number, 'langue', v_speaker.language_code, 'audios', v_count,
-    'date', now(), 'tache', v_job, 'prefixes_audio', v_prefixes,
+    'date', now(), 'par', auth.uid(), 'tache', v_job, 'prefixes_audio', v_prefixes,
     'cles_audio', to_jsonb(v_audio_keys), 'cles_identites', to_jsonb(v_identity_keys));
 end $$;
 
@@ -347,6 +357,41 @@ language sql volatile security invoker set search_path = '' as $$
   select acces.withdraw_speaker(p_speaker_id, p_confirm_number);
 $$;
 
+
+-- Restauration d'une sauvegarde (docs/sauvegardes.md) : une voix retirée APRÈS la date de la
+-- sauvegarde y figure encore. Le script de restauration la retire à nouveau, grâce aux traces
+-- « retraits/{langue}/{numéro}.json » laissées dans le stockage. Rôle service seulement.
+create function public.restore_reapply_withdrawal(
+  p_language text,
+  p_number text,
+  p_by uuid,
+  p_date timestamptz
+) returns boolean
+language plpgsql volatile security definer set search_path = '' as $$
+declare
+  v_speaker public.speakers;
+  v_by uuid;
+begin
+  select * into v_speaker from public.speakers
+  where language_code = p_language and number = p_number for update;
+  if v_speaker.id is not null then
+    perform acces.erase_speaker(v_speaker);
+    insert into public.audit_log (actor_kind, action, target_type, target_id, details)
+    values ('systeme', 'retrait_reapplique', 'speaker', p_number,
+            jsonb_build_object('langue', p_language));
+  end if;
+  -- L'admin qui avait retiré la voix, ou à défaut le plus ancien admin.
+  select user_id into v_by from public.team_members where user_id = p_by;
+  if v_by is null then
+    select user_id into v_by from public.team_members
+    where 'admin' = any(roles) order by created_at limit 1;
+  end if;
+  insert into public.withdrawals (language_code, speaker_number, withdrawn_by, withdrawn_at)
+  values (p_language, p_number, v_by, coalesce(p_date, now()))
+  on conflict (language_code, speaker_number) do nothing;
+  return v_speaker.id is not null;
+end $$;
+
 -- -----------------------------------------------------------------------------
 -- Droits
 -- -----------------------------------------------------------------------------
@@ -354,6 +399,11 @@ $$;
 revoke execute on function public.audit_log_inalterable() from public, anon, authenticated;
 revoke execute on function public.journal_phrase_active() from public, anon, authenticated;
 revoke execute on function public.journal_membre() from public, anon, authenticated;
+revoke execute on function acces.erase_speaker(public.speakers) from public, anon, authenticated;
+revoke execute on function public.restore_reapply_withdrawal(text, text, uuid, timestamptz)
+  from public, anon, authenticated;
+grant execute on function public.restore_reapply_withdrawal(text, text, uuid, timestamptz)
+  to service_role;
 
 do $$
 declare
