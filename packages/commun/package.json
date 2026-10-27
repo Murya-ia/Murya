@@ -1,0 +1,15 @@
+{
+  "name": "@murya/commun",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Code partagé entre l'app de la voix, l'espace équipe et l'API : encodage WAV, analyse audio, types.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./theme.css": "./src/theme.css",
+    "./logo": "./src/logo.tsx"
+  },
+  "scripts": {
+    "typecheck": "tsc -p ."
+  }
+}
