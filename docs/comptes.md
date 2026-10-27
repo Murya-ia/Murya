@@ -111,7 +111,7 @@ npx supabase db query --linked "update public.speakers set status = 'active', te
 _My Profile_ > _API Tokens_ > _Create Token_ > modèle **Edit Cloudflare Workers**. Notez le jeton
 (il servira à l'étape 5).
 
-### 2.5 Worker des vérifications audio (J4, GitHub Actions)
+### 2.5 Worker des vérifications audio (J4, GitHub Actions — activé le 27/10/2026)
 
 Le worker Python (`worker/`) vérifie chaque audio reçu (spec §6.2). Il tourne toutes les
 15 minutes sur GitHub Actions (`.github/workflows/worker.yml`), dans l'environnement GitHub
