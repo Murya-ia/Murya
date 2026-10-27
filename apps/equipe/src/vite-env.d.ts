@@ -1,6 +1,8 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
+  /** Adresse de l'API (Worker Cloudflare). */
+  readonly VITE_API_URL?: string;
   /** Adresse du projet Supabase (Project Settings > API). */
   readonly VITE_SUPABASE_URL?: string;
   /** Clé publique « publishable » du projet Supabase (sans danger côté navigateur grâce à la RLS). */

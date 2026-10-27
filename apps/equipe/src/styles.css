@@ -160,3 +160,329 @@ a.bouton {
   font-size: 0.9rem;
   margin: 0;
 }
+
+/* ------------------------------------------------------------------ J3 : pages de l'équipe */
+
+h1 {
+  margin-top: 0;
+}
+
+.contenu {
+  max-width: 1100px;
+}
+
+.carte {
+  margin-bottom: 20px;
+}
+
+.navigation {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.navigation a {
+  color: var(--blanc);
+  text-decoration: none;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.navigation a.actif,
+.navigation a:hover {
+  background: rgba(255, 255, 255, 0.16);
+  opacity: 1;
+}
+
+.cartes-compteurs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+button.compteur {
+  background: var(--blanc);
+  color: var(--noir);
+  border: 2px solid var(--bordure);
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  font-weight: 400;
+}
+
+.compteur strong {
+  font-size: 2rem;
+  color: var(--vert);
+}
+
+.tableau-defilant {
+  overflow-x: auto;
+}
+
+.tableau-defilant.haut {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.tableau {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.tableau th {
+  text-align: left;
+  color: var(--gris);
+  font-weight: 600;
+  border-bottom: 2px solid var(--bordure);
+  padding: 8px;
+  position: sticky;
+  top: 0;
+  background: var(--blanc);
+}
+
+.tableau td {
+  border-bottom: 1px solid var(--bordure);
+  padding: 8px;
+  vertical-align: middle;
+}
+
+.tableau tr.inactive td {
+  opacity: 0.5;
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.etape {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--ivoire);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.etape.alerte {
+  background: #fff4dc;
+  color: var(--alerte);
+}
+
+.etape.succes {
+  background: #e3f0ea;
+  color: var(--succes);
+}
+
+.etape.gris {
+  color: var(--gris);
+}
+
+.pastille-discrete {
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 6px;
+  border: 1px solid var(--bordure);
+  color: var(--gris);
+  font-size: 0.75rem;
+}
+
+button.danger {
+  background: var(--erreur);
+}
+
+.danger-texte {
+  color: var(--erreur) !important;
+  border-color: var(--erreur) !important;
+}
+
+button.lien {
+  background: none;
+  color: var(--vert);
+  text-decoration: underline;
+  padding: 0 8px;
+}
+
+.panneau {
+  border: 2px solid var(--vert);
+}
+
+.panneau-titre {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.prise-test {
+  margin-bottom: 12px;
+}
+
+.prise-test p {
+  margin: 4px 0;
+}
+
+textarea {
+  font: inherit;
+  width: 100%;
+  padding: 8px 12px;
+  border: 2px solid var(--bordure);
+  border-radius: 12px;
+}
+
+/* Lecteur audio avec forme d'onde */
+.lecteur {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0;
+}
+
+.lecteur .lecture {
+  width: 56px;
+  height: 56px;
+  min-height: 0;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.lecteur.compact .lecture {
+  width: 40px;
+  height: 40px;
+}
+
+.onde {
+  width: 100%;
+  height: 96px;
+  cursor: pointer;
+  background: var(--ivoire);
+  border-radius: 8px;
+}
+
+.lecteur.compact .onde {
+  height: 48px;
+}
+
+.onde.chargement {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gris);
+}
+
+/* Vérification */
+.titre-ligne {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.onglets {
+  display: flex;
+  gap: 8px;
+}
+
+.entete-audio {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.texte-attendu {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 12px 0 4px;
+}
+
+.indicateurs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  font-size: 0.9rem;
+  margin: 8px 0 16px;
+}
+
+.indicateurs .attention {
+  color: var(--alerte);
+  font-weight: 600;
+}
+
+.decisions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+kbd {
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 4px;
+  border: 1px solid currentColor;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.complement {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filtres {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.filtres input:not([type='checkbox']) {
+  max-width: 360px;
+}
+
+.case-ligne {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 400;
+  margin: 0;
+}
+
+.case-ligne input {
+  width: 20px;
+  height: 20px;
+  min-height: 0;
+}
+
+.apercu {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.message.succes {
+  background: #e3f0ea;
+  color: var(--succes);
+}
+
+.erreur-ligne {
+  color: var(--erreur);
+  margin: 2px 0;
+}

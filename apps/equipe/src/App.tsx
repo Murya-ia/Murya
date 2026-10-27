@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { Logo } from '@murya/commun/logo';
 import { LoginPage } from './LoginPage';
-import { HomePage } from './HomePage';
+import { TeamShell } from './TeamShell';
 import { supabase } from './supabase';
 
 export function App() {
@@ -23,7 +23,7 @@ function AuthGate({ client }: { client: SupabaseClient }) {
 
   if (session === undefined) return null;
   if (!session) return <LoginPage client={client} />;
-  return <HomePage client={client} session={session} />;
+  return <TeamShell client={client} session={session} />;
 }
 
 function MissingConfig() {

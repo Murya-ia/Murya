@@ -3,7 +3,7 @@
 // on en crée un nouveau.
 
 import { useState, type FormEvent } from 'react';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { LANGUAGE, useTeam } from '../lib/team';
 
 const VOICE_APP_URL = import.meta.env.VITE_VOICE_APP_URL ?? 'http://localhost:5173';
 
@@ -13,7 +13,8 @@ interface CreatedInvite {
   expires_at: string;
 }
 
-export function InviteForm({ client }: { client: SupabaseClient }) {
+export function InviteForm({ onCreated }: { onCreated?: () => void }) {
+  const { client } = useTeam();
   const [label, setLabel] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +29,7 @@ export function InviteForm({ client }: { client: SupabaseClient }) {
     setError(null);
     setCopied(false);
     const { data, error: rpcError } = await client
-      .rpc('create_invite', { p_label: label.trim(), p_language: 'dje' })
+      .rpc('create_invite', { p_label: label.trim(), p_language: LANGUAGE })
       .single<CreatedInvite>();
     setBusy(false);
     if (rpcError || !data) {
@@ -41,6 +42,7 @@ export function InviteForm({ client }: { client: SupabaseClient }) {
       expires: new Date(data.expires_at).toLocaleDateString('fr-FR'),
     });
     setLabel('');
+    onCreated?.();
   }
 
   const whatsappText = created
