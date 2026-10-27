@@ -486,3 +486,13 @@ kbd {
   color: var(--erreur);
   margin: 2px 0;
 }
+
+.gain {
+  font-size: 0.8rem;
+  color: var(--gris);
+  white-space: nowrap;
+}
+
+.lecteur {
+  flex-wrap: wrap;
+}

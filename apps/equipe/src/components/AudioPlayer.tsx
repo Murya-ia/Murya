@@ -1,9 +1,10 @@
 // Lecteur d'un audio de la collecte, avec sa forme d'onde (spec §5.4).
 // L'audio est téléchargé une seule fois (adresse signée de 15 min), décodé avec notre propre
-// lecteur WAV (packages/commun), puis lu depuis la mémoire du navigateur.
+// lecteur WAV (packages/commun), puis lu depuis la mémoire du navigateur. Il est amplifié pour
+// l'écoute seulement : le fichier gardé dans le stockage reste brut.
 
 import { useEffect, useRef, useState, type MutableRefObject } from 'react';
-import { decodeWavPcm16 } from '@murya/commun';
+import { amplify, decodeWavPcm16, encodeWav, listeningGain } from '@murya/commun';
 import { audioUrl } from '../lib/api';
 import { useTeam } from '../lib/team';
 
@@ -30,6 +31,7 @@ export function AudioPlayer({
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState(false);
+  const [gain, setGain] = useState(1);
 
   // Téléchargement et décodage.
   useEffect(() => {
@@ -44,8 +46,14 @@ export function AudioPlayer({
         const response = await fetch(await audioUrl(session, recordingId));
         const bytes = new Uint8Array(await response.arrayBuffer());
         if (cancelled) return;
-        setPeaks(computePeaks(decodeWavPcm16(bytes).samples));
-        objectUrl = URL.createObjectURL(new Blob([bytes], { type: 'audio/wav' }));
+        const { samples, info } = decodeWavPcm16(bytes);
+        const factor = listeningGain(samples);
+        setGain(factor);
+        setPeaks(computePeaks(samples));
+        // Version amplifiée pour les haut-parleurs ; l'original n'est pas modifié.
+        const playable =
+          factor > 1.05 ? encodeWav(amplify(samples, factor), info.sampleRate) : bytes;
+        objectUrl = URL.createObjectURL(new Blob([playable], { type: 'audio/wav' }));
         setBlobUrl(objectUrl);
       } catch {
         if (!cancelled) setError(true);
@@ -128,6 +136,11 @@ export function AudioPlayer({
         />
       ) : (
         <div className="onde chargement">Chargement…</div>
+      )}
+      {gain > 1.05 && !compact && (
+        <span className="gain" title="Le fichier d'origine n'est pas modifié">
+          Volume ×{Math.round(gain)} pour l'écoute (niveau d'origine {gain > 10 ? 'très ' : ''}bas)
+        </span>
       )}
       {blobUrl && (
         <audio

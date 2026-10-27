@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AudioPlayer, type PlayerControl } from '../components/AudioPlayer';
 import { errorText, LANGUAGE, useTeam } from '../lib/team';
+import { ownRecruits, type ReviewCounts } from './AccueilPage';
 
 interface Item {
   id: string;
@@ -45,7 +46,13 @@ const REASONS: Record<string, string> = {
 export function EcoutePage() {
   const { client, has } = useTeam();
   const canArbitrate = has('qualite') || has('admin');
-  const [mode, setMode] = useState<Mode>('premiere');
+  // `/ecoute?file=doutes` ouvre directement la file des doutes (lien de l'accueil).
+  const [mode, setMode] = useState<Mode>(() =>
+    canArbitrate && new URLSearchParams(location.search).get('file') === 'doutes'
+      ? 'doute'
+      : 'premiere',
+  );
+  const [counts, setCounts] = useState<ReviewCounts | null>(null);
   const [item, setItem] = useState<Item | null | undefined>(undefined);
   const [pending, setPending] = useState<Decision | null>(null);
   const [corrected, setCorrected] = useState('');
@@ -67,6 +74,9 @@ export function EcoutePage() {
       p_language: LANGUAGE,
       p_mode: mode,
     });
+    void client
+      .rpc('review_counts', { p_language: LANGUAGE })
+      .then(({ data: c }) => setCounts(c as ReviewCounts));
     if (rpcError) {
       setError(errorText(rpcError));
       setItem(null);
@@ -162,6 +172,15 @@ export function EcoutePage() {
       {item === null && (
         <section className="carte">
           <p>Rien à écouter pour le moment.</p>
+          {ownRecruits(
+            mode === 'doute' ? counts?.doutes_vos_recrues : counts?.a_verifier_vos_recrues,
+          ) && (
+            <p className="aide">
+              {ownRecruits(
+                mode === 'doute' ? counts?.doutes_vos_recrues : counts?.a_verifier_vos_recrues,
+              )}
+            </p>
+          )}
           <button className="secondaire" onClick={() => void claim()}>
             Vérifier à nouveau
           </button>

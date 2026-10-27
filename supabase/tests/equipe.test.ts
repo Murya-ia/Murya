@@ -276,3 +276,34 @@ describe('suivi des voix', () => {
     expect(progress).toMatchObject({ total: 0, enregistrees: 0 });
   });
 });
+
+describe('compteurs de l’écoute', () => {
+  it('comptent comme la file, et mettent à part les audios de ses propres recrues', async () => {
+    const recruiter = await createMember(db, 'compteurs', ['recruteur', 'verificateur', 'qualite']);
+    const mine = (await createSpeaker(db, recruiter)).id;
+    const doubt = await createRecording(db, mine, sentences[3]!);
+    await db.query(`update public.recordings set qc_status = 'doute' where id = $1`, [doubt]);
+
+    const counts = await as<{ doutes: number; doutes_vos_recrues: number }>(
+      recruiter,
+      `select public.review_counts('dje') as r`,
+    );
+    expect(counts.doutes_vos_recrues).toBe(1);
+    // La file des doutes ne lui propose pas cet audio : le compteur principal non plus.
+    const claimable = await as<{ id: string } | null>(
+      recruiter,
+      `select public.review_claim('dje', 'doute') as r`,
+    );
+    expect(counts.doutes).toBe(claimable ? 1 : 0);
+    expect(claimable?.id).not.toBe(doubt);
+  });
+
+  it('ne compte rien pour un membre qui n’écoute pas', async () => {
+    const recruiterOnly = await createMember(db, 'recrute-seulement', ['recruteur']);
+    const counts = await as<Record<string, number>>(
+      recruiterOnly,
+      `select public.review_counts('dje') as r`,
+    );
+    expect(Object.values(counts).every((n) => n === 0)).toBe(true);
+  });
+});

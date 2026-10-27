@@ -4,3 +4,4 @@ export * from './audio/checks';
 export * from './uuid';
 export * from './csv';
 export * from './orthography';
+export * from './audio/listening';
