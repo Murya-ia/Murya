@@ -204,3 +204,65 @@ team.post('/exports/:id/lien', async (c) => {
     url: await signedDownloadUrl(c.env, new URL(c.req.url).origin, location, body.fichier),
   });
 });
+
+const ROLES = ['recruteur', 'verificateur', 'qualite', 'admin'];
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * Nouveau membre de l'équipe, créé par un admin depuis la page « Membres » : le compte de
+ * connexion (e-mail + mot de passe provisoire, confirmé d'office) puis sa place dans l'équipe.
+ * La création d'un compte demande la clé secrète : c'est pourquoi elle passe par l'API.
+ */
+team.post('/membres', async (c) => {
+  const body = (await c.req.json().catch(() => null)) as {
+    email?: unknown;
+    mot_de_passe?: unknown;
+    nom?: unknown;
+    roles?: unknown;
+  } | null;
+  const email = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : '';
+  const password = typeof body?.mot_de_passe === 'string' ? body.mot_de_passe : '';
+  const name = typeof body?.nom === 'string' ? body.nom.trim() : '';
+  const roles = Array.isArray(body?.roles) ? body.roles : null;
+  if (
+    !EMAIL_RE.test(email) ||
+    password.length < 10 ||
+    password.length > 72 ||
+    !name ||
+    name.length > 80 ||
+    !roles ||
+    !roles.every((r) => typeof r === 'string' && ROLES.includes(r))
+  ) {
+    return c.json({ erreur: 'requete_invalide' }, 400);
+  }
+  // La base dit si la personne connectée est admin (avec SA session).
+  if (!(await rpcAsUser<boolean>(c.env, c.get('jwt'), 'has_role', { p_role: 'admin' }))) {
+    return c.json({ erreur: 'acces_refuse' }, 403);
+  }
+
+  const auth = { apikey: c.env.SUPABASE_SECRET_KEY, 'Content-Type': 'application/json' };
+  const created = await fetch(`${c.env.SUPABASE_URL}/auth/v1/admin/users`, {
+    method: 'POST',
+    headers: auth,
+    body: JSON.stringify({ email, password, email_confirm: true }),
+  });
+  if (created.status === 422) return c.json({ erreur: 'email_existe' }, 409);
+  if (!created.ok) throw new Error(`création du compte : HTTP ${created.status}`);
+  const { id } = (await created.json()) as { id: string };
+
+  try {
+    await rpcAsUser(c.env, c.get('jwt'), 'add_team_member', {
+      p_user_id: id,
+      p_name: name,
+      p_roles: roles,
+    });
+  } catch (error) {
+    // La base refuse (ex. déjà deux admins) : on ne laisse pas un compte sans équipe.
+    await fetch(`${c.env.SUPABASE_URL}/auth/v1/admin/users/${id}`, {
+      method: 'DELETE',
+      headers: auth,
+    });
+    throw error;
+  }
+  return c.json({ ok: true, email });
+});
