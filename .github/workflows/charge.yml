@@ -15,6 +15,9 @@ on:
       palier:
         description: Durée du palier à pleine charge (ex. 5m)
         default: '5m'
+      cible:
+        description: « api » (parcours complet) ou « supabase » (diagnostic, base seule)
+        default: api
 
 permissions:
   contents: read
@@ -36,11 +39,21 @@ jobs:
       - name: Préparer les voix d'essai
         run: psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -v n=${{ inputs.voix }} -f infra/charge/preparer.sql
       - name: Simuler les voix
+        if: inputs.cible == 'api'
         run: >-
           k6 run --quiet --summary-export resultat.json
           -e API=https://murya-api-staging.murya-api.workers.dev
           -e VOIX=${{ inputs.voix }} -e PALIER=${{ inputs.palier }}
           infra/charge/voix.js
+      - name: Simuler les voix, directement contre Supabase (diagnostic)
+        if: inputs.cible == 'supabase'
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        run: >-
+          k6 run --quiet --summary-export resultat.json
+          -e VOIX=${{ inputs.voix }} -e PALIER=${{ inputs.palier }}
+          infra/charge/direct.js
       - name: Résumé
         if: always()
         run: |
