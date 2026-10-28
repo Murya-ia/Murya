@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AudioPlayer, type PlayerControl } from '../components/AudioPlayer';
 import { errorText, LANGUAGE, useTeam } from '../lib/team';
 import { ownRecruits, type ReviewCounts } from './AccueilPage';
+import { VoixPrincipale } from './VoixPrincipale';
 
 interface Item {
   id: string;
@@ -360,6 +361,8 @@ export function EcoutePage() {
           )}
         </section>
       )}
+      {/* Le responsable qualité suit la voix principale ici quand il n'a pas la page Voix. */}
+      {has('qualite') && !has('recruteur') && !has('admin') && <VoixPrincipale />}
     </>
   );
 }

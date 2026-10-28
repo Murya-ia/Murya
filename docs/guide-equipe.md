@@ -65,7 +65,8 @@ avancement. Une voix n'est jamais connue autrement que par son numéro dans les 
 ### Voix principale (admins et responsable qualité)
 
 La voix principale lit tout le corpus, en séances d'environ 150 phrases, en qualité supérieure.
-Carte **« Voix principale »** de la page Voix :
+Carte **« Voix principale »** de la page Voix (le responsable qualité qui n'a pas la page Voix
+la trouve en bas de la page Écoute) :
 
 1. **Désigner** (admins) : choisir la voix dans la liste, puis **« Désigner comme voix
    principale »**. Une seule par langue. Elle passe d'abord le test comme les autres.

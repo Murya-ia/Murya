@@ -1,4 +1,5 @@
-// Voix principale (spec §5.7), sur la page Voix, pour les admins et le responsable qualité :
+// Voix principale (spec §5.7), sur la page Voix (admins), et en bas de la page Écoute pour le
+// responsable qualité qui n'a pas la page Voix :
 //   - désigner la voix principale (admins) ;
 //   - suivre ses séances : une séance s'ouvre seule quand la précédente est entièrement
 //     vérifiée (les audios de la voix principale s'écoutent dans la page Écoute, comme les autres) ;
