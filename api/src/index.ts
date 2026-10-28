@@ -3,6 +3,7 @@ import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
 import type { Env } from './env';
 import { processPendingErasures } from './erasure';
+import { downloads } from './exports';
 import { checkR2Credentials } from './r2';
 import { proof } from './routes/proof';
 import { team } from './routes/team';
@@ -31,6 +32,7 @@ app.get('/sante', async (c) => {
   return c.json({ ok: r2 === 'ok', ...health, r2 }, r2 === 'ok' ? 200 : 503);
 });
 
+app.route('/telechargement', downloads);
 app.route('/preuve', proof);
 app.route('/voix', voice);
 app.route('/equipe', team);

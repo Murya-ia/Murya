@@ -25,6 +25,10 @@ bucket_name = "murya-audio-staging"
 binding = "IDENTITES"
 bucket_name = "murya-identites-staging"
 
+[[r2_buckets]]
+binding = "EXPORTS"
+bucket_name = "murya-exports-staging"
+
 # ---------------------------------------------------------------- staging
 [env.staging]
 name = "murya-api-staging"
@@ -47,6 +51,10 @@ bucket_name = "murya-audio-staging"
 [[env.staging.r2_buckets]]
 binding = "IDENTITES"
 bucket_name = "murya-identites-staging"
+
+[[env.staging.r2_buckets]]
+binding = "EXPORTS"
+bucket_name = "murya-exports-staging"
 
 # Limites de débit des voix : 120 requêtes par minute et par jeton (une voix active en fait
 # environ 4 par phrase), 1 200 par minute et par adresse IP (adresses partagées des opérateurs).
@@ -82,6 +90,10 @@ bucket_name = "murya-audio"
 [[env.production.r2_buckets]]
 binding = "IDENTITES"
 bucket_name = "murya-identites"
+
+[[env.production.r2_buckets]]
+binding = "EXPORTS"
+bucket_name = "murya-exports"
 
 [[env.production.ratelimits]]
 name = "RL_TOKEN"

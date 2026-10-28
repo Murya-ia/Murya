@@ -13,7 +13,11 @@ export function fakeBucket(files: Record<string, Uint8Array> = {}) {
       if (!file) return null;
       const { offset = 0, length = file.byteLength } = options?.range ?? {};
       const part = file.slice(offset, offset + length);
-      return { arrayBuffer: async () => part.buffer };
+      return {
+        arrayBuffer: async () => part.buffer,
+        body: new Response(part).body,
+        size: part.byteLength,
+      };
     },
     async delete(keys: string | string[]) {
       for (const key of Array.isArray(keys) ? keys : [keys]) delete files[key];
@@ -45,6 +49,7 @@ export function testEnv(overrides: Partial<Env> = {}, files?: Record<string, Uin
     SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_test',
     AUDIO: fakeBucket(files) as unknown as R2Bucket,
     IDENTITES: fakeBucket() as unknown as R2Bucket,
+    EXPORTS: fakeBucket() as unknown as R2Bucket,
     ...overrides,
   };
 }

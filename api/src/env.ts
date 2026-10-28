@@ -18,6 +18,8 @@ export interface Env {
   AUDIO: R2Bucket;
   /** Bucket des identités (consentements oraux), séparé des audios des voix. */
   IDENTITES: R2Bucket;
+  /** Bucket des exports du jeu de données (écrit par le worker, lu par les admins). */
+  EXPORTS: R2Bucket;
   /** Limites de débit Cloudflare (facultatives : absentes en local et dans les tests). */
   RL_TOKEN?: RateLimit;
   RL_IP?: RateLimit;

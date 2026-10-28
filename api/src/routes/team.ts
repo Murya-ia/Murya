@@ -5,6 +5,7 @@
 import { Hono } from 'hono';
 import type { Env } from '../env';
 import { eraseFiles, type ErasurePayload } from '../erasure';
+import { isExportFile, signedDownloadUrl } from '../exports';
 import { presignUrl } from '../r2';
 import { VoiceError, businessStatus, rpc, rpcAsUser } from '../supabase';
 import { isUuid } from '../util';
@@ -112,4 +113,24 @@ team.post('/retrait/:speakerId', async (c) => {
     console.error(`retrait : effacement des fichiers à reprendre (${(error as Error).message})`);
   }
   return c.json({ numero: result.numero, audios: result.audios, fichiers_effaces: filesErased });
+});
+
+/**
+ * Lien de téléchargement d'un fichier d'export (spec §5.9), pour un admin. La base vérifie le
+ * rôle, note le téléchargement au journal et donne le dossier ; le lien signé vaut 15 minutes.
+ */
+team.post('/exports/:id/lien', async (c) => {
+  const id = Number(c.req.param('id'));
+  const body = (await c.req.json().catch(() => null)) as { fichier?: unknown } | null;
+  if (!Number.isInteger(id) || id <= 0 || !isExportFile(body?.fichier)) {
+    return c.json({ erreur: 'requete_invalide' }, 400);
+  }
+  const location = await rpcAsUser<string | null>(c.env, c.get('jwt'), 'export_location', {
+    p_export_id: id,
+    p_file: body.fichier,
+  });
+  if (!location) return c.json({ erreur: 'introuvable' }, 404);
+  return c.json({
+    url: await signedDownloadUrl(c.env, new URL(c.req.url).origin, location, body.fichier),
+  });
 });
