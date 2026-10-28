@@ -31,9 +31,10 @@ voice.use('*', async (c, next) => {
   // Limite principale par jeton. La limite par adresse IP reste large : au Niger, beaucoup
   // d'abonnés d'un même opérateur sortent par la même adresse.
   const ip = c.req.header('CF-Connecting-IP') ?? 'inconnue';
+  const loadTest = Date.now() < Date.parse(c.env.CHARGE_JUSQUA ?? '');
   const [byToken, byIp] = await Promise.all([
     c.env.RL_TOKEN?.limit({ key: tokenHash }),
-    c.env.RL_IP?.limit({ key: ip }),
+    loadTest ? undefined : c.env.RL_IP?.limit({ key: ip }),
   ]);
   if (byToken?.success === false || byIp?.success === false) {
     return c.json({ erreur: 'trop_de_requetes' }, 429);

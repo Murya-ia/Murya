@@ -66,6 +66,19 @@ describe('jeton', () => {
     const res = await request('GET', '/voix/session', undefined, testEnv({ RL_TOKEN: limited }));
     expect(res.status).toBe(429);
   });
+
+  it("lève la limite par adresse IP pendant un essai de charge, jusqu'à l'heure prévue", async () => {
+    const limited = { limit: async () => ({ success: false }) } as unknown as RateLimit;
+    const later = new Date(Date.now() + 3_600_000).toISOString();
+    const earlier = new Date(Date.now() - 60_000).toISOString();
+    const during = testEnv({ RL_IP: limited, CHARGE_JUSQUA: later });
+    expect((await request('GET', '/voix/session', undefined, during)).status).toBe(200);
+    const after = testEnv({ RL_IP: limited, CHARGE_JUSQUA: earlier });
+    expect((await request('GET', '/voix/session', undefined, after)).status).toBe(429);
+    // La limite par jeton, elle, reste toujours active.
+    const token = testEnv({ RL_TOKEN: limited, CHARGE_JUSQUA: later });
+    expect((await request('GET', '/voix/session', undefined, token)).status).toBe(429);
+  });
 });
 
 describe('consentement et fiche', () => {

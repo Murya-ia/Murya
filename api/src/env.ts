@@ -23,4 +23,10 @@ export interface Env {
   /** Limites de débit Cloudflare (facultatives : absentes en local et dans les tests). */
   RL_TOKEN?: RateLimit;
   RL_IP?: RateLimit;
+  /**
+   * Essai de charge (infra/charge) : jusqu'à cette date (ISO), la limite par adresse IP est
+   * levée, car tout l'essai part d'une seule machine. Donnée au déploiement, jamais dans le
+   * fichier de configuration ; passé cette date, la limite revient d'elle-même.
+   */
+  CHARGE_JUSQUA?: string;
 }
