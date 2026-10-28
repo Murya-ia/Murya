@@ -73,12 +73,19 @@ def encrypt(data: bytes, keys: list[x25519.Recipient]) -> bytes:
     return pyrage.encrypt(data, keys)
 
 
+def run_quiet(command: list[str], **kwargs) -> subprocess.CompletedProcess:
+    """Lance psql ou pg_dump. En cas d'échec, affiche leur message d'erreur (jamais l'adresse
+    de la base, qui contient le mot de passe)."""
+    result = subprocess.run(command, capture_output=True, **kwargs)
+    if result.returncode != 0:
+        error = result.stderr if isinstance(result.stderr, str) else result.stderr.decode(errors="replace")
+        raise SystemExit(f"{command[0]} a échoué : {error.strip()[-800:]}")
+    return result
+
+
 def psql(db_url: str, query: str) -> str:
-    result = subprocess.run(
-        ["psql", db_url, "--no-psqlrc", "--tuples-only", "--no-align", "--command", query],
-        check=True,
-        capture_output=True,
-        text=True,
+    result = run_quiet(
+        ["psql", db_url, "--no-psqlrc", "--tuples-only", "--no-align", "--command", query], text=True
     )
     return result.stdout.strip()
 
@@ -100,7 +107,7 @@ def dump_database(db_url: str) -> bytes:
         db_url,
     ]
     # La sortie reste en mémoire : jamais écrite dans un fichier ni dans les journaux.
-    return subprocess.run(command, check=True, capture_output=True).stdout
+    return run_quiet(command).stdout
 
 
 def backup_dates(store: Store, prefix: str) -> list[dt.date]:
