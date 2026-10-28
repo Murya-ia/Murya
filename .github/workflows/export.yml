@@ -1,0 +1,54 @@
+# Exports (spec §5.9) : construit les versions demandées par un admin dans l'espace équipe.
+# Regarde toutes les 15 minutes s'il y a un export à faire (moins d'une minute s'il n'y en a
+# pas). Gratuit tant que le dépôt est public.
+#
+# Inactif tant que la variable de dépôt EXPORT_ENABLED ne vaut pas "true".
+# Environnement GitHub « staging » (voir docs/comptes.md, section 2.7) :
+#   secrets   : SUPABASE_SECRET_KEY, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY (lecture des audios),
+#               EXPORT_R2_ACCESS_KEY_ID, EXPORT_R2_SECRET_ACCESS_KEY (bucket des exports),
+#               HF_TOKEN (facultatif : dépôt privé Hugging Face)
+#   variables : SUPABASE_URL, R2_ACCOUNT_ID, R2_BUCKET_AUDIO, EXPORT_R2_BUCKET,
+#               HF_OWNER (facultatif : compte ou organisation Hugging Face)
+name: Exports
+
+on:
+  schedule:
+    - cron: '7,22,37,52 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: export-staging
+  cancel-in-progress: false
+
+jobs:
+  exporter:
+    if: vars.EXPORT_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: worker/requirements.txt
+      - run: pip install -r worker/requirements.txt
+      - name: Construire les exports en attente
+        working-directory: worker
+        run: python -m murya_worker.export
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          R2_ACCOUNT_ID: ${{ vars.R2_ACCOUNT_ID }}
+          R2_BUCKET_AUDIO: ${{ vars.R2_BUCKET_AUDIO }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          EXPORT_R2_BUCKET: ${{ vars.EXPORT_R2_BUCKET }}
+          EXPORT_R2_ACCESS_KEY_ID: ${{ secrets.EXPORT_R2_ACCESS_KEY_ID }}
+          EXPORT_R2_SECRET_ACCESS_KEY: ${{ secrets.EXPORT_R2_SECRET_ACCESS_KEY }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_OWNER: ${{ vars.HF_OWNER }}

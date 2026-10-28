@@ -15,6 +15,8 @@ class Store(Protocol):
 
     def put(self, key: str, data: bytes) -> None: ...
 
+    def put_file(self, key: str, path: Path) -> None: ...
+
     def delete(self, keys: list[str]) -> None: ...
 
 
@@ -48,6 +50,10 @@ class S3Store:
 
     def put(self, key: str, data: bytes) -> None:
         self.client.put_object(Bucket=self.bucket, Key=key, Body=data)
+
+    def put_file(self, key: str, path: Path) -> None:
+        # Envoi en plusieurs morceaux pour les gros fichiers (archives d'export).
+        self.client.upload_file(str(path), self.bucket, key)
 
     def delete(self, keys: list[str]) -> None:
         # Au plus 1 000 clés par requête.
@@ -83,6 +89,9 @@ class DirStore:
         path = self._path(key)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(data)
+
+    def put_file(self, key: str, path: Path) -> None:
+        self.put(key, Path(path).read_bytes())
 
     def delete(self, keys: list[str]) -> None:
         for key in keys:
