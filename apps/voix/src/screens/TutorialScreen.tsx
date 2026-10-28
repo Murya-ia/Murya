@@ -1,19 +1,21 @@
-// Tutoriel (spec §3.4) : courte vidéo en zarma (à venir) et conseils illustrés.
-// La vidéo n'est jamais lancée toute seule : elle coûte des données mobiles.
+// Tutoriel (spec §3.4) : courte vidéo (1 min, sous-titrée) et conseils illustrés.
+// La vidéo n'est jamais lancée toute seule : elle coûte des données mobiles (2 Mo).
 
 import { useState } from 'react';
 import { Logo } from '@murya/commun/logo';
 import type { Api } from '../data/api';
-import { useT } from '../i18n/i18n';
+import { useLanguage, useT, type UiLanguage } from '../i18n/i18n';
 import { ErrorMessage } from '../ui/ErrorMessage';
 import { Icon } from '../ui/icons';
 
-/** Adresse de la vidéo du tutoriel, quand elle existera (ex. https://…/tutoriel-dje.mp4).
- * Les sous-titres seront intégrés à la vidéo (aucun fichier de plus à télécharger). */
-const VIDEO_URL = import.meta.env.VITE_TUTORIAL_VIDEO_URL;
+/** Vidéo du tutoriel par langue d'interface (fichiers de apps/voix/public, jamais mis en
+ * cache d'avance). Sous-titres intégrés à l'image. Version zarma : à ajouter quand la voix off
+ * aura été enregistrée par l'équipe ; en attendant, la version française. */
+const VIDEOS: Partial<Record<UiLanguage, string>> = { fr: '/tutoriel-fr.mp4' };
 
 export function TutorialScreen({ api, onDone }: { api: Api; onDone: () => void }) {
   const t = useT();
+  const video = VIDEOS[useLanguage()] ?? VIDEOS.fr;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
 
@@ -32,8 +34,15 @@ export function TutorialScreen({ api, onDone }: { api: Api; onDone: () => void }
     <main className="page">
       <Logo size={36} />
       <h1>{t('tutoriel.titre')}</h1>
-      {VIDEO_URL ? (
-        <video className="video" src={VIDEO_URL} controls preload="none" playsInline></video>
+      {video ? (
+        <video
+          className="video"
+          src={video}
+          poster="/tutoriel-affiche.jpg"
+          controls
+          preload="none"
+          playsInline
+        ></video>
       ) : (
         <p className="aide">{t('tutoriel.video_absente')}</p>
       )}

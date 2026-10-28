@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Murya — tutoriel</title>
+    <style>
+      @font-face {
+        font-family: 'Manrope';
+        src: url('manrope.woff2') format('woff2');
+        font-weight: 200 800;
+      }
+      :root {
+        --vert: #0f3d2e;
+        --vert-clair: #1f5c47;
+        --vif: #2b7a5c;
+        --ivoire: #f7f4ea;
+        --sable: #efeadb;
+        --noir: #111;
+        --gris: #6b6b64;
+        --rouge: #b3261e;
+        --degrade: linear-gradient(135deg, #2b7a5c 0%, #1f5c47 45%, #0f3d2e 100%);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: var(--ivoire);
+        font-family: 'Manrope', sans-serif;
+        color: var(--noir);
+      }
+      #scene {
+        position: relative;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+      }
+      .fond {
+        position: absolute;
+        inset: 0;
+      }
+      .onde {
+        position: absolute;
+        border-radius: 50%;
+        border: 3px solid rgba(31, 92, 71, 0.1);
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+      }
+      .plan {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        will-change: opacity, transform;
+      }
+      .etiquette {
+        position: absolute;
+        left: 50%;
+        top: 210px;
+        transform: translateX(-50%);
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 28px;
+        border-radius: 999px;
+        background: #fff;
+        border: 2px solid rgba(17, 17, 17, 0.08);
+        font-size: 34px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .etiquette::before {
+        content: '';
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--vert);
+      }
+      .titre {
+        position: absolute;
+        left: 80px;
+        right: 80px;
+        top: 300px;
+        text-align: center;
+        font-size: 92px;
+        line-height: 1.04;
+        font-weight: 700;
+        letter-spacing: -0.045em;
+      }
+      .titre .doux {
+        color: #9a978b;
+      }
+      .sous-titre {
+        position: absolute;
+        left: 70px;
+        right: 70px;
+        bottom: 120px;
+        text-align: center;
+        font-size: 46px;
+        line-height: 1.3;
+        font-weight: 600;
+        color: var(--noir);
+        background: rgba(255, 255, 255, 0.92);
+        border-radius: 36px;
+        padding: 30px 40px;
+        box-shadow: 0 30px 60px -40px rgba(15, 61, 46, 0.5);
+      }
+      .telephone {
+        position: absolute;
+        left: 50%;
+        width: 560px;
+        height: 900px;
+        margin-left: -280px;
+        top: 600px;
+        border-radius: 76px;
+        background: var(--noir);
+        padding: 22px;
+        box-shadow: 0 60px 120px -60px rgba(15, 61, 46, 0.6);
+      }
+      .ecran {
+        width: 100%;
+        height: 100%;
+        border-radius: 58px;
+        background: var(--ivoire);
+        overflow: hidden;
+        position: relative;
+      }
+      .phrase {
+        position: absolute;
+        left: 34px;
+        right: 34px;
+        top: 150px;
+        background: #fff;
+        border-radius: 40px;
+        padding: 54px 30px;
+        font-size: 52px;
+        line-height: 1.25;
+        font-weight: 800;
+        text-align: center;
+        border: 2px solid rgba(17, 17, 17, 0.08);
+      }
+      .micro {
+        position: absolute;
+        left: 50%;
+        top: 600px;
+        width: 210px;
+        height: 210px;
+        margin-left: -105px;
+        border-radius: 50%;
+        background: var(--degrade);
+        box-shadow: 0 0 0 22px rgba(31, 92, 71, 0.12);
+        display: grid;
+        place-items: center;
+      }
+      .doigt {
+        position: absolute;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: rgba(17, 17, 17, 0.18);
+        border: 6px solid rgba(255, 255, 255, 0.9);
+      }
+      .bouton {
+        position: absolute;
+        left: 34px;
+        right: 34px;
+        height: 104px;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        font-size: 38px;
+        font-weight: 700;
+      }
+      .grand-logo {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="scene">
+      <div class="fond" id="fond"></div>
+    </div>
+    <script>
+      // ------------------------------------------------------------------ outils
+      const W = 1080,
+        H = 1920;
+      const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+      const ease = (x) => {
+        x = clamp(x);
+        return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+      };
+      const out = (x) => 1 - Math.pow(1 - clamp(x), 3);
+      const back = (x) => {
+        x = clamp(x);
+        const c = 1.70158,
+          d = c + 1;
+        return 1 + d * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2);
+      };
+      const span = (t, a, b) => clamp((t - a) / (b - a));
+      const el = (html) => {
+        const d = document.createElement('div');
+        d.innerHTML = html.trim();
+        return d.firstElementChild;
+      };
+      const LOGO = window.LOGO;
+      const symbol = (size, color) =>
+        `<svg width="${(size * 501) / 489}" height="${size}" viewBox="${LOGO.sv}"><path fill="${color}" fill-rule="evenodd" d="${LOGO.sp}"/></svg>`;
+      const wordmark = (h, color) =>
+        `<svg width="${(h * 775) / 204}" height="${h}" viewBox="${LOGO.wv}"><path fill="${color}" fill-rule="evenodd" d="${LOGO.wp}"/></svg>`;
+
+      // Ondes décoratives du fond (rappel du logo), qui respirent doucement.
+      const fond = document.getElementById('fond');
+      const ondes = [520, 820, 1120, 1420, 1720].map((s) => {
+        const o = el(`<div class="onde" style="width:${s}px;height:${s}px"></div>`);
+        fond.appendChild(o);
+        return o;
+      });
+
+      // ------------------------------------------------------------------ scènes
+      // Durées : voix off de chaque scène + respirations (fichier durees.json).
+      const D = window.DUREES;
+      const PAD_BEFORE = 0.6,
+        PAD_AFTER = 0.9;
+      const TEXTS = {
+        s1: 'Bienvenue sur Murya. Avec votre voix, vous aidez à créer une intelligence artificielle qui comprend le zarma.',
+        s2: "C'est simple : l'application vous montre une phrase, et vous la lisez à voix haute.",
+        s3: "D'abord, installez-vous dans un endroit calme : pas de télévision, pas de moto, pas de foule.",
+        s4: 'Tenez le téléphone à une main de votre bouche. Pas trop près, pas trop loin.',
+        s5: 'Touchez le bouton pour enregistrer. Attendez une seconde. Puis lisez la phrase, normalement.',
+        s6: 'Quand vous avez fini, touchez encore le bouton. Réécoutez, recommencez, ou validez.',
+        s7: 'Pas de réseau ? Pas de souci. Vos enregistrements partent tout seuls quand le réseau revient.',
+        s8: 'Une phrase trop difficile ? Touchez « Je n’arrive pas à lire cette phrase ».',
+        s9: 'Merci pour votre aide. Chaque voix compte.',
+      };
+      const scenes = [];
+      let cursor = 0;
+      for (const id of Object.keys(TEXTS)) {
+        const dur = PAD_BEFORE + D[id] + PAD_AFTER + (id === 's9' ? 1.6 : 0);
+        scenes.push({ id, start: cursor, dur, voice: cursor + PAD_BEFORE });
+        cursor += dur;
+      }
+      window.TOTAL = cursor;
+      window.VOIX = scenes.map((s) => ({ id: s.id, at: s.voice }));
+
+      const root = document.getElementById('scene');
+      const planOf = {};
+      for (const s of scenes) {
+        const p = el(`<div class="plan" id="${s.id}"></div>`);
+        root.appendChild(p);
+        planOf[s.id] = p;
+      }
+      const caption = (p, text) => p.appendChild(el(`<div class="sous-titre">${text}</div>`));
+
+      // Scène 1 — logo
+      {
+        const p = planOf.s1;
+        p.innerHTML = `
+    <div class="grand-logo" id="s1-logo" style="display:flex;flex-direction:column;align-items:center;gap:40px">
+      <div id="s1-sym">${symbol(300, '#0f3d2e')}</div>
+      <div id="s1-mot">${wordmark(120, '#0f3d2e')}</div>
+      <div id="s1-tag" style="font-size:58px;font-weight:700;letter-spacing:-0.03em;text-align:center;white-space:nowrap">Votre langue. <span style="color:#9a978b">Votre voix.</span></div>
+    </div>`;
+        caption(p, TEXTS.s1);
+      }
+      // Scène 2 — le principe : une phrase à lire
+      {
+        const p = planOf.s2;
+        p.innerHTML = `
+    <div class="etiquette">Le principe</div>
+    <div class="titre" style="top:300px">Une phrase. <span class="doux">Votre voix.</span></div>
+    <div class="telephone" id="s2-tel"><div class="ecran">
+      <div style="position:absolute;left:34px;right:34px;top:56px;display:flex;justify-content:space-between;font-size:28px;font-weight:700;color:#6b6b64"><span>Phrase 12 / 150</span><span>V023</span></div>
+      <div class="phrase" id="s2-phrase">Ay ga koy habu suba.</div>
+      <div id="s2-onde" style="position:absolute;left:60px;right:60px;top:520px;height:120px;display:flex;align-items:center;justify-content:center;gap:10px"></div>
+    </div></div>`;
+        const onde = p.querySelector('#s2-onde');
+        for (let i = 0; i < 22; i++)
+          onde.appendChild(
+            el('<span style="width:12px;border-radius:6px;background:#1f5c47;height:20px"></span>'),
+          );
+        caption(p, TEXTS.s2);
+      }
+      // Scène 3 — endroit calme
+      {
+        const p = planOf.s3;
+        const tv = `<svg width="200" height="200" viewBox="0 0 100 100"><rect x="12" y="22" width="76" height="52" rx="8" fill="none" stroke="#111" stroke-width="6"/><path d="M38 86h24M50 74v12" stroke="#111" stroke-width="6" stroke-linecap="round"/></svg>`;
+        const moto = `<svg width="200" height="200" viewBox="0 0 100 100"><circle cx="24" cy="68" r="14" fill="none" stroke="#111" stroke-width="6"/><circle cx="78" cy="68" r="14" fill="none" stroke="#111" stroke-width="6"/><path d="M24 68l18-26h22l14 26M52 42l-6-12h-10M64 42l8-10h10" fill="none" stroke="#111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+        const foule = `<svg width="200" height="200" viewBox="0 0 100 100"><circle cx="30" cy="34" r="10" fill="none" stroke="#111" stroke-width="6"/><circle cx="70" cy="34" r="10" fill="none" stroke="#111" stroke-width="6"/><circle cx="50" cy="28" r="10" fill="none" stroke="#111" stroke-width="6"/><path d="M14 84c2-16 12-24 22-24M86 84c-2-16-12-24-22-24M30 84c2-18 10-26 20-26s18 8 20 26" fill="none" stroke="#111" stroke-width="6" stroke-linecap="round"/></svg>`;
+        p.innerHTML = `
+    <div class="etiquette">Conseil 1</div>
+    <div class="titre">Un endroit <span class="doux">calme.</span></div>
+    <div id="s3-icones" style="position:absolute;left:0;right:0;top:700px;display:flex;justify-content:center;gap:40px">
+      ${[tv, moto, foule].map((svg, i) => `<div class="s3-ic" style="position:relative;width:280px;height:280px;border-radius:60px;background:#fff;display:grid;place-items:center;border:2px solid rgba(17,17,17,.08)">${svg}<svg class="s3-barre" width="280" height="280" viewBox="0 0 280 280" style="position:absolute;inset:0"><path d="M50 50L230 230" stroke="#b3261e" stroke-width="18" stroke-linecap="round" stroke-dasharray="260" stroke-dashoffset="260"/></svg></div>`).join('')}
+    </div>
+    <div id="s3-ok" style="position:absolute;left:50%;top:1110px;transform:translateX(-50%);display:flex;align-items:center;gap:24px;padding:30px 54px;border-radius:999px;background:var(--degrade);color:#fff;font-size:52px;font-weight:700;white-space:nowrap">
+      <svg width="60" height="60" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>Calme, c'est mieux</div>`;
+        caption(p, TEXTS.s3);
+      }
+      // Scène 4 — distance
+      {
+        const p = planOf.s4;
+        p.innerHTML = `
+    <div class="etiquette">Conseil 2</div>
+    <div class="titre">À une main <span class="doux">de la bouche.</span></div>
+    <svg id="s4-visage" width="420" height="560" viewBox="0 0 210 280" style="position:absolute;left:110px;top:680px">
+      <path d="M150 40c-46-24-120 0-120 78 0 40 18 66 30 80 6 8 4 30-6 48h96c-4-14-6-26 0-32 16 0 26-8 26-24v-20l14-6c4-2 4-6 2-10l-14-26c0-48-8-74-28-88z" fill="#0f3d2e"/>
+      <path d="M176 154c-8 4-16 4-22 0" stroke="#f7f4ea" stroke-width="6" stroke-linecap="round" fill="none"/>
+    </svg>
+    <div id="s4-tel" style="position:absolute;left:720px;top:780px;width:200px;height:380px;border-radius:44px;background:#111;padding:12px"><div style="width:100%;height:100%;border-radius:34px;background:#f7f4ea;display:grid;place-items:center"><div style="width:90px;height:90px;border-radius:50%;background:var(--degrade)"></div></div></div>
+    <div id="s4-fleche" style="position:absolute;left:520px;top:950px;width:180px;height:40px">
+      <svg width="180" height="40" viewBox="0 0 180 40"><path d="M10 20h160M150 6l20 14-20 14M30 6L10 20l20 14" fill="none" stroke="#2b7a5c" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div id="s4-mesure" style="position:absolute;left:470px;top:1020px;width:280px;text-align:center;font-size:44px;font-weight:800;color:#1f5c47">≈ 20 cm</div>`;
+        caption(p, TEXTS.s4);
+      }
+      // Scène 5 — enregistrer
+      {
+        const p = planOf.s5;
+        p.innerHTML = `
+    <div class="etiquette">Enregistrer</div>
+    <div class="titre" style="font-size:80px">Toucher, <span class="doux">attendre 1 s, lire.</span></div>
+    <div class="telephone" style="top:540px"><div class="ecran">
+      <div class="phrase" style="top:100px">Ay ga koy habu suba.</div>
+      <div class="micro" id="s5-micro" style="top:520px"><svg width="90" height="90" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></div>
+      <svg id="s5-anneau" width="300" height="300" viewBox="0 0 300 300" style="position:absolute;left:50%;top:475px;margin-left:-150px"><circle cx="150" cy="150" r="138" fill="none" stroke="#2b7a5c" stroke-width="10" stroke-linecap="round" stroke-dasharray="867" stroke-dashoffset="867" transform="rotate(-90 150 150)"/></svg>
+      <div id="s5-compte" style="position:absolute;left:0;right:0;top:785px;text-align:center;font-size:40px;font-weight:800;color:#1f5c47"></div>
+      <div id="s5-onde" style="position:absolute;left:40px;right:40px;top:345px;height:110px;display:flex;align-items:center;justify-content:center;gap:9px"></div>
+      <div class="doigt" id="s5-doigt"></div>
+    </div></div>`;
+        const onde = p.querySelector('#s5-onde');
+        for (let i = 0; i < 24; i++)
+          onde.appendChild(
+            el('<span style="width:11px;border-radius:6px;background:#1f5c47;height:12px"></span>'),
+          );
+        caption(p, TEXTS.s5);
+      }
+      // Scène 6 — réécouter, recommencer, valider
+      {
+        const p = planOf.s6;
+        p.innerHTML = `
+    <div class="etiquette">Ensuite</div>
+    <div class="titre">Vous gardez <span class="doux">la main.</span></div>
+    <div class="telephone" style="top:540px"><div class="ecran">
+      <div class="phrase">Ay ga koy habu suba.</div>
+      <div id="s6-bien" style="position:absolute;left:34px;right:34px;top:420px;padding:22px;border-radius:28px;background:#e3f0ea;color:#0f3d2e;font-size:36px;font-weight:800;text-align:center">C'est bien !</div>
+      <div class="bouton s6-b" style="top:530px;background:#efeadb">▶ Réécouter</div>
+      <div class="bouton s6-b" style="top:645px;background:#efeadb">↺ Recommencer</div>
+      <div class="bouton s6-b" id="s6-valider" style="top:760px;background:var(--degrade);color:#fff">✓ Valider</div>
+    </div></div>`;
+        caption(p, TEXTS.s6);
+      }
+      // Scène 7 — hors réseau
+      {
+        const p = planOf.s7;
+        p.innerHTML = `
+    <div class="etiquette">Sans réseau</div>
+    <div class="titre">Rien ne <span class="doux">se perd.</span></div>
+    <div class="telephone" style="top:540px"><div class="ecran">
+      <div id="s7-reseau" style="position:absolute;right:46px;top:46px;display:flex;align-items:flex-end;gap:8px">
+        ${[22, 36, 50, 64].map((h) => `<span class="s7-barre" style="width:16px;height:${h}px;border-radius:5px;background:#d6d1c2"></span>`).join('')}
+      </div>
+      <div id="s7-croix" style="position:absolute;right:30px;top:30px;width:120px;height:90px"><svg width="120" height="90" viewBox="0 0 120 90"><path d="M20 15l80 60M100 15L20 75" stroke="#b3261e" stroke-width="10" stroke-linecap="round"/></svg></div>
+      <div style="position:absolute;left:0;right:0;top:170px;text-align:center;font-size:36px;font-weight:700;color:#6b6b64" id="s7-etat">Gardés dans le téléphone</div>
+      ${[0, 1, 2].map((i) => `<div class="s7-carte" style="position:absolute;left:70px;right:70px;top:${300 + i * 150}px;height:120px;border-radius:30px;background:#fff;border:2px solid rgba(17,17,17,.08);display:flex;align-items:center;gap:22px;padding:0 30px;font-size:34px;font-weight:700"><span style="width:60px;height:60px;border-radius:50%;background:var(--degrade);display:grid;place-items:center;color:#fff">♪</span>Audio ${i + 1}</div>`).join('')}
+      <div id="s7-envoye" style="position:absolute;left:34px;right:34px;top:740px;padding:26px;border-radius:30px;background:#e3f0ea;color:#0f3d2e;font-size:38px;font-weight:800;text-align:center">✓ Tout est envoyé</div>
+    </div></div>`;
+        caption(p, TEXTS.s7);
+      }
+      // Scène 8 — phrase difficile
+      {
+        const p = planOf.s8;
+        p.innerHTML = `
+    <div class="etiquette">Phrase difficile ?</div>
+    <div class="titre">Pas de souci, <span class="doux">on passe.</span></div>
+    <div class="telephone" style="top:540px"><div class="ecran">
+      <div class="phrase" id="s8-a">Wayboro di zanka cine.</div>
+      <div class="phrase" id="s8-b">Ay ga koy habu suba.</div>
+      <div class="micro" style="top:470px"></div>
+      <div id="s8-lien" style="position:absolute;left:24px;right:24px;top:690px;text-align:center;font-size:32px;line-height:1.5;font-weight:800;color:#0f3d2e;text-decoration:underline;text-underline-offset:8px">Je n'arrive pas à lire cette phrase</div>
+      <div class="doigt" id="s8-doigt"></div>
+    </div></div>`;
+        caption(p, TEXTS.s8);
+      }
+      // Scène 9 — merci
+      {
+        const p = planOf.s9;
+        p.innerHTML = `
+    <div class="grand-logo" style="display:flex;flex-direction:column;align-items:center;gap:50px">
+      <div id="s9-sym" style="width:380px;height:380px;border-radius:90px;background:var(--degrade);display:grid;place-items:center">${symbol(220, '#ffffff')}</div>
+      <div style="font-size:110px;font-weight:800;letter-spacing:-0.05em" id="s9-merci">Merci !</div>
+      <div style="font-size:60px;font-weight:700;color:#9a978b;letter-spacing:-0.03em;white-space:nowrap" id="s9-tag">Chaque voix compte.</div>
+      <div id="s9-mot">${wordmark(70, '#0f3d2e')}</div>
+    </div>`;
+      }
+
+      // ------------------------------------------------------------------ animation
+      const $ = (s) => document.querySelector(s);
+      const $$ = (s) => [...document.querySelectorAll(s)];
+      const setT = (n, x = 0, y = 0, s = 1, r = 0) => {
+        if (n) n.style.transform = `translate(${x}px,${y}px) scale(${s}) rotate(${r}deg)`;
+      };
+
+      function animate(id, t, d) {
+        const p = planOf[id];
+        const cap = p.querySelector('.sous-titre');
+        if (cap) {
+          const c = out(span(t, 0.3, 0.9));
+          cap.style.opacity = c;
+          cap.style.transform = `translateY(${(1 - c) * 40}px)`;
+        }
+        const et = p.querySelector('.etiquette'),
+          ti = p.querySelector('.titre');
+        if (et) {
+          const a = out(span(t, 0, 0.5));
+          et.style.opacity = a;
+          et.style.transform = `translateX(-50%) translateY(${(1 - a) * -30}px)`;
+        }
+        if (ti) {
+          const a = out(span(t, 0.1, 0.8));
+          ti.style.opacity = a;
+          ti.style.transform = `translateY(${(1 - a) * 50}px)`;
+        }
+        const tel = p.querySelector('.telephone');
+        if (tel) {
+          const a = out(span(t, 0.15, 1.0));
+          tel.style.transform = `translateY(${(1 - a) * 500}px)`;
+          tel.style.opacity = clamp(a * 1.5);
+        }
+
+        if (id === 's1') {
+          const s = back(span(t, 0.1, 1.1));
+          setT($('#s1-sym'), 0, 0, 0.4 + 0.6 * s, (1 - s) * -20);
+          $('#s1-sym').style.opacity = clamp(span(t, 0.1, 0.5));
+          const m = out(span(t, 0.7, 1.4));
+          $('#s1-mot').style.opacity = m;
+          setT($('#s1-mot'), 0, (1 - m) * 40);
+          const g = out(span(t, 1.3, 2.0));
+          $('#s1-tag').style.opacity = g;
+          setT($('#s1-tag'), 0, (1 - g) * 40);
+        }
+        if (id === 's2') {
+          const h = back(span(t, 1.0, 1.6));
+          setT($('#s2-phrase'), 0, 0, 0.85 + 0.15 * h);
+          $('#s2-phrase').style.opacity = clamp(span(t, 1.0, 1.3));
+          const talking = span(t, 2.0, 2.3) * (1 - span(t, d - 1.2, d - 0.8));
+          $$('#s2-onde span').forEach((b, i) => {
+            b.style.height = `${20 + talking * (30 + 70 * Math.abs(Math.sin(t * 7 + i * 0.9)) * (0.5 + 0.5 * Math.sin(i * 1.7)))}px`;
+          });
+        }
+        if (id === 's3') {
+          $$('.s3-ic').forEach((c, i) => {
+            const a = back(span(t, 0.6 + i * 0.25, 1.1 + i * 0.25));
+            c.style.opacity = clamp(a);
+            c.style.transform = `scale(${0.6 + 0.4 * a})`;
+          });
+          $$('.s3-barre path').forEach((l, i) => {
+            l.style.strokeDashoffset = 260 * (1 - ease(span(t, 2.0 + i * 0.5, 2.5 + i * 0.5)));
+          });
+          const ok = back(span(t, d - 2.4, d - 1.8));
+          $('#s3-ok').style.opacity = clamp(ok);
+          $('#s3-ok').style.transform = `translateX(-50%) scale(${0.7 + 0.3 * ok})`;
+        }
+        if (id === 's4') {
+          const v = out(span(t, 0.4, 1.1));
+          $('#s4-visage').style.opacity = v;
+          setT($('#s4-visage'), (1 - v) * -200);
+          const ph = out(span(t, 0.6, 1.3));
+          $('#s4-tel').style.opacity = ph;
+          setT($('#s4-tel'), (1 - ph) * 200, 0, 1, (1 - ph) * 12);
+          const f = ease(span(t, 1.4, 2.0));
+          $('#s4-fleche').style.opacity = f;
+          $('#s4-fleche').style.transform = `scaleX(${f})`;
+          const m = back(span(t, 1.9, 2.4));
+          $('#s4-mesure').style.opacity = clamp(m);
+          setT($('#s4-mesure'), 0, 0, 0.7 + 0.3 * m);
+          // léger va-et-vient « pas trop près, pas trop loin »
+          const sway = Math.sin(span(t, 2.6, d) * Math.PI * 2) * 40 * span(t, 2.6, 3.0);
+          $('#s4-tel').style.left = `${720 + sway}px`;
+        }
+        if (id === 's5') {
+          const tap = span(t, 1.2, 1.6);
+          const doigt = $('#s5-doigt');
+          doigt.style.left = `${200 + (1 - out(span(t, 0.6, 1.2))) * 250}px`;
+          doigt.style.top = `${565 + (1 - out(span(t, 0.6, 1.2))) * 300}px`;
+          doigt.style.opacity = clamp(span(t, 0.6, 0.9)) * (1 - span(t, 1.9, 2.2));
+          doigt.style.transform = `scale(${1 - 0.25 * Math.sin(Math.PI * tap)})`;
+          const rec = span(t, 1.6, 1.7);
+          $('#s5-micro').style.background = rec > 0 ? '#111' : '';
+          const wait = span(t, 1.7, 2.7);
+          $('#s5-anneau circle').style.strokeDashoffset = 867 * (1 - wait);
+          $('#s5-compte').textContent =
+            t > 1.6 && t < 2.8 ? 'Attendez 1 seconde…' : t >= 2.8 ? 'Lisez maintenant' : '';
+          $('#s5-compte').style.opacity = clamp(span(t, 1.6, 1.9));
+          const talking = span(t, 2.8, 3.1);
+          $$('#s5-onde span').forEach((b, i) => {
+            b.style.height = `${12 + talking * (20 + 80 * Math.abs(Math.sin(t * 8 + i * 0.7)) * (0.5 + 0.5 * Math.cos(i * 1.3)))}px`;
+          });
+        }
+        if (id === 's6') {
+          const b = back(span(t, 0.6, 1.1));
+          $('#s6-bien').style.opacity = clamp(b);
+          setT($('#s6-bien'), 0, 0, 0.8 + 0.2 * b);
+          $$('.s6-b').forEach((n, i) => {
+            const a = back(span(t, 1.6 + i * 0.9, 2.1 + i * 0.9));
+            n.style.opacity = clamp(a);
+            n.style.transform = `translateX(${(1 - a) * 300}px)`;
+          });
+          const pulse = span(t, 4.4, d);
+          setT($('#s6-valider'), 0, 0, 1 + 0.05 * Math.sin(pulse * Math.PI * 4));
+        }
+        if (id === 's7') {
+          const back2 = span(t, 3.4, 4.0);
+          $$('.s7-barre').forEach((b, i) => {
+            b.style.background = back2 > i / 4 ? '#1f5c47' : '#d6d1c2';
+          });
+          $('#s7-croix').style.opacity = 1 - back2;
+          $$('.s7-carte').forEach((c, i) => {
+            const inn = back(span(t, 0.8 + i * 0.5, 1.3 + i * 0.5));
+            const fly = ease(span(t, 4.0 + i * 0.25, 4.7 + i * 0.25));
+            c.style.opacity = clamp(inn) * (1 - fly);
+            c.style.transform = `translate(${(1 - inn) * -200 + fly * 200}px, ${fly * -420}px) scale(${1 - 0.4 * fly})`;
+          });
+          $('#s7-etat').textContent =
+            back2 > 0.5 ? 'Réseau revenu : envoi…' : 'Gardés dans le téléphone';
+          const e = back(span(t, 5.2, 5.7));
+          $('#s7-envoye').style.opacity = clamp(e);
+          setT($('#s7-envoye'), 0, 0, 0.8 + 0.2 * e);
+        }
+        if (id === 's8') {
+          const doigt = $('#s8-doigt');
+          const go = out(span(t, 1.4, 2.2));
+          doigt.style.left = `${220 + (1 - go) * 200}px`;
+          doigt.style.top = `${660 + (1 - go) * 200}px`;
+          doigt.style.opacity = clamp(span(t, 1.4, 1.7)) * (1 - span(t, 3.0, 3.3));
+          doigt.style.transform = `scale(${1 - 0.25 * Math.sin(Math.PI * span(t, 2.3, 2.7))})`;
+          const sw = ease(span(t, 2.7, 3.4));
+          $('#s8-a').style.transform = `translateX(${-sw * 600}px)`;
+          $('#s8-a').style.opacity = 1 - sw;
+          $('#s8-b').style.transform = `translateX(${(1 - sw) * 600}px)`;
+          $('#s8-b').style.opacity = sw;
+        }
+        if (id === 's9') {
+          const s = back(span(t, 0.1, 0.9));
+          setT($('#s9-sym'), 0, 0, 0.5 + 0.5 * s, (1 - s) * 30);
+          $('#s9-sym').style.opacity = clamp(s);
+          const m = out(span(t, 0.6, 1.2));
+          $('#s9-merci').style.opacity = m;
+          setT($('#s9-merci'), 0, (1 - m) * 50);
+          const g = out(span(t, 1.0, 1.6));
+          $('#s9-tag').style.opacity = g;
+          setT($('#s9-tag'), 0, (1 - g) * 50);
+          const w = out(span(t, 1.5, 2.1));
+          $('#s9-mot').style.opacity = w;
+        }
+      }
+
+      window.seek = (time) => {
+        // Fond qui respire.
+        ondes.forEach((o, i) => {
+          const s = 1 + 0.04 * Math.sin(time * 0.8 + i);
+          o.style.transform = `translate(-50%,-50%) scale(${s})`;
+        });
+        for (const s of scenes) {
+          const p = planOf[s.id];
+          const t = time - s.start;
+          const fadeIn = s.id === 's1' ? clamp(t / 0.4) : out(span(t, -0.25, 0.35));
+          const fadeOut = 1 - ease(span(t, s.dur - 0.35, s.dur + 0.25));
+          const o = s.id === 's9' ? fadeIn : fadeIn * fadeOut;
+          p.style.opacity = o;
+          p.style.display = o > 0.001 ? 'block' : 'none';
+          if (o > 0.001) animate(s.id, t, s.dur);
+        }
+      };
+      window.seek(0);
+    </script>
+  </body>
+</html>

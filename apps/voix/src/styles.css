@@ -382,8 +382,14 @@ button.lien {
   flex-shrink: 0;
 }
 
+/* Vidéo verticale (format téléphone) : centrée, jamais plus haute que l'écran. */
 .video {
-  width: 100%;
+  display: block;
+  margin: 0 auto;
+  width: auto;
+  max-width: 100%;
+  max-height: 72vh;
+  aspect-ratio: 9 / 16;
   border-radius: var(--rayon-carte);
   background: var(--noir);
 }
