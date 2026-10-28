@@ -62,6 +62,20 @@ avancement. Une voix n'est jamais connue autrement que par son numéro dans les 
   fiche, identité et accords sont effacés aussitôt ; les sauvegardes les oublient au plus tard
   30 jours après.
 
+### Voix principale (admins et responsable qualité)
+
+La voix principale lit tout le corpus, en séances d'environ 150 phrases, en qualité supérieure.
+Carte **« Voix principale »** de la page Voix :
+
+1. **Désigner** (admins) : choisir la voix dans la liste, puis **« Désigner comme voix
+   principale »**. Une seule par langue. Elle passe d'abord le test comme les autres.
+2. **Suivre les séances** : enregistrées, à vérifier, rejetées. Ses audios s'écoutent dans la
+   page Écoute comme les autres. Quand **tous** les audios d'une séance sont vérifiés, la
+   séance suivante s'ouvre seule ; la voix le voit en revenant sur son lien.
+3. **Audio de référence** (admins) : après la première séance, **« Choisir l'audio de
+   référence »**, écouter quelques audios validés et prendre celui dont le ton est le meilleur.
+   La voix le réécoute au début de chaque séance.
+
 ## Écoute (vérificateurs, responsable qualité, admins)
 
 Un audio à la fois. Écoutez-le (bouton lecture ou **barre d'espace**), lisez le texte attendu,

@@ -157,6 +157,7 @@ Tous les textes de phrases sont normalisés en Unicode **NFC** (contrôlé par l
 
 | 28/10/2026 | Exports rangés dans un bucket R2 privé (`murya-exports-…`, téléchargement par lien signé de 15 min, admins seulement) **et** poussés sur un dépôt **privé** Hugging Face (une étiquette par version). Audios en **WAV 16 kHz** tels quels. |
 | 28/10/2026 | Voix examen : Murya **propose 10 %** (tirage stratifié sexe × âge × région, stable), l'admin ajuste. Dès qu'une voix est exportée, sa partie (`train`/`test`) est **figée**. |
+| 28/10/2026 | Voix principale : **une par langue**, désignée par un admin ; elle passe le test comme les autres ; séances de 150 phrases (réglage) qui **s'ouvrent seules** quand la précédente est entièrement vérifiée ; **audio de référence choisi par un admin** parmi ses audios validés. Ses lectures validées comptent comme les autres. |
 
 ### Questions encore ouvertes
 
@@ -212,7 +213,7 @@ Conséquences pour le code :
 | J4 Qualité ✓           | vérifs serveur, double écoute, quotas, alertes, tableau de bord                          | terminé le 27 oct (worker actif)                          |
 | J6a Protection ✓       | sauvegardes + restauration, retrait d'une voix, journal                                  | terminé le 28 oct (sauvegardes actives)                   |
 | J7 Charge et lancement | k6 2 000 utilisateurs, test des 5 membres, README                                        | outils prêts le 28 oct (essai à 5 et 50 audios/s à faire) |
-| J5 Voix principale     | séances, audio de référence, verrou                                                      | fin janvier                                               |
+| J5 Voix principale ✓   | séances, audio de référence, verrou                                                      | construit le 28 oct                                       |
 | J6b Exports ✓          | CSV/JSONL/README, partition d'examen, Hugging Face                                       | terminé le 28 oct (exports actifs)                        |
 
 ## Points d'attention
