@@ -218,7 +218,9 @@ part (`murya-dje-varie-essai`…) : ceux sans suffixe sont réservés à la prod
 d'essai créés avant ce réglage (`murya-dje-…`) sont à supprimer sur Hugging Face avant le
 premier export de production.
 
-### 2.8 Vérifications, sauvegardes et exports de la production
+### 2.8 Vérifications, sauvegardes et exports de la production ✓
+
+Fait le 28/10/2026 : clés en place, vérifications, sauvegarde et exports réussis en production.
 
 Les trois workflows (Worker, Sauvegarde, Exports) tournent pour chaque environnement GitHub
 qui a ses clés : la production est sautée tant que les siennes manquent. Ses variables
