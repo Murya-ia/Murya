@@ -183,7 +183,9 @@ Puis la variable de dépôt `SAUVEGARDE_ENABLED` = `true`, un premier lancement 
 (_Actions_ > _Sauvegarde_ > _Run workflow_) et un exercice de restauration
 ([sauvegardes.md](sauvegardes.md#restaurer)).
 
-### 2.7 Exports (J6b : R2 et Hugging Face)
+### 2.7 Exports (J6b : R2 et Hugging Face) ✓
+
+Fait le 28/10/2026 pour le staging : jeton `export-staging`, compte Hugging Face `Murya-ai`, premier export v001 réussi.
 
 Fonctionnement : page **Exports** de l'espace équipe (admins), workflow GitHub « Exports »
 (`.github/workflows/export.yml`), code `worker/murya_worker/export.py`.

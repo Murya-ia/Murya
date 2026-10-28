@@ -213,7 +213,7 @@ Conséquences pour le code :
 | J6a Protection ✓       | sauvegardes + restauration, retrait d'une voix, journal                                  | terminé le 28 oct (sauvegardes actives)        |
 | J7 Charge et lancement | k6 2 000 utilisateurs, test des 5 membres, README                                        | 4 – 15 jan                                     |
 | J5 Voix principale     | séances, audio de référence, verrou                                                      | fin janvier                                    |
-| J6b Exports            | CSV/JSONL/README, partition d'examen, Hugging Face                                       | construit le 28 oct (exports à activer)        |
+| J6b Exports ✓          | CSV/JSONL/README, partition d'examen, Hugging Face                                       | terminé le 28 oct (exports actifs)             |
 
 ## Points d'attention
 
