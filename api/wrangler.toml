@@ -76,9 +76,8 @@ name = "murya-api"
 ENVIRONMENT = "production"
 ALLOWED_ORIGINS = "https://murya-voix.murya-api.workers.dev,https://murya-equipe.murya-api.workers.dev"
 R2_BUCKET_AUDIO = "murya-audio"
-# À remplir quand le projet Supabase de production sera créé (J7).
-SUPABASE_URL = ""
-SUPABASE_PUBLISHABLE_KEY = ""
+SUPABASE_URL = "https://agmwkzuxydcvzsprotaw.supabase.co"
+SUPABASE_PUBLISHABLE_KEY = "sb_publishable_uNLib8sFrdGdd9VVgsKZpw_AnoOPmip"
 
 [env.production.triggers]
 crons = ["17 * * * *"]
