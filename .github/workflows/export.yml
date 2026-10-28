@@ -3,12 +3,14 @@
 # pas). Gratuit tant que le dépôt est public.
 #
 # Inactif tant que la variable de dépôt EXPORT_ENABLED ne vaut pas "true".
-# Environnement GitHub « staging » (voir docs/comptes.md, section 2.7) :
+# Tourne pour chaque environnement GitHub (« staging », « production ») déjà configuré ; un
+# environnement sans ses clés est sauté. Dans chacun (voir docs/comptes.md, section 2.7) :
 #   secrets   : SUPABASE_SECRET_KEY, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY (lecture des audios),
 #               EXPORT_R2_ACCESS_KEY_ID, EXPORT_R2_SECRET_ACCESS_KEY (bucket des exports),
 #               HF_TOKEN (facultatif : dépôt privé Hugging Face)
 #   variables : SUPABASE_URL, R2_ACCOUNT_ID, R2_BUCKET_AUDIO, EXPORT_R2_BUCKET,
-#               HF_OWNER (facultatif : compte ou organisation Hugging Face)
+#               HF_OWNER (facultatif : compte ou organisation Hugging Face),
+#               HF_REPO_SUFFIX (« -essai » en staging : dépôts séparés de la production)
 name: Exports
 
 on:
@@ -19,25 +21,39 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: export-staging
-  cancel-in-progress: false
-
 jobs:
   exporter:
     if: vars.EXPORT_ENABLED == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        environnement: [staging, production]
     runs-on: ubuntu-latest
-    environment: staging
+    environment: ${{ matrix.environnement }}
+    concurrency:
+      group: export-${{ matrix.environnement }}
+      cancel-in-progress: false
     timeout-minutes: 180
     steps:
+      - name: Environnement prêt ?
+        id: pret
+        env:
+          CLE: ${{ secrets.EXPORT_R2_ACCESS_KEY_ID }}
+        run: |
+          if [ -n "$CLE" ]; then echo "ok=true" >> "$GITHUB_OUTPUT"
+          else echo "Environnement « ${{ matrix.environnement }} » pas encore configuré : rien à faire."; fi
       - uses: actions/checkout@v5
+        if: steps.pret.outputs.ok == 'true'
       - uses: actions/setup-python@v5
+        if: steps.pret.outputs.ok == 'true'
         with:
           python-version: '3.12'
           cache: pip
           cache-dependency-path: worker/requirements.txt
       - run: pip install -r worker/requirements.txt
+        if: steps.pret.outputs.ok == 'true'
       - name: Construire les exports en attente
+        if: steps.pret.outputs.ok == 'true'
         working-directory: worker
         run: python -m murya_worker.export
         env:
@@ -52,3 +68,4 @@ jobs:
           EXPORT_R2_SECRET_ACCESS_KEY: ${{ secrets.EXPORT_R2_SECRET_ACCESS_KEY }}
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           HF_OWNER: ${{ vars.HF_OWNER }}
+          HF_REPO_SUFFIX: ${{ vars.HF_REPO_SUFFIX }}

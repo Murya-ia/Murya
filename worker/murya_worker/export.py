@@ -274,12 +274,14 @@ def build_export(
     return stats, location, hf_repo
 
 
-def hugging_face_publisher(token: str, owner: str) -> Publisher:
+def hugging_face_publisher(token: str, owner: str, suffix: str = "") -> Publisher:
+    """`suffix` sépare les dépôts d'essai (ex. « -essai ») de ceux de la production."""
+
     def publish(folder: Path, repo_name: str, version: int) -> str:
         from huggingface_hub import HfApi  # importé ici : les tests n'en ont pas besoin
 
         api = HfApi(token=token)
-        repo_id = f"{owner}/{repo_name}"
+        repo_id = f"{owner}/{repo_name}{suffix}"
         api.create_repo(repo_id, repo_type="dataset", private=True, exist_ok=True)
         api.upload_folder(
             repo_id=repo_id,
@@ -339,7 +341,8 @@ def main() -> None:
         account, env("EXPORT_R2_BUCKET"), env("EXPORT_R2_ACCESS_KEY_ID"), env("EXPORT_R2_SECRET_ACCESS_KEY")
     )
     token, owner = os.environ.get("HF_TOKEN", "").strip(), os.environ.get("HF_OWNER", "").strip()
-    publish = hugging_face_publisher(token, owner) if token and owner else None
+    suffix = os.environ.get("HF_REPO_SUFFIX", "").strip()
+    publish = hugging_face_publisher(token, owner, suffix) if token and owner else None
     if publish is None:
         print("Hugging Face non configuré (HF_TOKEN, HF_OWNER) : export rangé dans R2 seulement.")
     worker_id = f"{socket.gethostname()}-{int(time.time())}"
