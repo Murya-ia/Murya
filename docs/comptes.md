@@ -142,7 +142,9 @@ l'API) :
 
 Pour arrêter le worker : passez `WORKER_ENABLED` à `false`.
 
-### 2.6 Sauvegardes chiffrées (J6a, Backblaze B2)
+### 2.6 Sauvegardes chiffrées (J6a, Backblaze B2) ✓
+
+Fait le 28/10/2026 pour le staging (première sauvegarde et premier exercice réussis).
 
 Fonctionnement et restauration : [sauvegardes.md](sauvegardes.md).
 

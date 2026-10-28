@@ -113,6 +113,6 @@ et restauration ») : sauvegarde, base effacée, restauration, vérifications.
 
 ## Exercices de restauration
 
-| Date | Sauvegarde restaurée | Résultat | Par |
-| ---- | -------------------- | -------- | --- |
-|      |                      |          |     |
+| Date       | Sauvegarde restaurée         | Résultat                               | Par    |
+| ---------- | ---------------------------- | -------------------------------------- | ------ |
+| 28/10/2026 | `base/quotidien/2026-10-28/` | réussi : 135 lignes, aucune différence | Claude |
