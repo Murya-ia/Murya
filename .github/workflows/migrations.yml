@@ -1,0 +1,35 @@
+# Applique les migrations de la base (supabase/migrations) à un environnement, à la main :
+# GitHub > Actions > « Migrations de la base » > Run workflow > staging ou production.
+# Utilise le secret SUPABASE_DB_URL de l'environnement choisi : personne n'a à retaper le
+# mot de passe de la base.
+name: Migrations de la base
+
+on:
+  workflow_dispatch:
+    inputs:
+      environnement:
+        description: staging ou production
+        type: choice
+        options: [staging, production]
+        default: staging
+
+permissions:
+  contents: read
+
+concurrency:
+  group: migrations-${{ inputs.environnement }}
+  cancel-in-progress: false
+
+jobs:
+  migrations:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environnement }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Appliquer les migrations
+        run: supabase db push --yes --db-url "$SUPABASE_DB_URL"
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
