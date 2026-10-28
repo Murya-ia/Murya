@@ -213,6 +213,32 @@ Fonctionnement : page **Exports** de l'espace équipe (admins), workflow GitHub 
 Puis la variable de dépôt `EXPORT_ENABLED` = `true`. Sans `HF_TOKEN` / `HF_OWNER`, l'export
 est seulement rangé dans R2.
 
+En staging, la variable `HF_REPO_SUFFIX` = `-essai` range les exports d'essai dans des dépôts à
+part (`murya-dje-varie-essai`…) : ceux sans suffixe sont réservés à la production. Les dépôts
+d'essai créés avant ce réglage (`murya-dje-…`) sont à supprimer sur Hugging Face avant le
+premier export de production.
+
+### 2.8 Vérifications, sauvegardes et exports de la production
+
+Les trois workflows (Worker, Sauvegarde, Exports) tournent pour chaque environnement GitHub
+qui a ses clés : la production est sautée tant que les siennes manquent. Ses variables
+(buckets, adresse Supabase, B2, Hugging Face) sont en place depuis le 28/10/2026. Restent les
+clés, à créer comme pour le staging :
+
+1. Cloudflare, _R2_ > _Manage API tokens_ > _Create Account API token_, trois jetons :
+   - `worker-production` : **Object Read only**, bucket `murya-audio` ;
+   - `sauvegarde-production` : **Object Read only**, buckets `murya-audio` et `murya-identites` ;
+   - `export-production` : **Object Read & Write**, bucket `murya-exports`.
+2. Backblaze : bucket privé `murya-sauvegardes` (mêmes réglages que celui du staging), puis une
+   clé `sauvegarde-production`, **Read and Write**, limitée à ce bucket.
+3. Les coller dans GitHub (environnement `production`) avec le script prévu : secrets
+   `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `SAUVEGARDE_R2_ACCESS_KEY_ID`,
+   `SAUVEGARDE_R2_SECRET_ACCESS_KEY`, `B2_KEY_ID`, `B2_APPLICATION_KEY`,
+   `EXPORT_R2_ACCESS_KEY_ID`, `EXPORT_R2_SECRET_ACCESS_KEY`, `HF_TOKEN`.
+
+Pour vérifier : GitHub > Actions > « État de la base » (tâches automatiques de la base et file
+du worker), et les workflows Worker / Sauvegarde / Exports lancés à la main.
+
 ## 3. Supabase (base de données, connexion de l'équipe)
 
 ### 3.1 Ce qui est en place (fait le 27/10/2026)
