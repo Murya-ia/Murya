@@ -25,6 +25,10 @@ export default defineConfig({
   // Un seul fichier .env.local à la racine du dépôt pour toutes les apps (modèle : .env.example).
   envDir: '../..',
   define: { __BUILD_VERSION__: JSON.stringify(buildVersion()) },
-  build: { target: 'es2020' },
+  build: {
+    target: 'es2020',
+    // Les polices restent des fichiers : la politique de sécurité (CSP) interdit les « data: ».
+    assetsInlineLimit: (file) => (file.endsWith('.woff2') ? false : undefined),
+  },
   server: { port: 5174 },
 });

@@ -246,7 +246,12 @@ kbd {
 }
 
 .centre-page h1 {
+  font-size: clamp(1.9rem, 1.5rem + 1.5vw, 2.5rem);
   margin: 4px 0 8px;
+}
+
+.centre-page h1 .doux {
+  white-space: nowrap;
 }
 
 .formulaire {
