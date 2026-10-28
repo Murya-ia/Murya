@@ -170,6 +170,41 @@ describe('envoi des audios', () => {
     expect(await res.json()).toEqual({ erreur: 'fichier_absent' });
   });
 
+  it('confirme en un seul appel à la base grâce au jeton d’envoi donné à la préparation', async () => {
+    replies.voice_prepare_upload = { body: { cle: KEY, prise: 1, statut: 'en_envoi' } };
+    const prepared = (await (
+      await request('POST', '/voix/envoi/preparer', { id: RECORDING, phrase_id: 7 })
+    ).json()) as { cle: string; jeton_envoi: string };
+    expect(prepared.jeton_envoi).toMatch(/^[0-9a-f]{64}$/);
+
+    calls = [];
+    replies.voice_confirm_upload = { body: { statut_voix: 'active', deja_recu: false } };
+    const wav = encodeWav(new Float32Array(16_000), 16_000);
+    const res = await request(
+      'POST',
+      '/voix/envoi/confirmer',
+      { id: RECORDING, phrase_id: 7, cle: prepared.cle, jeton_envoi: prepared.jeton_envoi },
+      testEnv({}, { [KEY]: wav }),
+    );
+    expect(res.status).toBe(200);
+    expect(calls.map((c) => c.fn)).toEqual(['voice_confirm_upload']);
+  });
+
+  it('ignore un jeton d’envoi falsifié ou pris à une autre voix : la base est consultée', async () => {
+    replies.voice_prepare_upload = { body: { cle: KEY, prise: 1, statut: 'en_envoi' } };
+    const other = 'dje/varie/V002/dje_V002_T001_1.wav';
+    const files = { [KEY]: encodeWav(new Float32Array(16_000), 16_000) };
+    const res = await request(
+      'POST',
+      '/voix/envoi/confirmer',
+      { id: RECORDING, phrase_id: 7, cle: other, jeton_envoi: 'f'.repeat(64) },
+      testEnv({}, files),
+    );
+    expect(res.status).toBe(200);
+    // La clé vient de la base (celle de cette voix), pas de la requête.
+    expect(calls.map((c) => c.fn)).toEqual(['voice_prepare_upload', 'voice_confirm_upload']);
+  });
+
   it('refuse un identifiant d’enregistrement qui n’est pas un UUID', async () => {
     const res = await request('POST', '/voix/envoi/preparer', { id: '../x', phrase_id: 7 });
     expect(res.status).toBe(400);

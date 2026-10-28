@@ -4,7 +4,7 @@
 
 import { Hono } from 'hono';
 import type { Env } from './env';
-import { safeEqual } from './util';
+import { hmacHex, safeEqual } from './util';
 
 /** Fichiers d'un export, et nom proposé au téléchargement. */
 export const EXPORT_FILES = ['README.md', 'metadata.csv', 'metadata.jsonl', 'archive.zip'] as const;
@@ -25,17 +25,8 @@ export function isExportFile(value: unknown): value is ExportFile {
 }
 
 // Clé de signature dérivée de la clé secrète Supabase : aucun secret de plus à gérer.
-async function signature(env: Env, message: string): Promise<string> {
-  const key = await crypto.subtle.importKey(
-    'raw',
-    new TextEncoder().encode(`murya-exports:${env.SUPABASE_SECRET_KEY}`),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign'],
-  );
-  const mac = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(message));
-  return Array.from(new Uint8Array(mac), (b) => b.toString(16).padStart(2, '0')).join('');
-}
+const signature = (env: Env, message: string) =>
+  hmacHex(env.SUPABASE_SECRET_KEY, 'exports', message);
 
 /** Lien signé vers un fichier d'export (`location` : dossier dans le bucket). */
 export async function signedDownloadUrl(

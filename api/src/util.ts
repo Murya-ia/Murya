@@ -22,6 +22,22 @@ export async function sha256Hex(text: string): Promise<string> {
   return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+/**
+ * Signature HMAC-SHA256 (hexadécimal) d'un message. La clé est dérivée de la clé secrète
+ * Supabase et d'un usage (`exports`, `envois`…) : aucun secret de plus à gérer.
+ */
+export async function hmacHex(secret: string, usage: string, message: string): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(`murya-${usage}:${secret}`),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const mac = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(message));
+  return Array.from(new Uint8Array(mac), (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 export function allowedOrigins(list: string): string[] {
   return list
     .split(',')

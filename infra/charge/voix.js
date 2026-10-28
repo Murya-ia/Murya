@@ -114,7 +114,14 @@ export default function () {
   if (!check(deposit, { 'depot 200': (r) => r.status === 200 })) return;
   const confirmed = http.post(
     `${API}/voix/envoi/confirmer`,
-    JSON.stringify({ id, phrase_id: sentence.id, mesures: { essai: true }, micro: {} }),
+    JSON.stringify({
+      id,
+      phrase_id: sentence.id,
+      cle: prepared.json('cle'),
+      jeton_envoi: prepared.json('jeton_envoi'),
+      mesures: { essai: true },
+      micro: {},
+    }),
     headers('confirmer'),
   );
   if (check(confirmed, { 'confirmer 200': (r) => r.status === 200 })) {

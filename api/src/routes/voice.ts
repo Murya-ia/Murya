@@ -8,7 +8,7 @@ import { Hono } from 'hono';
 import type { Env } from '../env';
 import { UPLOAD_URL_SECONDS, WAV_ERROR_STATUS, inspectStoredWav, presignUrl } from '../r2';
 import { VoiceError, businessStatus, rpc } from '../supabase';
-import { isUuid, sha256Hex } from '../util';
+import { hmacHex, isUuid, safeEqual, sha256Hex } from '../util';
 
 type VoiceContext = { Bindings: Env; Variables: { tokenHash: string } };
 type Body = Record<string, unknown>;
@@ -109,35 +109,60 @@ interface Prepared {
   statut: 'en_envoi' | 'recu';
 }
 
-/** Étape 2 de l'envoi : réserve la ligne en base et renvoie une URL signée vers R2. */
+/**
+ * Étape 2 de l'envoi : réserve la ligne en base et renvoie une URL signée vers R2, avec un
+ * « jeton d'envoi » qui lie cette clé de fichier à cette voix et à cet enregistrement : à la
+ * confirmation, l'API n'a pas besoin de redemander la clé à la base (un appel de moins).
+ */
 voice.post('/envoi/preparer', async (c) => {
   const body = await readBody(c.req.raw);
   const prepared = await prepare(c.env, c.get('tokenHash'), body);
   if (prepared.statut === 'recu') return c.json({ deja_recu: true, cle: prepared.cle });
   const url = await presignUrl(c.env, 'PUT', prepared.cle, UPLOAD_URL_SECONDS);
-  return c.json({ url, cle: prepared.cle, prise: prepared.prise, deja_recu: false });
+  const ticket = await uploadTicket(c.env, c.get('tokenHash'), body.id as string, prepared.cle);
+  return c.json({
+    url,
+    cle: prepared.cle,
+    prise: prepared.prise,
+    deja_recu: false,
+    jeton_envoi: ticket,
+  });
 });
 
 /** Étape 4 : vérifie le fichier arrivé dans R2, puis confirme en base (idempotent). */
 voice.post('/envoi/confirmer', async (c) => {
   const body = await readBody(c.req.raw);
-  const prepared = await prepare(c.env, c.get('tokenHash'), body);
-  if (prepared.statut === 'recu') return c.json({ deja_recu: true });
+  const tokenHash = c.get('tokenHash');
+  // Avec un jeton d'envoi valide, la clé du fichier est connue sans appeler la base. Sinon
+  // (ancienne version de l'app), on la redemande : la base vérifie que l'audio est à cette voix.
+  let key: string;
+  if (
+    isUuid(body.id) &&
+    typeof body.cle === 'string' &&
+    typeof body.jeton_envoi === 'string' &&
+    safeEqual(body.jeton_envoi, await uploadTicket(c.env, tokenHash, body.id, body.cle))
+  ) {
+    key = body.cle;
+  } else {
+    const prepared = await prepare(c.env, tokenHash, body);
+    if (prepared.statut === 'recu') return c.json({ deja_recu: true });
+    key = prepared.cle;
+  }
 
-  const wav = await inspectStoredWav(c.env, prepared.cle);
+  const wav = await inspectStoredWav(c.env, key);
   if (typeof wav === 'string') return c.json({ erreur: wav }, WAV_ERROR_STATUS[wav]);
   // Spec §4 : WAV mono 16 bits ; 16 kHz pour les voix variées, fréquence native pour la principale.
-  const expectedRate = prepared.cle.includes('/varie/')
+  const expectedRate = key.includes('/varie/')
     ? wav.sampleRate === 16_000
     : wav.sampleRate >= 16_000;
   if (wav.channels !== 1 || wav.bits !== 16 || !expectedRate) {
-    await c.env.AUDIO.delete(prepared.cle);
+    await c.env.AUDIO.delete(key);
     return c.json({ erreur: 'format_invalide' }, 422);
   }
 
   return c.json(
     await rpc(c.env, 'voice_confirm_upload', {
-      p_token_hash: c.get('tokenHash'),
+      p_token_hash: tokenHash,
       p_recording_id: body.id,
       // Taille, durée et fréquence viennent du fichier lu par l'API, pas du navigateur.
       p_size_bytes: wav.size,
@@ -157,6 +182,11 @@ voice.post('/sauter', async (c) => {
   });
   return c.json({ ok: true });
 });
+
+/** Jeton d'envoi : signature de (voix, enregistrement, clé du fichier). */
+function uploadTicket(env: Env, tokenHash: string, recordingId: string, key: string) {
+  return hmacHex(env.SUPABASE_SECRET_KEY, 'envois', `${tokenHash}:${recordingId}:${key}`);
+}
 
 function prepare(env: Env, tokenHash: string, body: Body): Promise<Prepared> {
   if (!isUuid(body.id)) throw new BadRequest();
