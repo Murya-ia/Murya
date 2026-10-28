@@ -23,6 +23,7 @@ function memoryStore(): UploadStore & { data: Map<string, UploadItem> } {
 function fakeTransport() {
   const received = new Set<string>();
   const log: string[] = [];
+  const receipts: string[] = [];
   const failures: { step: 'prepare' | 'upload' | 'confirm'; error: Error }[] = [];
   const failIfAsked = (step: 'prepare' | 'upload' | 'confirm') => {
     const i = failures.findIndex((f) => f.step === step);
@@ -32,20 +33,23 @@ function fakeTransport() {
     async prepare(item) {
       log.push(`prepare ${item.id}`);
       failIfAsked('prepare');
-      return received.has(item.id) ? {} : { url: `https://r2/${item.id}` };
+      return received.has(item.id)
+        ? {}
+        : { url: `https://r2/${item.id}`, receipt: { jeton_envoi: `jeton-${item.id}` } };
     },
     async upload(url) {
       log.push(`upload ${url}`);
       failIfAsked('upload');
     },
-    async confirm(item) {
+    async confirm(item, receipt) {
       log.push(`confirm ${item.id}`);
+      receipts.push(receipt?.jeton_envoi ?? '');
       failIfAsked('confirm');
       received.add(item.id);
       return { statut_voix: 'inscrite' };
     },
   };
-  return { transport, received, log, failures };
+  return { transport, received, log, failures, receipts };
 }
 
 const audio = (id: string, createdAt = 1) => ({
@@ -78,6 +82,8 @@ describe('UploadQueue', () => {
     await flush();
     expect(storedBeforeUpload).toBe(true);
     expect(net.received.has('a')).toBe(true);
+    // Le jeton d'envoi donné à la préparation est renvoyé à la confirmation.
+    expect(net.receipts).toEqual(['jeton-a']);
     expect(store.data.size).toBe(0);
     expect(queue.state.pending).toBe(0);
   });

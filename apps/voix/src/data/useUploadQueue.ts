@@ -13,11 +13,19 @@ const store = {
 
 const transport: UploadTransport = {
   async prepare(item) {
-    const result = await createApi(item.token).post<{ url?: string; deja_recu: boolean }>(
-      '/voix/envoi/preparer',
-      { id: item.id, phrase_id: item.sentenceId },
-    );
-    return { url: result.deja_recu ? undefined : result.url };
+    const result = await createApi(item.token).post<{
+      url?: string;
+      deja_recu: boolean;
+      cle?: string;
+      jeton_envoi?: string;
+    }>('/voix/envoi/preparer', { id: item.id, phrase_id: item.sentenceId });
+    if (result.deja_recu) return {};
+    const receipt: Record<string, string> = {};
+    if (result.cle && result.jeton_envoi) {
+      receipt.cle = result.cle;
+      receipt.jeton_envoi = result.jeton_envoi;
+    }
+    return { url: result.url, receipt };
   },
   async upload(url, wav) {
     // Envoi direct dans R2 avec l'URL signée : le fichier ne passe pas par l'API.
@@ -28,8 +36,9 @@ const transport: UploadTransport = {
     });
     if (!response.ok) throw new ApiError(response.status, `r2_${response.status}`);
   },
-  confirm(item) {
+  confirm(item, receipt) {
     return createApi(item.token).post('/voix/envoi/confirmer', {
+      ...receipt,
       id: item.id,
       phrase_id: item.sentenceId,
       mesures: item.metrics,

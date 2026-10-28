@@ -34,10 +34,13 @@ export interface UploadStore {
 }
 
 export interface UploadTransport {
-  /** Réserve l'envoi ; `url` absente si le serveur a déjà reçu cet audio. */
-  prepare(item: UploadItem): Promise<{ url?: string }>;
+  /**
+   * Réserve l'envoi ; `url` absente si le serveur a déjà reçu cet audio. `receipt` : ce que
+   * le serveur demande de lui renvoyer à la confirmation (clé du fichier et jeton d'envoi).
+   */
+  prepare(item: UploadItem): Promise<{ url?: string; receipt?: Record<string, string> }>;
   upload(url: string, wav: Blob): Promise<void>;
-  confirm(item: UploadItem): Promise<{ statut_voix?: string }>;
+  confirm(item: UploadItem, receipt?: Record<string, string>): Promise<{ statut_voix?: string }>;
 }
 
 export interface QueueState {
@@ -153,10 +156,10 @@ export class UploadQueue {
 
   private async send(item: UploadItem): Promise<void> {
     try {
-      const { url } = await this.transport.prepare(item);
+      const { url, receipt } = await this.transport.prepare(item);
       if (url) {
         await this.transport.upload(url, item.wav);
-        const { statut_voix } = await this.transport.confirm(item);
+        const { statut_voix } = await this.transport.confirm(item, receipt);
         if (statut_voix) this.onVoiceStatus(statut_voix);
       }
       // Confirmé par le serveur : seulement maintenant on efface l'audio du téléphone.
