@@ -236,7 +236,7 @@ team.post('/membres', async (c) => {
     return c.json({ erreur: 'requete_invalide' }, 400);
   }
   // La base dit si la personne connectée est admin (avec SA session).
-  if (!(await rpcAsUser<boolean>(c.env, c.get('jwt'), 'has_role', { p_role: 'admin' }))) {
+  if (!(await rpcAsUser<boolean>(c.env, c.get('jwt'), 'is_admin', {}))) {
     return c.json({ erreur: 'acces_refuse' }, 403);
   }
 
@@ -246,8 +246,17 @@ team.post('/membres', async (c) => {
     headers: auth,
     body: JSON.stringify({ email, password, email_confirm: true }),
   });
-  if (created.status === 422) return c.json({ erreur: 'email_existe' }, 409);
-  if (!created.ok) throw new Error(`création du compte : HTTP ${created.status}`);
+  if (!created.ok) {
+    // Supabase dit pourquoi dans `error_code` (ex. email_exists, weak_password).
+    const { error_code: reason } = (await created.json().catch(() => ({}))) as {
+      error_code?: string;
+    };
+    if (reason === 'email_exists' || reason === 'user_already_exists') {
+      return c.json({ erreur: 'email_existe' }, 409);
+    }
+    if (reason === 'weak_password') return c.json({ erreur: 'weak_password' }, 400);
+    throw new Error(`création du compte : HTTP ${created.status} ${reason ?? ''}`);
+  }
   const { id } = (await created.json()) as { id: string };
 
   try {

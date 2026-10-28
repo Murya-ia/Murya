@@ -9,6 +9,11 @@ name = "murya-api-local"
 main = "src/index.ts"
 compatibility_date = "2026-10-01"
 
+# Journaux du serveur gardés quelques jours (tableau de bord Cloudflare > Workers > Logs) :
+# ils servent à comprendre une erreur. Aucune donnée personnelle n'y est écrite.
+[observability]
+enabled = true
+
 [vars]
 ENVIRONMENT = "local"
 ALLOWED_ORIGINS = "http://localhost:5173,http://localhost:5174"
@@ -32,6 +37,9 @@ bucket_name = "murya-exports-staging"
 # ---------------------------------------------------------------- staging
 [env.staging]
 name = "murya-api-staging"
+
+[env.staging.observability]
+enabled = true
 
 [env.staging.vars]
 ENVIRONMENT = "staging"
@@ -71,6 +79,9 @@ simple = { limit = 1200, period = 60 }
 # ------------------------------------------------------------- production
 [env.production]
 name = "murya-api"
+
+[env.production.observability]
+enabled = true
 
 [env.production.vars]
 ENVIRONMENT = "production"

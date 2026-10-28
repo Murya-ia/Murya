@@ -6,12 +6,14 @@ const USER = '5d6e7f80-1a2b-4c3d-8e9f-0a1b2c3d4e5f';
 let calls: { url: string; method: string; headers: Headers; body: unknown }[];
 let isAdmin: boolean;
 let authStatus: number;
+let authError: string;
 let addMember: { status: number; body: unknown };
 
 beforeEach(() => {
   calls = [];
   isAdmin = true;
   authStatus = 200;
+  authError = '';
   addMember = { status: 200, body: null };
   vi.stubGlobal(
     'fetch',
@@ -23,12 +25,13 @@ beforeEach(() => {
         headers: new Headers(init?.headers),
         body: init?.body ? JSON.parse(String(init.body)) : null,
       });
-      if (url.endsWith('/rpc/has_role')) return new Response(JSON.stringify(isAdmin));
+      if (url.endsWith('/rpc/is_admin')) return new Response(JSON.stringify(isAdmin));
       if (url.endsWith('/rpc/add_team_member')) {
         return new Response(JSON.stringify(addMember.body), { status: addMember.status });
       }
       if (url.endsWith('/auth/v1/admin/users')) {
-        return new Response(JSON.stringify({ id: USER }), { status: authStatus });
+        const body = authStatus === 200 ? { id: USER } : { error_code: authError };
+        return new Response(JSON.stringify(body), { status: authStatus });
       }
       return new Response(null, { status: 200 });
     }),
@@ -80,9 +83,18 @@ describe("création d'un membre (page « Membres »)", () => {
 
   it('signale un e-mail déjà utilisé', async () => {
     authStatus = 422;
+    authError = 'email_exists';
     const res = await create(member);
     expect(res.status).toBe(409);
     expect(await res.json()).toEqual({ erreur: 'email_existe' });
+  });
+
+  it('signale un mot de passe refusé par Supabase (sans le confondre avec un e-mail pris)', async () => {
+    authStatus = 422;
+    authError = 'weak_password';
+    const res = await create(member);
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ erreur: 'weak_password' });
   });
 
   it('supprime le compte si la base refuse de l’ajouter (déjà deux admins)', async () => {
