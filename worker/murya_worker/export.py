@@ -34,7 +34,7 @@ from .stores import Store
 
 COLUMNS = [
     "file_name", "texte", "id_phrase", "voix", "sexe", "tranche_age", "region",
-    "langue_maternelle", "duree_s", "partition",
+    "langue_maternelle", "duree_s", "partition", "mode",
 ]
 PARTITIONS = ("train", "test")
 DOWNLOAD_THREADS = 16
@@ -88,6 +88,8 @@ def download_audios(audios: list[dict[str, Any]], store: Store, root: Path) -> l
             "langue_maternelle": audio.get("langue_maternelle") or "",
             "duree_s": round(wav_seconds(data), 3),
             "partition": audio["partition"],
+            # « repetition » : la personne a écouté un modèle avant de dire la phrase.
+            "mode": audio.get("mode") or "lecture",
         }
 
     for partition in PARTITIONS:

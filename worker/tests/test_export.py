@@ -71,6 +71,7 @@ def test_construit_les_fichiers_les_parties_et_l_archive(tmp_path: Path) -> None
     assert rows[1]["texte"] == "Texte corrigé." and rows[0]["duree_s"] == "2.0"
     lines = exports.get("dje/varie/v001/metadata.jsonl").decode().splitlines()
     assert json.loads(lines[2])["partition"] == "test"
+    assert json.loads(lines[2])["mode"] == "lecture"
 
     with zipfile.ZipFile(tmp_path / "exports" / "dje/varie/v001/archive.zip") as archive:
         names = set(archive.namelist())
