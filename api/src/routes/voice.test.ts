@@ -105,6 +105,32 @@ describe('consentement et fiche', () => {
   });
 });
 
+describe('accord et mode répétition', () => {
+  it("donne les audios de l'accord par des adresses signées, jamais leurs clés", async () => {
+    replies.voice_session = {
+      body: { consentement: { id: 1, audios: { dje: { complet: 'accord/v1/dje-complet.m4a' } } } },
+    };
+    const body = (await (await request('GET', '/voix/session')).json()) as {
+      consentement: { audios: { dje: { complet: string } } };
+    };
+    expect(new URL(body.consentement.audios.dje.complet).pathname).toBe(
+      '/murya-audio-staging/accord/v1/dje-complet.m4a',
+    );
+  });
+
+  it("donne l'audio modèle d'une phrase en mode répétition, sinon « introuvable »", async () => {
+    replies.voice_model_key = { body: KEY };
+    const res = await request('GET', '/voix/modele/7');
+    const { url } = (await res.json()) as { url: string };
+    expect(new URL(url).pathname).toBe(`/murya-audio-staging/${KEY}`);
+    expect(calls[0]!.args).toMatchObject({ p_sentence_id: 7 });
+
+    replies.voice_model_key = { body: null };
+    expect((await request('GET', '/voix/modele/7')).status).toBe(404);
+    expect((await request('GET', '/voix/modele/abc')).status).toBe(400);
+  });
+});
+
 describe('phrases', () => {
   it("voix principale : donne l'audio de référence par une adresse signée, jamais sa clé", async () => {
     replies.voice_sentences = {

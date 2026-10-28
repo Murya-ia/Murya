@@ -87,6 +87,76 @@ team.post('/consentement-oral', async (c) => {
   }
 });
 
+const CONSENT_LANGUAGES = ['dje', 'fr'];
+const CONSENT_KINDS = ['complet', 'rappel'];
+
+/**
+ * Audio de l'accord (spec §3.2), enregistré par l'équipe pour les personnes qui lisent peu :
+ * un admin l'envoie, il est rangé avec les audios (ce n'est pas une donnée personnelle).
+ */
+team.post('/accord-audio', async (c) => {
+  const form = await c.req.formData().catch(() => null);
+  const version = Number(form?.get('version_id'));
+  const language = form?.get('langue');
+  const kind = form?.get('type');
+  const file = form?.get('fichier');
+  if (
+    !Number.isSafeInteger(version) ||
+    version <= 0 ||
+    typeof language !== 'string' ||
+    !CONSENT_LANGUAGES.includes(language) ||
+    typeof kind !== 'string' ||
+    !CONSENT_KINDS.includes(kind) ||
+    !(file instanceof File)
+  ) {
+    return c.json({ erreur: 'requete_invalide' }, 400);
+  }
+  const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
+  if (!file.type.startsWith('audio/') && !AUDIO_EXTENSIONS.includes(extension)) {
+    return c.json({ erreur: 'pas_un_audio' }, 400);
+  }
+  if (file.size > MAX_ORAL_CONSENT_BYTES) return c.json({ erreur: 'fichier_trop_gros' }, 413);
+
+  const safeExtension = AUDIO_EXTENSIONS.includes(extension) ? extension : 'audio';
+  const key = `accord/v${version}/${language}-${kind}-${crypto.randomUUID()}.${safeExtension}`;
+  await c.env.AUDIO.put(key, await file.arrayBuffer(), {
+    httpMetadata: { contentType: file.type || 'application/octet-stream' },
+  });
+  try {
+    await rpcAsUser(c.env, c.get('jwt'), 'set_consent_audio', {
+      p_consent_version_id: version,
+      p_ui_language: language,
+      p_kind: kind,
+      p_storage_key: key,
+    });
+  } catch (error) {
+    await c.env.AUDIO.delete(key);
+    throw error;
+  }
+  return c.json({ ok: true });
+});
+
+/** Adresse d'écoute (15 min) d'un audio de l'accord, pour l'équipe. */
+team.get('/accord-audio/:version/:langue/:type', async (c) => {
+  const version = Number(c.req.param('version'));
+  const language = c.req.param('langue');
+  const kind = c.req.param('type');
+  if (
+    !Number.isSafeInteger(version) ||
+    !CONSENT_LANGUAGES.includes(language) ||
+    !CONSENT_KINDS.includes(kind)
+  ) {
+    return c.json({ erreur: 'requete_invalide' }, 400);
+  }
+  const key = await rpcAsUser<string | null>(c.env, c.get('jwt'), 'consent_audio_key', {
+    p_consent_version_id: version,
+    p_ui_language: language,
+    p_kind: kind,
+  });
+  if (!key) return c.json({ erreur: 'introuvable' }, 404);
+  return c.json({ url: await presignUrl(c.env, 'GET', key, LISTEN_URL_SECONDS) });
+});
+
 /**
  * Retrait d'une voix (spec §5.8), par un admin qui retape le numéro de la voix pour confirmer.
  * La base vérifie les droits et efface tout de son côté ; l'API efface ensuite les fichiers.

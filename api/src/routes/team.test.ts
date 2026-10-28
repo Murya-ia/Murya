@@ -95,6 +95,62 @@ describe('consentement oral', () => {
   });
 });
 
+describe("audios de l'accord", () => {
+  const send = (form: FormData, e: Env) =>
+    app.request(
+      '/equipe/accord-audio',
+      { method: 'POST', body: form, headers: { Authorization: 'Bearer jeton' } },
+      e,
+    );
+  const form = (type = 'complet') => {
+    const f = new FormData();
+    f.set('version_id', '3');
+    f.set('langue', 'dje');
+    f.set('type', type);
+    f.set('fichier', new File([new Uint8Array(50)], 'accord.m4a', { type: 'audio/mp4' }));
+    return f;
+  };
+
+  it('range le fichier avec les audios, puis le déclare à la base (droits de l’admin)', async () => {
+    const audioBucket = fakeBucket();
+    const res = await send(form(), testEnv({ AUDIO: audioBucket as unknown as R2Bucket }));
+    expect(res.status).toBe(200);
+    const [key] = Object.keys(audioBucket.files);
+    expect(key).toMatch(/^accord\/v3\/dje-complet-[0-9a-f-]+\.m4a$/);
+    expect(calls[0]).toMatchObject({
+      fn: 'set_consent_audio',
+      args: {
+        p_consent_version_id: 3,
+        p_ui_language: 'dje',
+        p_kind: 'complet',
+        p_storage_key: key,
+      },
+    });
+    expect(calls[0]!.headers.get('Authorization')).toBe('Bearer jeton');
+  });
+
+  it('supprime le fichier si la base refuse (pas admin)', async () => {
+    const audioBucket = fakeBucket();
+    reply = { status: 400, body: { code: 'P0001', message: 'acces_refuse' } };
+    const res = await send(form(), testEnv({ AUDIO: audioBucket as unknown as R2Bucket }));
+    expect(res.status).toBe(403);
+    expect(audioBucket.files).toEqual({});
+  });
+
+  it('refuse un type d’audio inconnu', async () => {
+    expect((await send(form('autre'), testEnv())).status).toBe(400);
+    expect(calls).toEqual([]);
+  });
+
+  it("donne une adresse d'écoute signée pour l'équipe", async () => {
+    reply = { body: 'accord/v3/dje-complet-x.m4a' };
+    const res = await get('/equipe/accord-audio/3/dje/complet');
+    const { url } = (await res.json()) as { url: string };
+    expect(new URL(url).pathname).toBe('/murya-audio-staging/accord/v3/dje-complet-x.m4a');
+    expect(calls[0]).toMatchObject({ fn: 'consent_audio_key' });
+  });
+});
+
 describe("retrait d'une voix (spec §5.8)", () => {
   const SPEAKER = '7b6a5c4d-3e2f-4a1b-9c8d-aabbccddeeff';
   const withdrawal = {

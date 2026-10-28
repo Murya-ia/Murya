@@ -52,9 +52,28 @@ voice.onError((error, c) => {
   return c.json({ erreur: 'erreur_interne' }, 500);
 });
 
-voice.get('/session', async (c) =>
-  c.json(await rpc(c.env, 'voice_session', { p_token_hash: c.get('tokenHash') })),
-);
+/** Durée de validité des adresses des audios (accord, audio modèle d'une phrase). */
+const LISTEN_URL_SECONDS = 60 * 60;
+
+type ConsentAudios = Record<string, Record<string, string>>;
+
+voice.get('/session', async (c) => {
+  const session = await rpc<{ consentement?: { audios?: ConsentAudios } | null }>(
+    c.env,
+    'voice_session',
+    { p_token_hash: c.get('tokenHash') },
+  );
+  // Audios de l'accord : la base donne leurs clés, l'app reçoit des adresses signées.
+  const audios = session?.consentement?.audios;
+  if (audios) {
+    for (const byKind of Object.values(audios)) {
+      for (const [kind, key] of Object.entries(byKind)) {
+        byKind[kind] = await presignUrl(c.env, 'GET', key, LISTEN_URL_SECONDS);
+      }
+    }
+  }
+  return c.json(session);
+});
 
 voice.post('/consentement', async (c) => {
   const body = await readBody(c.req.raw);
@@ -99,9 +118,6 @@ voice.post('/tutoriel', async (c) => {
   return c.json({ ok: true });
 });
 
-/** Durée de validité de l'adresse de l'audio de référence (voix principale). */
-const REFERENCE_URL_SECONDS = 60 * 60;
-
 voice.get('/phrases', async (c) => {
   const batch = await rpc<{ seance?: Record<string, unknown> & { reference_cle?: string | null } }>(
     c.env,
@@ -113,7 +129,7 @@ voice.get('/phrases', async (c) => {
     const { reference_cle: key, ...seance } = batch.seance;
     batch.seance = {
       ...seance,
-      ...(key ? { reference_url: await presignUrl(c.env, 'GET', key, REFERENCE_URL_SECONDS) } : {}),
+      ...(key ? { reference_url: await presignUrl(c.env, 'GET', key, LISTEN_URL_SECONDS) } : {}),
     };
   }
   return c.json(batch);
@@ -188,6 +204,18 @@ voice.post('/envoi/confirmer', async (c) => {
       p_mic_settings: smallJson(body.micro),
     }),
   );
+});
+
+/** Mode « écouter puis répéter » : adresse de l'audio modèle d'une phrase. */
+voice.get('/modele/:sentenceId', async (c) => {
+  const sentenceId = Number(c.req.param('sentenceId'));
+  if (!Number.isSafeInteger(sentenceId) || sentenceId <= 0) throw new BadRequest();
+  const key = await rpc<string | null>(c.env, 'voice_model_key', {
+    p_token_hash: c.get('tokenHash'),
+    p_sentence_id: sentenceId,
+  });
+  if (!key) return c.json({ erreur: 'introuvable' }, 404);
+  return c.json({ url: await presignUrl(c.env, 'GET', key, LISTEN_URL_SECONDS) });
 });
 
 voice.post('/sauter', async (c) => {
