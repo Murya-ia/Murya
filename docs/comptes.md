@@ -142,6 +142,45 @@ l'API) :
 
 Pour arrêter le worker : passez `WORKER_ENABLED` à `false`.
 
+### 2.6 Sauvegardes chiffrées (J6a, Backblaze B2)
+
+Fonctionnement et restauration : [sauvegardes.md](sauvegardes.md).
+
+1. **Backblaze B2** (compte créé avec l'adresse de l'équipe) :
+   - _Buckets_ > _Create a Bucket_ : nom `murya-sauvegardes-staging`, **Private**, chiffrement
+     B2 activé, pas d'_Object Lock_ ;
+   - _Lifecycle Settings_ du bucket : **Keep only the last version of the file** (un fichier
+     effacé disparaît vraiment : droit à l'effacement) ;
+   - noter l'_Endpoint_ du bucket (ex. `s3.eu-central-003.backblazeb2.com`) ;
+   - _Application Keys_ > _Add a New Application Key_ : nom `sauvegarde-staging`, accès au seul
+     bucket `murya-sauvegardes-staging`, **Read and Write** → garder _keyID_ et
+     _applicationKey_ (affichée une seule fois).
+2. **Clé de chiffrement** : `python -m murya_worker.cle <fichier>` (depuis `worker`) écrit la clé
+   privée dans le fichier et affiche la clé publique. Le fichier se garde précieusement, avec
+   une copie hors de l'ordinateur.
+3. **Cloudflare** : jeton R2 `sauvegarde-staging`, **Object Read only**, sur
+   `murya-audio-staging` et `murya-identites-staging`.
+4. **Supabase** : _Connect_ > _Session pooler_ : adresse `postgresql://postgres.<ref>:…@…:5432/postgres`,
+   avec le mot de passe de la base à la place de `[YOUR-PASSWORD]`.
+5. **GitHub**, environnement `staging` :
+
+| Type     | Nom                               | Valeur                                         |
+| -------- | --------------------------------- | ---------------------------------------------- |
+| Secret   | `SUPABASE_DB_URL`                 | adresse de l'étape 4                           |
+| Secret   | `SAUVEGARDE_R2_ACCESS_KEY_ID`     | Access Key ID du jeton de l'étape 3            |
+| Secret   | `SAUVEGARDE_R2_SECRET_ACCESS_KEY` | Secret Access Key du jeton de l'étape 3        |
+| Secret   | `B2_KEY_ID`                       | keyID de l'étape 1                             |
+| Secret   | `B2_APPLICATION_KEY`              | applicationKey de l'étape 1                    |
+| Variable | `B2_ENDPOINT`                     | `https://` + endpoint de l'étape 1             |
+| Variable | `B2_REGION`                       | la région de l'endpoint (ex. `eu-central-003`) |
+| Variable | `B2_BUCKET`                       | `murya-sauvegardes-staging`                    |
+| Variable | `R2_BUCKET_IDENTITES`             | `murya-identites-staging`                      |
+| Variable | `AGE_RECIPIENTS`                  | clé publique de l'étape 2 (`age1…`)            |
+
+Puis la variable de dépôt `SAUVEGARDE_ENABLED` = `true`, un premier lancement à la main
+(_Actions_ > _Sauvegarde_ > _Run workflow_) et un exercice de restauration
+([sauvegardes.md](sauvegardes.md#restaurer)).
+
 ## 3. Supabase (base de données, connexion de l'équipe)
 
 ### 3.1 Ce qui est en place (fait le 27/10/2026)

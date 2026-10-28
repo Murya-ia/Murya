@@ -89,8 +89,11 @@ l'audio, et la page envoie la liste des audios passés pendant la séance pour n
   l'app voix, jeton masqué avant envoi à Sentry.
 - Limite de débit principale **par jeton** ; limite par IP large (au Niger, beaucoup d'abonnés
   d'un même opérateur partagent une IP).
-- Sauvegarde hebdomadaire vers Backblaze B2, rotation 4 semaines : une voix retirée disparaît
-  des sauvegardes au plus tard 4 semaines après.
+- Sauvegarde **chaque nuit** vers Backblaze B2, chiffrée avec age (la clé privée reste chez
+  les admins, hors de GitHub) : 7 nuits + 4 dimanches. Une voix retirée disparaît des
+  sauvegardes au plus tard 30 jours après ; une restauration ne la fait jamais revenir
+  ([sauvegardes.md](sauvegardes.md)).
+- Journal d'activité inaltérable (ni modification ni effacement, même par un admin).
 
 ## Multilingue
 
@@ -149,6 +152,8 @@ Tous les textes de phrases sont normalisés en Unicode **NFC** (contrôlé par l
 | 27/10/2026 | Worker hébergé sur **GitHub Actions** toutes les 15 min, avec ses propres clés : R2 en **lecture seule** sur le bucket audio, clé secrète Supabase dédiée. Environnement GitHub `staging` limité à la branche `main`.                  |
 | 27/10/2026 | Double écoute : en cas de désaccord, **la décision du responsable qualité remplace** la première. Le taux de désaccord par vérificateur est affiché aux rôles qualité et admin.                                                        |
 | 27/10/2026 | Quotas : « hors de Niamey » compte aussi « autre pays » ; la langue maternelle est comparée au code de la langue collectée (`zarma` pour `dje`). Les parts se calculent sur les voix ayant rempli leur fiche.                          |
+| 28/10/2026 | Sauvegardes chez **Backblaze B2**, **chaque nuit**, chiffrées ; clé privée gardée par les admins dans un fichier texte (avec une copie hors de l'ordinateur).                                                                          |
+| 28/10/2026 | Retrait d'une voix : **le recruteur demande, un admin confirme** (en retapant le numéro). Fichiers effacés aussitôt par l'API ; trace minimale `retraits/…` pour les sauvegardes et la restauration.                                   |
 
 ### Questions encore ouvertes
 
@@ -202,7 +207,7 @@ Conséquences pour le code :
 | J2 Parcours voix ✓     | invitation, consentement, fiche, tutoriel, test, enregistrement, hors ligne              | construit le 27 oct (test iPhone à faire)      |
 | J3 Espace équipe ✓     | import CSV, recrutement, validation des tests, écoute, À refaire                         | construit le 27 oct (test à 2 membres à faire) |
 | J4 Qualité ✓           | vérifs serveur, double écoute, quotas, alertes, tableau de bord                          | terminé le 27 oct (worker actif)               |
-| J6a Protection         | sauvegardes + restauration, retrait d'une voix, journal                                  | 21 déc – 3 jan                                 |
+| J6a Protection         | sauvegardes + restauration, retrait d'une voix, journal                                  | construit le 28 oct (sauvegardes à activer)    |
 | J7 Charge et lancement | k6 2 000 utilisateurs, test des 5 membres, README                                        | 4 – 15 jan                                     |
 | J5 Voix principale     | séances, audio de référence, verrou                                                      | fin janvier                                    |
 | J6b Exports            | CSV/JSONL/README, partition d'examen, Hugging Face                                       | février                                        |
