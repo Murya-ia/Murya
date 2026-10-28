@@ -7,6 +7,7 @@ import type { QueueState, UploadQueue } from '../data/queue';
 import { cache, isOffline, type Sentences, type Session } from '../data/session';
 import { useT } from '../i18n/i18n';
 import { ErrorMessage } from '../ui/ErrorMessage';
+import { ListenButton } from '../ui/ListenButton';
 import { MessageScreen } from './MessageScreen';
 import { RecordScreen } from './RecordScreen';
 import { useScrollToTop } from '../ui/useScrollToTop';
@@ -49,6 +50,8 @@ export function RecordingFlow({
   }, [load]);
 
   const finished = useCallback(() => setFinishedLocally(true), []);
+  // Voix principale : audio de référence écouté pour cette séance (mémorisé dans le téléphone).
+  const [, setReferenceHeard] = useState(0);
 
   if (!data) {
     return error ? (
@@ -79,6 +82,46 @@ export function RecordingFlow({
   if (data.etape === 'attente' || (data.etape === 'test' && finishedLocally)) {
     return <WaitingScreen onRefresh={() => void load()} />;
   }
+  // Voix principale : séance finie, l'équipe vérifie avant d'ouvrir la suivante.
+  const sessionNumber = data.seance?.numero;
+  if (
+    data.etape === 'verification' ||
+    (finishedLocally && data.etape === 'lot' && sessionNumber !== undefined)
+  ) {
+    return (
+      <MessageScreen
+        icon="valider"
+        title={t('verification.titre', { n: sessionNumber ?? '' })}
+        action={{ label: t('attente.verifier'), onClick: () => void load() }}
+      >
+        <p>{t('verification.texte')}</p>
+        {queueState.pending > 0 && <p className="message alerte">{t('fin.envois_restants')}</p>}
+      </MessageScreen>
+    );
+  }
+  if (
+    data.etape === 'lot' &&
+    sessionNumber !== undefined &&
+    data.seance?.reference_url &&
+    !referenceHeard(sessionNumber)
+  ) {
+    return (
+      <MessageScreen
+        icon="ecouter"
+        title={t('seance.titre', { n: sessionNumber })}
+        action={{
+          label: t('seance.commencer'),
+          onClick: () => {
+            markReferenceHeard(sessionNumber);
+            setReferenceHeard((n) => n + 1);
+          },
+        }}
+      >
+        <p className="texte-long">{t('seance.reference')}</p>
+        <ListenButton src={data.seance.reference_url} />
+      </MessageScreen>
+    );
+  }
   if (data.etape === 'fin' || (finishedLocally && data.etape === 'lot')) {
     if (redo.length > 0 && !finishedLocally) {
       return <RecordScreen key="refaire" mode="refaire" sentences={redo} {...common} />;
@@ -106,6 +149,24 @@ export function RecordingFlow({
   const redoIds = new Set(redo.map((s) => s.id));
   const sentences = [...redo, ...data.phrases.filter((p) => !redoIds.has(p.id))];
   return <RecordScreen key="lot" mode="lot" sentences={sentences} {...common} />;
+}
+
+const referenceKey = (session: number) => `murya-reference-seance-${session}`;
+
+function referenceHeard(session: number): boolean {
+  try {
+    return localStorage.getItem(referenceKey(session)) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function markReferenceHeard(session: number): void {
+  try {
+    localStorage.setItem(referenceKey(session), '1');
+  } catch {
+    // Stockage indisponible : l'écran de référence reviendra à la prochaine ouverture.
+  }
 }
 
 function WaitingScreen({ onRefresh }: { onRefresh: () => void }) {

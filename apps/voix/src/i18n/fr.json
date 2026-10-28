@@ -116,5 +116,10 @@
 
   "fin.titre": "Merci beaucoup !",
   "fin.texte": "Vous avez enregistré {n} phrases. Un membre de l'équipe vous recontactera si besoin.",
-  "fin.envois_restants": "Quelques audios ne sont pas encore envoyés : rouvrez l'app quand vous avez du réseau."
+  "fin.envois_restants": "Quelques audios ne sont pas encore envoyés : rouvrez l'app quand vous avez du réseau.",
+  "seance.titre": "Séance {n}",
+  "seance.reference": "Avant de commencer, réécoutez l'audio de référence. Gardez le même ton, le même rythme et la même distance au téléphone.",
+  "seance.commencer": "Commencer la séance",
+  "verification.titre": "Séance {n} terminée, merci !",
+  "verification.texte": "L'équipe écoute vos enregistrements. La séance suivante s'ouvrira dès qu'ils seront tous vérifiés : revenez sur ce lien plus tard."
 }

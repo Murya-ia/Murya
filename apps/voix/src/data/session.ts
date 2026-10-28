@@ -46,10 +46,13 @@ export interface Sentence {
 }
 
 export interface Sentences {
-  etape: 'test' | 'attente' | 'lot' | 'fin';
+  /** `verification` : voix principale, séance finie, en attente de la vérification de l'équipe. */
+  etape: 'test' | 'attente' | 'lot' | 'verification' | 'fin';
   phrases: Sentence[];
   a_refaire?: Sentence[];
   total?: number;
+  /** Voix principale : séance en cours et audio de référence (adresse signée, 1 h). */
+  seance?: { numero: number; reference_url?: string };
 }
 
 const KEYS = {
