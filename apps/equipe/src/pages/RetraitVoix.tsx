@@ -230,7 +230,7 @@ export function WithdrawPanel({
       </p>
       <ul className="aide">
         <li>Le journal garde seulement le numéro {target.number}, la date et votre nom.</li>
-        <li>Les sauvegardes l’oublient au plus tard 4 semaines après.</li>
+        <li>Les sauvegardes l’oublient au plus tard 30 jours après.</li>
         <li>Un export déjà fait ne change pas ; la voix sera exclue des prochains.</li>
       </ul>
       <form className="formulaire" onSubmit={(e) => void withdraw(e)}>
