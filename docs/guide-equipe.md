@@ -114,6 +114,22 @@ ici.
 3. **Versions** : téléchargez l'archive, la fiche de version ou les métadonnées ; le lien
    Hugging Face ouvre le dépôt privé. Aucun nom ni contact n'est jamais dans un export.
 
+## Membres (admins) : gérer l'équipe soi-même
+
+Page **Membres** du menu. Tout se fait ici, sans aller dans Supabase.
+
+1. **Ajouter un membre** : son prénom, son e-mail, et un mot de passe provisoire (déjà proposé,
+   facile à recopier). Cochez ses rôles, puis **« Créer le compte »**. Un message affiche
+   l'adresse de l'espace équipe, l'e-mail et le mot de passe : envoyez-les-lui sur WhatsApp.
+2. Le membre se connecte, puis clique sur **« Mot de passe »** en haut à droite pour choisir
+   le sien (10 caractères au moins).
+3. **Changer les rôles** d'un membre : cochez ou décochez, puis **« Enregistrer les rôles »**.
+4. **Désactiver** un membre qui quitte l'équipe : il ne peut plus rien faire, mais tout ce
+   qu'il a fait reste (et peut être réactivé).
+
+Deux règles protègent l'équipe : **deux admins au maximum**, et **toujours au moins un admin
+actif** (personne ne peut enlever le dernier). Chaque changement est noté au journal.
+
 ## Journal (admins)
 
 Qui a fait quoi, et quand : invitations, décisions, retraits, consultations d'identité,

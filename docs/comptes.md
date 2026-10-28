@@ -261,6 +261,9 @@ npx supabase db advisors --linked --type all
 
 ### 3.3 Ajouter un membre de l'équipe
 
+Depuis le 28/10/2026 : **page « Membres » de l'espace équipe** (admins), voir
+[guide-equipe.md](guide-equipe.md). La méthode ci-dessous (par Supabase) reste possible.
+
 1. _Authentication_ > _Users_ > _Add user_ > _Create new user_ : e-mail du membre,
    « Auto confirm user » coché ; le membre tape lui-même son mot de passe.
 2. Donner ses rôles (`recruteur`, `verificateur`, `qualite`, `admin` — deux admins au maximum) :
