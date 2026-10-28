@@ -22,3 +22,17 @@ describe('liens entre tables', () => {
     expect(rows.map((r) => r.cible)).toContain('sentences');
   });
 });
+
+describe('numéros de voix', () => {
+  it('garde trois chiffres jusqu’à V999, puis continue sans couper (V1000)', async () => {
+    await db.exec(`update public.languages set speaker_seq = 998 where code = 'dje'`);
+    const numbers = [];
+    for (let i = 0; i < 3; i++) {
+      const { rows } = await db.query<{ n: string }>(
+        `select public.next_speaker_number('dje') as n`,
+      );
+      numbers.push(rows[0]!.n);
+    }
+    expect(numbers).toEqual(['V999', 'V1000', 'V1001']);
+  });
+});

@@ -17,6 +17,8 @@ where j.kind = 'verifier_audio'
 delete from public.speakers where language_code = 'zz';
 delete from public.invites where language_code = 'zz';
 update public.sentences set pending_reads = 0, validated_reads = 0 where language_code = 'zz';
+-- Les numéros des voix d'essai repartent de V001 au prochain essai.
+update public.languages set speaker_seq = 0 where code = 'zz';
 
 commit;
 
