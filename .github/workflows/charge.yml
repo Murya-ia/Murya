@@ -1,0 +1,60 @@
+# Essai de charge (spec §9), lancé à la main contre la version d'essai :
+#   1. prépare des voix d'essai (langue à part « zz », jamais mêlée aux vraies voix) ;
+#   2. k6 simule ces voix qui enregistrent leurs phrases ;
+#   3. efface les voix d'essai, quoi qu'il arrive.
+# Avant de lancer : lever la limite par adresse IP de l'API pour une heure (docs/charge.md).
+# Environnement GitHub « staging » : secret SUPABASE_DB_URL (déjà là pour les sauvegardes).
+name: Essai de charge
+
+on:
+  workflow_dispatch:
+    inputs:
+      voix:
+        description: Nombre de voix simultanées
+        default: '500'
+      palier:
+        description: Durée du palier à pleine charge (ex. 5m)
+        default: '5m'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: charge-staging
+  cancel-in-progress: false
+
+jobs:
+  charge:
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 60
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: grafana/setup-k6-action@v1
+      - name: Préparer les voix d'essai
+        run: psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -v n=${{ inputs.voix }} -f infra/charge/preparer.sql
+      - name: Simuler les voix
+        run: >-
+          k6 run --quiet --summary-export resultat.json
+          -e API=https://murya-api-staging.murya-api.workers.dev
+          -e VOIX=${{ inputs.voix }} -e PALIER=${{ inputs.palier }}
+          infra/charge/voix.js
+      - name: Résumé
+        if: always()
+        run: |
+          [ -f resultat.json ] || exit 0
+          jq '{
+            audios_envoyes: .metrics.audios_envoyes.count,
+            audios_par_seconde: .metrics.audios_envoyes.rate,
+            erreurs: .metrics.http_req_failed.value,
+            requetes: .metrics.http_reqs.count,
+            envoi_complet_ms: .metrics.envoi_complet_ms,
+            par_etape: (.metrics | with_entries(select(.key | startswith("http_req_duration{etape:")))
+                       | map_values({med, "p(95)": .["p(95)"], max})),
+            seuils_depasses: [.metrics | to_entries[] | select(.value.thresholds? // {} | to_entries | any(.value == true)) | .key]
+          }' resultat.json | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Effacer les voix d'essai
+        if: always()
+        run: psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f infra/charge/nettoyer.sql
