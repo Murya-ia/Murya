@@ -1,0 +1,37 @@
+# Diagnostic ponctuel (à supprimer ensuite) : comment le service de comptes de Supabase
+# accepte la clé secrète, pour créer un compte depuis l'API. Crée puis efface un compte d'essai.
+name: Diagnostic création de compte
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      URL: ${{ vars.SUPABASE_URL }}
+      KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+    steps:
+      - name: Essais
+        run: |
+          essai() {
+            local nom="$1"; shift
+            local email="diagnostic-$nom-$(date +%s)@murya.test"
+            local out
+            out=$(curl -s -w '\n%{http_code}' -X POST "$URL/auth/v1/admin/users" "$@" \
+              -H 'Content-Type: application/json' \
+              -d "{\"email\":\"$email\",\"password\":\"essai-diagnostic-123\",\"email_confirm\":true}")
+            local code=$(echo "$out" | tail -1)
+            echo "$nom : HTTP $code — $(echo "$out" | head -1 | jq -c '{code: (.code // .error_code // null), msg: (.msg // .message // null), id: (.id != null)}' 2>/dev/null)"
+            local id=$(echo "$out" | head -1 | jq -r '.id // empty' 2>/dev/null)
+            if [ -n "$id" ]; then
+              curl -s -o /dev/null -w "  (compte d'essai effacé : HTTP %{http_code})\n" -X DELETE \
+                "$URL/auth/v1/admin/users/$id" -H "apikey: $KEY" -H "Authorization: Bearer $KEY"
+            fi
+          }
+          essai apikey-seule -H "apikey: $KEY"
+          essai apikey-et-bearer -H "apikey: $KEY" -H "Authorization: Bearer $KEY"
