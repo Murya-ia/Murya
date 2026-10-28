@@ -9,6 +9,7 @@ import { useT } from '../i18n/i18n';
 import { ErrorMessage } from '../ui/ErrorMessage';
 import { MessageScreen } from './MessageScreen';
 import { RecordScreen } from './RecordScreen';
+import { useScrollToTop } from '../ui/useScrollToTop';
 
 export function RecordingFlow({
   token,
@@ -28,6 +29,7 @@ export function RecordingFlow({
   const [error, setError] = useState<unknown>(null);
   // Fini sur ce téléphone, même si des audios attendent encore leur envoi.
   const [finishedLocally, setFinishedLocally] = useState(false);
+  useScrollToTop(`${data?.etape ?? 'chargement'}-${finishedLocally}`);
 
   const load = useCallback(async () => {
     try {

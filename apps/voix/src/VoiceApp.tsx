@@ -16,6 +16,7 @@ import { ReminderScreen } from './screens/ReminderScreen';
 import { TutorialScreen } from './screens/TutorialScreen';
 import { Banner } from './ui/Banner';
 import { ErrorMessage } from './ui/ErrorMessage';
+import { useScrollToTop } from './ui/useScrollToTop';
 
 export function VoiceApp({ token }: { token: string }) {
   const [language, setLanguage] = useState<UiLanguage | null>(readLanguage);
@@ -50,6 +51,8 @@ export function VoiceApp({ token }: { token: string }) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useScrollToTop(currentStep(language, session, error, reminderSeen));
 
   if (!language) {
     return (
@@ -107,4 +110,23 @@ export function VoiceApp({ token }: { token: string }) {
       />
     );
   }
+}
+
+/** Nom de l'écran affiché (même logique que `renderStep`), pour remonter en haut à chaque
+ * changement d'écran. */
+function currentStep(
+  language: UiLanguage | null,
+  session: Session | null,
+  error: unknown,
+  reminderSeen: boolean,
+): string {
+  if (!language) return 'langue';
+  if (!session) return error ? 'erreur' : 'chargement';
+  const voice = session.voix;
+  if (!session.consentement) return 'indisponible';
+  if (!voice || !voice.consentement_a_jour) return 'consentement';
+  if (voice.rappel_requis && !reminderSeen) return 'rappel';
+  if (!voice.fiche_remplie) return 'fiche';
+  if (!voice.tutoriel_vu) return 'tutoriel';
+  return `enregistrement-${voice.statut}`;
 }
