@@ -24,6 +24,7 @@ import { isOffline, type Sentence, type Session } from '../data/session';
 import { useT, type TextKey } from '../i18n/i18n';
 import { Icon } from '../ui/icons';
 import { LevelMeter } from '../ui/LevelMeter';
+import { ModelButton } from '../ui/ModelButton';
 
 /** Fréquence des voix variées (spec §4.1). La voix principale garde celle du téléphone (§4.2). */
 const VARIED_RATE = 16_000;
@@ -48,6 +49,7 @@ export function RecordScreen({
   sentences,
   settings,
   principal,
+  repetition = false,
   queuePending,
   onFinished,
 }: {
@@ -58,6 +60,8 @@ export function RecordScreen({
   sentences: Sentence[];
   settings: Session['reglages'];
   principal: boolean;
+  /** Mode « écouter puis répéter » : un bouton fait entendre la phrase avant de la dire. */
+  repetition?: boolean;
   /** Nombre d'audios en attente : recalcule les phrases faites quand la file se recharge. */
   queuePending: number;
   onFinished: () => void;
@@ -262,10 +266,11 @@ export function RecordScreen({
         <progress max={sentences.length} value={position - 1} />
       </div>
 
-      <p className="aide">{t('enregistrement.lisez')}</p>
+      <p className="aide">{t(repetition ? 'repetition.consigne' : 'enregistrement.lisez')}</p>
       <p className="phrase" lang="dje">
         {current.texte}
       </p>
+      {repetition && <ModelButton api={api} sentenceId={current.id} />}
 
       <LevelMeter rms={level} active={phase === 'enregistrement'} />
 

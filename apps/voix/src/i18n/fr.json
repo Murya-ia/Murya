@@ -121,5 +121,10 @@
   "seance.reference": "Avant de commencer, réécoutez l'audio de référence. Gardez le même ton, le même rythme et la même distance au téléphone.",
   "seance.commencer": "Commencer la séance",
   "verification.titre": "Séance {n} terminée, merci !",
+  "repetition.ecouter": "Écouter la phrase",
+  "repetition.consigne": "Écoutez la phrase, puis répétez-la à votre tour.",
+  "repetition.absent": "Cette phrase n'a pas encore d'audio à écouter : vous pouvez la passer.",
+  "repetition.sans_modele_titre": "Merci de votre patience",
+  "repetition.sans_modele": "Les phrases à écouter ne sont pas encore prêtes. L'équipe vous recontactera dès qu'elles le seront.",
   "verification.texte": "L'équipe écoute vos enregistrements. La séance suivante s'ouvrira dès qu'ils seront tous vérifiés : revenez sur ce lien plus tard."
 }

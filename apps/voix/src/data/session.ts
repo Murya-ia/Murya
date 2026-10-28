@@ -33,6 +33,8 @@ export interface Session {
     tutoriel_vu: boolean;
     message_test: string | null;
     principale: boolean;
+    /** Mode « écouter puis répéter » : la personne ne lit pas, elle répète un modèle. */
+    repetition?: boolean;
   } | null;
 }
 
@@ -47,7 +49,7 @@ export interface Sentence {
 
 export interface Sentences {
   /** `verification` : voix principale, séance finie, en attente de la vérification de l'équipe. */
-  etape: 'test' | 'attente' | 'lot' | 'verification' | 'fin';
+  etape: 'test' | 'attente' | 'lot' | 'verification' | 'sans_modele' | 'fin';
   phrases: Sentence[];
   a_refaire?: Sentence[];
   total?: number;

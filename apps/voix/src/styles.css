@@ -465,3 +465,18 @@ button.lien {
 .message svg {
   vertical-align: middle;
 }
+
+/* Mode « écouter puis répéter » : gros bouton bien visible sous la phrase. */
+.modele {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.bouton-modele {
+  width: 100%;
+  min-height: 64px;
+  font-size: 1.15rem;
+  background: var(--degrade);
+}

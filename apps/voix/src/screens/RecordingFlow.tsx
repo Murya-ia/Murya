@@ -75,12 +75,24 @@ export function RecordingFlow({
     queue,
     settings,
     principal,
+    repetition: session.voix?.repetition ?? false,
     queuePending: queueState.pending,
     onFinished: finished,
   };
 
   if (data.etape === 'attente' || (data.etape === 'test' && finishedLocally)) {
     return <WaitingScreen onRefresh={() => void load()} />;
+  }
+  if (data.etape === 'sans_modele') {
+    return (
+      <MessageScreen
+        icon="valider"
+        title={t('repetition.sans_modele_titre')}
+        action={{ label: t('attente.verifier'), onClick: () => void load() }}
+      >
+        <p>{t('repetition.sans_modele')}</p>
+      </MessageScreen>
+    );
   }
   // Voix principale : séance finie, l'équipe vérifie avant d'ouvrir la suivante.
   const sessionNumber = data.seance?.numero;
