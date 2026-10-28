@@ -105,6 +105,32 @@ describe('consentement et fiche', () => {
   });
 });
 
+describe('phrases', () => {
+  it("voix principale : donne l'audio de référence par une adresse signée, jamais sa clé", async () => {
+    replies.voice_sentences = {
+      body: { etape: 'lot', phrases: [], seance: { numero: 2, reference_cle: KEY } },
+    };
+    const body = (await (await request('GET', '/voix/phrases')).json()) as {
+      seance: Record<string, unknown>;
+    };
+    expect(body.seance.numero).toBe(2);
+    expect(body.seance.reference_cle).toBeUndefined();
+    expect(new URL(body.seance.reference_url as string).pathname).toBe(
+      `/murya-audio-staging/${KEY}`,
+    );
+  });
+
+  it('sans audio de référence choisi, ne donne pas d’adresse', async () => {
+    replies.voice_sentences = {
+      body: { etape: 'lot', phrases: [], seance: { numero: 1, reference_cle: null } },
+    };
+    const body = (await (await request('GET', '/voix/phrases')).json()) as {
+      seance: Record<string, unknown>;
+    };
+    expect(body.seance).toEqual({ numero: 1 });
+  });
+});
+
 describe('envoi des audios', () => {
   it('prépare un envoi : URL signée vers R2 pour la clé fixée par la base', async () => {
     replies.voice_prepare_upload = { body: { cle: KEY, prise: 1, statut: 'en_envoi' } };

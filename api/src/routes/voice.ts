@@ -99,9 +99,25 @@ voice.post('/tutoriel', async (c) => {
   return c.json({ ok: true });
 });
 
-voice.get('/phrases', async (c) =>
-  c.json(await rpc(c.env, 'voice_sentences', { p_token_hash: c.get('tokenHash') })),
-);
+/** Durée de validité de l'adresse de l'audio de référence (voix principale). */
+const REFERENCE_URL_SECONDS = 60 * 60;
+
+voice.get('/phrases', async (c) => {
+  const batch = await rpc<{ seance?: Record<string, unknown> & { reference_cle?: string | null } }>(
+    c.env,
+    'voice_sentences',
+    { p_token_hash: c.get('tokenHash') },
+  );
+  // Voix principale : l'audio de référence s'écoute par une adresse signée, jamais par sa clé.
+  if (batch.seance) {
+    const { reference_cle: key, ...seance } = batch.seance;
+    batch.seance = {
+      ...seance,
+      ...(key ? { reference_url: await presignUrl(c.env, 'GET', key, REFERENCE_URL_SECONDS) } : {}),
+    };
+  }
+  return c.json(batch);
+});
 
 interface Prepared {
   cle: string;
