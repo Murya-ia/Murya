@@ -30,3 +30,7 @@ __pycache__/
 # Système
 .DS_Store
 Thumbs.db
+
+# Essais de bout en bout (Playwright)
+test-results/
+playwright-report/
