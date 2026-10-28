@@ -38,6 +38,8 @@ const ACTIONS: Record<string, string> = {
   export_demande: 'Export demandé',
   export_termine: 'Export prêt',
   export_telecharge: 'Export téléchargé',
+  voix_principale: 'Voix principale désignée ou retirée',
+  reference_choisie: 'Audio de référence choisi',
 };
 
 /** Détail court et lisible selon l'action. */

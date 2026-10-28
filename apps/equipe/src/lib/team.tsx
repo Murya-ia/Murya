@@ -62,6 +62,11 @@ export function errorText(error: { message?: string } | null | undefined): strin
     partition_figee: 'Cette voix est déjà dans un export : sa partie ne peut plus changer.',
     introuvable: 'Fichier introuvable (export pas prêt ?).',
     demo: 'Téléchargement indisponible en mode démo.',
+    principale_existe: 'Il y a déjà une voix principale pour cette langue.',
+    deja_en_lot:
+      'Cette voix a déjà commencé un lot de voix variée : elle ne peut plus devenir principale.',
+    seances_commencees: 'La voix principale a commencé ses séances : elle le reste.',
+    reference_invalide: 'Choisissez un audio validé de la voix principale.',
   };
   return known[code] ?? 'Une erreur est survenue. Réessayez.';
 }

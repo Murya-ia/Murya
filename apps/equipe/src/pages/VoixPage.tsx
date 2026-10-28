@@ -10,6 +10,7 @@ import { AudioPlayer } from '../components/AudioPlayer';
 import { sendOralConsent } from '../lib/api';
 import { errorText, useTeam } from '../lib/team';
 import { InviteForm } from './InviteForm';
+import { VoixPrincipale } from './VoixPrincipale';
 import {
   CancelRequestButton,
   IdentityButton,
@@ -146,6 +147,7 @@ export function VoixPage() {
       )}
       {has('recruteur') && <InviteForm onCreated={() => void load()} />}
       {has('admin') && <SpeakerSearch onWithdraw={openWithdraw} />}
+      {(has('admin') || has('qualite')) && <VoixPrincipale />}
       {error && <p className="message erreur">{error}</p>}
 
       <section className="carte">

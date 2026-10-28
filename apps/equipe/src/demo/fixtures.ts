@@ -166,6 +166,48 @@ const EXAM_OVERVIEW = {
   ],
 };
 
+const session = (
+  numero: number,
+  statut: string,
+  enregistrees: number,
+  a_verifier: number,
+  rejetees: number,
+  opened: number,
+) => ({
+  numero,
+  statut,
+  ouverte_le: day(opened),
+  terminee_le: statut === 'en_cours' ? null : day(opened + 2),
+  verifiee_le: statut === 'verifiee' ? day(opened + 3) : null,
+  phrases: 150,
+  enregistrees,
+  a_verifier,
+  rejetees,
+});
+
+const PRINCIPAL = {
+  phrases_total: 3000,
+  voix: {
+    id: 'spk-principale',
+    numero: 'V004',
+    statut: 'active',
+    libelle: 'Hadiza (voix principale)',
+    reference: { id: 'test-0', code: 'S0012', texte: 'Ay ga koy habu suba.' },
+    phrases_validees: 437,
+    seances: [
+      session(1, 'verifiee', 150, 0, 6, -12),
+      session(2, 'verifiee', 150, 0, 3, -8),
+      session(3, 'a_verifier', 150, 41, 1, -4),
+    ],
+    candidats_reference: SENTENCES.slice(0, 4).map((s, i) => ({
+      id: `test-${i}`,
+      code: s.code,
+      texte: s.text,
+    })),
+  },
+  candidats: [],
+};
+
 const TABLES: Record<string, unknown[]> = {
   team_members: MEMBERS,
   exports: EXPORTS,
@@ -373,6 +415,8 @@ export function rpcResult(name: string, args: Record<string, unknown>): unknown 
       ];
     case 'speaker_identity':
       return { nom: 'Issa Moussa', contact: '+227 90 00 00 00', consentement_oral: false };
+    case 'principal_overview':
+      return PRINCIPAL;
     case 'exam_overview':
       return EXAM_OVERVIEW;
     case 'request_export':

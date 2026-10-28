@@ -1483,3 +1483,25 @@ progress {
     align-items: flex-end;
   }
 }
+
+/* ------------------------------------------------------------------ Voix principale (J5) */
+
+.avancement-principale {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 4px 0 18px;
+}
+
+.reference-principale {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--trait);
+}
+
+.reference-principale .prise-test {
+  background: var(--ivoire);
+  border-radius: 16px;
+  padding: 12px 14px;
+  margin: 10px 0;
+}
