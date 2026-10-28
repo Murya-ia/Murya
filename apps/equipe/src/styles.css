@@ -1425,3 +1425,61 @@ progress {
 .intro {
   margin-bottom: 16px;
 }
+
+/* ------------------------------------------------------------------ Exports (J6b) */
+
+.liste-voix-examen {
+  list-style: none;
+  margin: 14px 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 8px;
+}
+
+.liste-voix-examen li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--ivoire);
+  border-radius: 16px;
+}
+
+.liste-voix-examen .case-ligne {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.contenu-export {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.contenu-export strong {
+  font-family: var(--titres);
+  font-size: 1.2rem;
+  letter-spacing: -0.03em;
+}
+
+.erreur-export {
+  display: block;
+  margin-top: 4px;
+  max-width: 260px;
+  overflow-wrap: anywhere;
+}
+
+.lien-hf {
+  align-self: center;
+  color: var(--vert);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .tableau.empile .contenu-export {
+    align-items: flex-end;
+  }
+}

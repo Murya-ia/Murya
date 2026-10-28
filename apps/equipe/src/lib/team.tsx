@@ -58,6 +58,10 @@ export function errorText(error: { message?: string } | null | undefined): strin
     voix_inconnue: 'Cette voix n’existe plus (déjà retirée ?).',
     confirmation_incorrecte: 'Le numéro tapé ne correspond pas à la voix.',
     journal_inalterable: 'Le journal ne peut pas être modifié.',
+    export_en_cours: 'Un export de ce type est déjà en préparation : attendez qu’il soit prêt.',
+    partition_figee: 'Cette voix est déjà dans un export : sa partie ne peut plus changer.',
+    introuvable: 'Fichier introuvable (export pas prêt ?).',
+    demo: 'Téléchargement indisponible en mode démo.',
   };
   return known[code] ?? 'Une erreur est survenue. Réessayez.';
 }

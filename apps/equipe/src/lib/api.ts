@@ -27,6 +27,21 @@ export function sendOralConsent(session: Session, form: FormData): Promise<{ num
   return call(session, '/equipe/consentement-oral', { method: 'POST', body: form });
 }
 
+export type ExportFile = 'archive.zip' | 'README.md' | 'metadata.csv' | 'metadata.jsonl';
+
+/** Lien de téléchargement signé (15 minutes) d'un fichier d'export (admins). */
+export async function exportLink(session: Session, exportId: number, file: ExportFile) {
+  if (import.meta.env.DEV && session.access_token === 'demo') {
+    throw new Error('demo');
+  }
+  const { url } = await call<{ url: string }>(session, `/equipe/exports/${exportId}/lien`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fichier: file }),
+  });
+  return url;
+}
+
 /** Retrait d'une voix (admins) : la base efface tout, puis l'API efface ses fichiers. */
 export async function withdrawSpeaker(
   session: Session,

@@ -34,6 +34,10 @@ const ACTIONS: Record<string, string> = {
   phrase_reactivee: 'Phrase réactivée',
   membre_ajoute: 'Membre ajouté',
   membre_modifie: 'Rôles d’un membre modifiés',
+  voix_examen: 'Voix examen modifiées',
+  export_demande: 'Export demandé',
+  export_termine: 'Export prêt',
+  export_telecharge: 'Export téléchargé',
 };
 
 /** Détail court et lisible selon l'action. */
@@ -51,6 +55,13 @@ function detail(entry: Entry): string {
     case 'membre_ajoute':
     case 'membre_modifie':
       return `rôles : ${((d.roles as string[] | undefined) ?? []).join(', ') || 'aucun'}${d.actif === false ? ' (désactivé)' : ''}`;
+    case 'voix_examen':
+      return `ajoutées : ${((d.ajoutees as string[] | undefined) ?? []).join(', ') || 'aucune'} ; retirées : ${((d.retirees as string[] | undefined) ?? []).join(', ') || 'aucune'}`;
+    case 'export_demande':
+    case 'export_termine':
+      return `v${String(d.version ?? '').padStart(3, '0')} · ${d.type === 'principale' ? 'voix principale' : 'voix variées'}${d.heures != null ? ` · ${d.heures} h` : ''}`;
+    case 'export_telecharge':
+      return String(d.fichier ?? '');
     default:
       return '';
   }

@@ -95,8 +95,80 @@ const PROGRESS = INVITES.flatMap((invite, i) =>
     : [],
 );
 
+const part = (audios: number, heures: number, voix: number) => ({ audios, heures, voix });
+
+const EXPORTS = [
+  {
+    id: 3,
+    kind: 'varie',
+    version: 3,
+    status: 'en_cours',
+    requested_at: day(0),
+    finished_at: null,
+    stats: null,
+    hf_repo: null,
+    error: null,
+  },
+  {
+    id: 2,
+    kind: 'varie',
+    version: 2,
+    status: 'pret',
+    requested_at: day(-7),
+    finished_at: day(-7),
+    stats: {
+      ...part(5210, 6.42, 31),
+      train: part(4688, 5.79, 28),
+      test: part(522, 0.63, 3),
+      archive_octets: 742_000_000,
+    },
+    hf_repo: 'murya-ai/murya-dje-varie@v002',
+    error: null,
+  },
+  {
+    id: 1,
+    kind: 'varie',
+    version: 1,
+    status: 'pret',
+    requested_at: day(-21),
+    finished_at: day(-21),
+    stats: {
+      ...part(1904, 2.31, 14),
+      train: part(1720, 2.08, 13),
+      test: part(184, 0.23, 1),
+      archive_octets: 268_000_000,
+    },
+    hf_repo: 'murya-ai/murya-dje-varie@v001',
+    error: null,
+  },
+];
+
+const exam = (
+  id: string,
+  numero: string,
+  sexe: string,
+  age: string,
+  region: string,
+  figee?: boolean,
+) => ({ id, numero, sexe, age, region, figee });
+
+const EXAM_OVERVIEW = {
+  voix_eligibles: 47,
+  cible: 5,
+  examen: [
+    exam('ex-1', 'V004', 'femme', '26-40', 'Niamey', true),
+    exam('ex-2', 'V017', 'homme', '41-60', 'Dosso', true),
+    exam('ex-3', 'V023', 'femme', '18-25', 'Tillabéri', false),
+  ],
+  proposition: [
+    exam('ex-4', 'V031', 'homme', '18-25', 'Niamey'),
+    exam('ex-5', 'V042', 'femme', '60+', 'Tahoua'),
+  ],
+};
+
 const TABLES: Record<string, unknown[]> = {
   team_members: MEMBERS,
+  exports: EXPORTS,
   withdrawal_requests: [
     {
       speaker_id: 'spk-3',
@@ -301,6 +373,10 @@ export function rpcResult(name: string, args: Record<string, unknown>): unknown 
       ];
     case 'speaker_identity':
       return { nom: 'Issa Moussa', contact: '+227 90 00 00 00', consentement_oral: false };
+    case 'exam_overview':
+      return EXAM_OVERVIEW;
+    case 'request_export':
+      return { id: 4, version: 4 };
     case 'journal':
       return JOURNAL.filter((e) => !args.p_action || e.action === args.p_action);
     default:
