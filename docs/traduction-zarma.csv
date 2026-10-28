@@ -25,7 +25,7 @@ consentement.nom_a_part,Écran de l'accord (cases à cocher),Votre nom est gard�
 consentement.accepter,Écran de l'accord (cases à cocher),J'accepte,
 consentement.nouvelle_version,Écran de l'accord (cases à cocher),Le texte a changé depuis votre dernière visite. Merci de le relire.,
 rappel.titre,"Rappel de l'accord, quelques jours plus tard",Bon retour !,
-rappel.texte,"Rappel de l'accord, quelques jours plus tard","Pour rappel, vous avez accepté que votre voix soit enregistrée et utilisée pour créer une intelligence artificielle en zarma, y compris pour un usage commercial. Votre nom n'est jamais lié à votre voix. Vous pouvez demander à retirer votre voix à tout moment, auprès de la personne qui vous a invité.",
+rappel.texte,"Rappel de l'accord, quelques jours plus tard","Pour rappel, vous avez accepté que votre voix soit enregistrée et utilisée pour créer une intelligence artificielle qui comprend les langues locales africaines, y compris pour un usage commercial. Votre nom n'est jamais lié à votre voix. Vous pouvez demander à retirer votre voix à tout moment, auprès de la personne qui vous a invité.",
 rappel.continuer,"Rappel de l'accord, quelques jours plus tard",Je continue,
 fiche.titre,"Écran « Quelques questions » (sexe, âge, région, langue)",Quelques questions,
 fiche.intro,"Écran « Quelques questions » (sexe, âge, région, langue)",Ces réponses restent anonymes. Elles servent à avoir des voix variées.,

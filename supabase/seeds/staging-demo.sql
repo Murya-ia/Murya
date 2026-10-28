@@ -11,7 +11,7 @@
 insert into public.consent_versions (language_code, version, texts, published_at)
 select 'dje', 1, '{
   "fr": {
-    "intro": "[BROUILLON DE TEST — texte à faire relire par un juriste] Murya construit une intelligence artificielle qui comprend et parle le zarma. Pour cela, nous enregistrons des personnes qui lisent des phrases à voix haute. Votre nom est gardé à part : il n''est jamais lié à votre voix. Vous pouvez demander à retirer votre voix à tout moment.",
+    "intro": "[BROUILLON DE TEST — texte à faire relire par un juriste] Murya construit une intelligence artificielle qui comprend et parle les langues locales africaines, en commençant par le zarma. Pour cela, nous enregistrons des personnes qui lisent des phrases à voix haute. Votre nom est gardé à part : il n''est jamais lié à votre voix. Vous pouvez demander à retirer votre voix à tout moment.",
     "points": {
       "enregistrement": "J''accepte que ma voix soit enregistrée pendant que je lis des phrases.",
       "entrainement_ia": "J''accepte que mes enregistrements servent à entraîner et à tester des modèles d''intelligence artificielle.",
