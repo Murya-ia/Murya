@@ -417,6 +417,15 @@ export function rpcResult(name: string, args: Record<string, unknown>): unknown 
       ];
     case 'speaker_identity':
       return { nom: 'Issa Moussa', contact: '+227 90 00 00 00', consentement_oral: false };
+    case 'team_directory':
+      return MEMBERS.map((m, i) => ({
+        user_id: m.user_id,
+        nom: m.display_name,
+        email: `${m.display_name.toLowerCase()}@murya.org`,
+        roles: m.roles,
+        actif: true,
+        derniere_connexion: i === 3 ? null : day(-i),
+      }));
     case 'principal_overview':
       return PRINCIPAL;
     case 'exam_overview':

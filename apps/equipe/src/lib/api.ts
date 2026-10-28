@@ -47,6 +47,21 @@ export async function consentAudioUrl(
   return (await call<{ url: string }>(session, path)).url;
 }
 
+/** Nouveau membre de l'équipe (admins) : compte de connexion + rôles. */
+export async function createMember(
+  session: Session,
+  member: { email: string; mot_de_passe: string; nom: string; roles: string[] },
+): Promise<{ email: string }> {
+  if (import.meta.env.DEV && session.access_token === 'demo') {
+    return { email: member.email.trim().toLowerCase() };
+  }
+  return call(session, '/equipe/membres', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(member),
+  });
+}
+
 export type ExportFile = 'archive.zip' | 'README.md' | 'metadata.csv' | 'metadata.jsonl';
 
 /** Lien de téléchargement signé (15 minutes) d'un fichier d'export (admins). */

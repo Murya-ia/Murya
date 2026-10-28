@@ -67,6 +67,11 @@ export function errorText(error: { message?: string } | null | undefined): strin
       'Cette voix a déjà commencé un lot de voix variée : elle ne peut plus devenir principale.',
     seances_commencees: 'La voix principale a commencé ses séances : elle le reste.',
     reference_invalide: 'Choisissez un audio validé de la voix principale.',
+    deux_admins_max: 'Il y a déjà deux admins : retirez d’abord ce rôle à l’un d’eux.',
+    dernier_admin: 'Il doit toujours rester au moins un admin actif.',
+    email_existe: 'Un compte existe déjà avec cet e-mail.',
+    weak_password: 'Mot de passe trop faible : 10 caractères au moins.',
+    same_password: 'Le nouveau mot de passe doit être différent de l’ancien.',
   };
   return known[code] ?? 'Une erreur est survenue. Réessayez.';
 }

@@ -416,6 +416,19 @@ kbd {
   .utilisateur {
     display: none;
   }
+
+  .barre-droite {
+    gap: 6px;
+  }
+
+  .mise-en-page .barre-droite button.petit {
+    padding: 0 12px;
+    font-size: 0.82rem;
+  }
+}
+
+.barre-droite button {
+  white-space: nowrap;
 }
 
 .contenu {
@@ -1563,4 +1576,70 @@ progress {
 .bouton-fichier:focus-within {
   outline: 3px solid var(--vert);
   outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------ Membres */
+
+.liste-membres {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.liste-membres li {
+  padding: 14px 18px;
+  background: var(--ivoire);
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.liste-membres li.inactif {
+  opacity: 0.6;
+}
+
+.membre-tete {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.cases-roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+
+.etiquette-champ {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.identifiants {
+  font-family: ui-monospace, Consolas, monospace;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+/* Petite fenêtre au-dessus de la page (mot de passe). */
+.fenetre-fond {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(17, 17, 17, 0.35);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.fenetre {
+  width: min(100%, 440px);
+  margin: 0;
 }

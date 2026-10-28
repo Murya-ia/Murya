@@ -10,6 +10,8 @@ import { AccueilPage } from './pages/AccueilPage';
 import { EcoutePage } from './pages/EcoutePage';
 import { ExportsPage } from './pages/ExportsPage';
 import { JournalPage } from './pages/JournalPage';
+import { MembresPage } from './pages/MembresPage';
+import { MotDePasse } from './components/MotDePasse';
 import { PhrasesPage } from './pages/PhrasesPage';
 import { VoixPage } from './pages/VoixPage';
 import type { Role, TeamMember } from './supabase';
@@ -62,7 +64,7 @@ export function TeamShell({ client, session }: { client: SupabaseClient; session
   return (
     <TeamProvider value={{ client, session, member: state.member }}>
       <div className="mise-en-page">
-        <TopBar email={session.user.email} onSignOut={signOut}>
+        <TopBar email={session.user.email} onSignOut={signOut} account={<MotDePasse />}>
           <Navigation />
         </TopBar>
         <main className="contenu">
@@ -80,6 +82,7 @@ const PAGES: { path: string; label: string; roles: Role[] | null }[] = [
   { path: '/ecoute', label: 'Écoute', roles: ['verificateur', 'qualite', 'admin'] },
   { path: '/phrases', label: 'Phrases', roles: null },
   { path: '/exports', label: 'Exports', roles: ['admin'] },
+  { path: '/membres', label: 'Membres', roles: ['admin'] },
   { path: '/journal', label: 'Journal', roles: ['admin'] },
 ];
 
@@ -111,6 +114,7 @@ function Page() {
   if (path === '/ecoute') return <EcoutePage />;
   if (path === '/phrases') return <PhrasesPage />;
   if (path === '/exports') return <ExportsPage />;
+  if (path === '/membres') return <MembresPage />;
   if (path === '/journal') return <JournalPage />;
   return <AccueilPage />;
 }
@@ -118,10 +122,13 @@ function Page() {
 function TopBar({
   email,
   onSignOut,
+  account,
   children,
 }: {
   email: string | undefined;
   onSignOut: () => void;
+  /** Boutons du compte (ex. « Mon mot de passe »), seulement une fois le membre chargé. */
+  account?: React.ReactNode;
   children?: React.ReactNode;
 }) {
   return (
@@ -144,6 +151,7 @@ function TopBar({
             {email}
           </span>
         )}
+        {account}
         <button className="secondaire petit" onClick={onSignOut}>
           Se déconnecter
         </button>
