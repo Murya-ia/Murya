@@ -183,6 +183,34 @@ Puis la variable de dépôt `SAUVEGARDE_ENABLED` = `true`, un premier lancement 
 (_Actions_ > _Sauvegarde_ > _Run workflow_) et un exercice de restauration
 ([sauvegardes.md](sauvegardes.md#restaurer)).
 
+### 2.7 Exports (J6b : R2 et Hugging Face)
+
+Fonctionnement : page **Exports** de l'espace équipe (admins), workflow GitHub « Exports »
+(`.github/workflows/export.yml`), code `worker/murya_worker/export.py`.
+
+1. **Buckets R2** `murya-exports-staging` et `murya-exports` : créés le 28/10/2026 (Wrangler).
+   L'API les lit directement (liaison `EXPORTS` dans `api/wrangler.toml`).
+2. **Jeton R2 du worker d'export** : _R2_ > _Manage API tokens_ > _Create Account API token_ :
+   nom `export-staging`, **Object Read & Write**, sur le seul bucket `murya-exports-staging`.
+   Les audios sont lus avec le jeton du worker de vérification (`R2_ACCESS_KEY_ID`, lecture
+   seule), déjà en place.
+3. **Hugging Face** (facultatif, mais prévu) : compte ou organisation de l'équipe (adresse
+   e-mail d'équipe), puis _Settings_ > _Access Tokens_ > jeton **fine-grained** nommé
+   `murya-export-staging`, droit « Write access to contents/settings of all repos under your
+   personal namespace » (ou de l'organisation). Les dépôts sont créés **privés** par le worker.
+4. **GitHub**, environnement `staging` :
+
+| Type     | Nom                           | Valeur                                          |
+| -------- | ----------------------------- | ----------------------------------------------- |
+| Secret   | `EXPORT_R2_ACCESS_KEY_ID`     | Access Key ID du jeton de l'étape 2             |
+| Secret   | `EXPORT_R2_SECRET_ACCESS_KEY` | Secret Access Key du jeton de l'étape 2         |
+| Secret   | `HF_TOKEN`                    | jeton Hugging Face de l'étape 3                 |
+| Variable | `EXPORT_R2_BUCKET`            | `murya-exports-staging`                         |
+| Variable | `HF_OWNER`                    | nom du compte ou de l'organisation Hugging Face |
+
+Puis la variable de dépôt `EXPORT_ENABLED` = `true`. Sans `HF_TOKEN` / `HF_OWNER`, l'export
+est seulement rangé dans R2.
+
 ## 3. Supabase (base de données, connexion de l'équipe)
 
 ### 3.1 Ce qui est en place (fait le 27/10/2026)

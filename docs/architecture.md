@@ -155,6 +155,9 @@ Tous les textes de phrases sont normalisés en Unicode **NFC** (contrôlé par l
 | 28/10/2026 | Sauvegardes chez **Backblaze B2**, **chaque nuit**, chiffrées ; clé privée gardée par les admins dans un fichier texte (avec une copie hors de l'ordinateur).                                                                          |
 | 28/10/2026 | Retrait d'une voix : **le recruteur demande, un admin confirme** (en retapant le numéro). Fichiers effacés aussitôt par l'API ; trace minimale `retraits/…` pour les sauvegardes et la restauration.                                   |
 
+| 28/10/2026 | Exports rangés dans un bucket R2 privé (`murya-exports-…`, téléchargement par lien signé de 15 min, admins seulement) **et** poussés sur un dépôt **privé** Hugging Face (une étiquette par version). Audios en **WAV 16 kHz** tels quels. |
+| 28/10/2026 | Voix examen : Murya **propose 10 %** (tirage stratifié sexe × âge × région, stable), l'admin ajuste. Dès qu'une voix est exportée, sa partie (`train`/`test`) est **figée**. |
+
 ### Questions encore ouvertes
 
 - Logo : source vectorielle (sera déposée à la racine du dépôt) ; symbole SVG provisoire en attendant.
@@ -210,7 +213,7 @@ Conséquences pour le code :
 | J6a Protection ✓       | sauvegardes + restauration, retrait d'une voix, journal                                  | terminé le 28 oct (sauvegardes actives)        |
 | J7 Charge et lancement | k6 2 000 utilisateurs, test des 5 membres, README                                        | 4 – 15 jan                                     |
 | J5 Voix principale     | séances, audio de référence, verrou                                                      | fin janvier                                    |
-| J6b Exports            | CSV/JSONL/README, partition d'examen, Hugging Face                                       | février                                        |
+| J6b Exports            | CSV/JSONL/README, partition d'examen, Hugging Face                                       | construit le 28 oct (exports à activer)        |
 
 ## Points d'attention
 
