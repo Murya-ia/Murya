@@ -34,8 +34,9 @@ from .stores import Store
 
 DAILY_KEEP_DAYS = 7
 WEEKLY_KEEP_DAYS = 28
-# Fichiers à ne pas sauvegarder : enregistrements de la page de preuve (effacés après 7 jours).
-EXCLUDED_PREFIXES = ("preuve/",)
+# Fichiers à ne pas sauvegarder : page de preuve (effacés après 7 jours) et essais de charge
+# (langue « zz », effacés après 1 jour).
+EXCLUDED_PREFIXES = ("preuve/", "zz/")
 DUMP_NAME = "donnees.sql.gz.age"
 MANIFEST_NAME = "manifeste.json"
 
