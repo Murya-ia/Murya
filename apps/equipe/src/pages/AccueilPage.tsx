@@ -72,19 +72,52 @@ export function AccueilPage() {
     { n: flags, label: 'signalement(s) « je n’arrive pas à lire »', path: '/phrases', note: null },
   ].filter((c) => c !== null);
 
+  // Action principale selon les rôles : l'écoute d'abord, sinon les voix, sinon les phrases.
+  const listens = has('verificateur') || has('qualite') || has('admin');
+  const recruits = has('recruteur') || has('admin');
+  const main = listens
+    ? { label: 'Commencer l’écoute', path: '/ecoute' }
+    : recruits
+      ? { label: 'Voir les voix', path: '/voix' }
+      : { label: 'Voir les phrases', path: '/phrases' };
+
   return (
     <>
-      <h1>Bonjour {member.display_name}</h1>
-      <p className="roles">
-        Vos rôles :{' '}
-        {member.roles.length === 0
-          ? 'aucun pour le moment'
-          : member.roles.map((role) => (
-              <span key={role} className="pastille">
-                {ROLE_LABELS[role]}
-              </span>
-            ))}
-      </p>
+      <section className="heros">
+        <span className="etiquette">Espace équipe</span>
+        <h1>
+          Bonjour {member.display_name}. <span className="doux">Chaque voix compte.</span>
+        </h1>
+        <p className="roles">
+          Vos rôles :{' '}
+          {member.roles.length === 0
+            ? 'aucun pour le moment'
+            : member.roles.map((role) => (
+                <span key={role} className="pastille">
+                  {ROLE_LABELS[role]}
+                </span>
+              ))}
+        </p>
+        <div className="boutons">
+          <button className="avec-fleche" onClick={() => navigate(main.path)}>
+            {main.label}
+            <span className="rond" aria-hidden="true">
+              →
+            </span>
+          </button>
+          {listens && recruits && (
+            <button className="secondaire" onClick={() => navigate('/voix')}>
+              Inviter une voix
+            </button>
+          )}
+        </div>
+      </section>
+      <div className="pilules" aria-hidden="true">
+        <span>Lire</span>
+        <span>Enregistrer</span>
+        <span>→</span>
+        <span>Partager</span>
+      </div>
       <div className="cartes-compteurs">
         {cards.map((card) => (
           <button key={card.label} className="compteur" onClick={() => navigate(card.path)}>
@@ -92,7 +125,7 @@ export function AccueilPage() {
             <span>{card.label}</span>
             {card.note && <small className="aide">{card.note}</small>}
             <span className="compteur-fleche" aria-hidden="true">
-              →
+              ↗
             </span>
           </button>
         ))}

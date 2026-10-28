@@ -26,7 +26,10 @@ export function LoginPage({ client }: { client: SupabaseClient }) {
   return (
     <main className="centre-page">
       <Logo size={44} />
-      <h1>Espace équipe</h1>
+      <span className="etiquette">Espace équipe</span>
+      <h1>
+        Bon retour. <span className="doux">Connectez-vous.</span>
+      </h1>
       <form className="carte formulaire" onSubmit={(e) => void submit(e)}>
         <div>
           <label htmlFor="email">E-mail</label>
@@ -51,8 +54,11 @@ export function LoginPage({ client }: { client: SupabaseClient }) {
           />
         </div>
         {error && <p className="message erreur">{error}</p>}
-        <button type="submit" disabled={busy}>
+        <button type="submit" className="avec-fleche" disabled={busy}>
           {busy ? 'Connexion…' : 'Se connecter'}
+          <span className="rond" aria-hidden="true">
+            →
+          </span>
         </button>
         <p className="aide">
           Pas de compte ou mot de passe oublié ? Demandez à un admin : les inscriptions libres sont

@@ -1,12 +1,20 @@
 /* Espace équipe. Couleurs de base dans packages/commun/src/theme.css.
    Pensé pour l'ordinateur ET le téléphone : on vérifie à 375 px et à 1440 px de large. */
 
+@import '@fontsource-variable/manrope/wght.css';
+
 :root {
-  --trait: #e7e1cc; /* bordure discrète des cartes */
-  --ombre: 0 1px 2px rgba(15, 61, 46, 0.05), 0 8px 24px -16px rgba(15, 61, 46, 0.25);
+  --trait: rgba(17, 17, 17, 0.08); /* bordure discrète des cartes */
+  --ombre: 0 24px 48px -36px rgba(15, 61, 46, 0.35);
+  --sable: #efeadb; /* ivoire un ton plus foncé : boutons discrets, fonds de pilules */
+  --sable-fonce: #e6e0cc;
+  --doux: #9a978b; /* seconde moitié des grands titres */
+  --degrade: linear-gradient(135deg, #2b7a5c 0%, var(--vert-clair) 45%, var(--vert) 100%);
   --vert-pale: #e3f0ea;
   --ambre-pale: #fff4dc;
   --rouge-pale: #fbe9e7;
+  --titres: 'Manrope Variable', var(--police);
+  --rayon-carte: 24px;
   --marge: clamp(16px, 3vw, 32px);
   --largeur: 1240px; /* largeur maximale du contenu */
 }
@@ -15,20 +23,35 @@ body {
   font-size: 16px;
 }
 
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--titres);
+  font-weight: 650;
+}
+
 h1 {
-  font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.1rem);
-  line-height: 1.15;
-  letter-spacing: -0.01em;
-  margin: 0 0 8px;
+  font-size: clamp(1.9rem, 1.3rem + 2.2vw, 3rem);
+  line-height: 1.04;
+  letter-spacing: -0.045em;
+  margin: 0 0 12px;
+}
+
+h1 .doux {
+  color: var(--doux);
 }
 
 h2 {
-  font-size: clamp(1.2rem, 1.1rem + 0.4vw, 1.4rem);
+  font-size: clamp(1.3rem, 1.1rem + 0.7vw, 1.75rem);
+  letter-spacing: -0.035em;
+  line-height: 1.15;
   margin: 0 0 12px;
 }
 
 h3 {
-  font-size: 1.05rem;
+  font-size: 1.1rem;
+  letter-spacing: -0.02em;
   margin: 0 0 12px;
 }
 
@@ -45,37 +68,107 @@ label {
   margin: 0;
 }
 
-/* ------------------------------------------------------------------ Boutons */
+/* Petite étiquette « • Section » au-dessus des grands titres. */
+.etiquette {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--blanc);
+  border: 1px solid var(--trait);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.etiquette::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--vert);
+}
+
+/* ------------------------------------------------------------------ Boutons (pilules) */
 
 .mise-en-page button,
 .centre-page button {
-  min-height: 44px;
-  padding: 0 18px;
-  border-radius: 12px;
+  min-height: 46px;
+  padding: 0 22px;
+  border-radius: 999px;
+  font-weight: 600;
   transition:
-    filter 0.15s,
     background-color 0.15s,
+    color 0.15s,
     transform 0.15s;
+}
+
+.mise-en-page button:not(:disabled):active,
+.centre-page button:not(:disabled):active {
+  transform: scale(0.98);
 }
 
 .mise-en-page button:not(:disabled):hover,
 .centre-page button:not(:disabled):hover {
-  filter: brightness(1.15);
+  background-color: var(--vert-clair);
 }
 
-.mise-en-page button.secondaire:not(:disabled):hover {
-  filter: none;
-  background: var(--vert-pale);
+/* Bouton discret : fond sable, sans bordure. */
+.mise-en-page button.secondaire,
+.centre-page button.secondaire {
+  background: var(--sable);
+  color: var(--noir);
+  border: none;
+}
+
+.mise-en-page button.secondaire:not(:disabled):hover,
+.centre-page button.secondaire:not(:disabled):hover {
+  background: var(--sable-fonce);
 }
 
 .mise-en-page button.petit {
-  min-height: 36px;
-  padding: 0 14px;
+  min-height: 38px;
+  padding: 0 16px;
   font-size: 0.9rem;
 }
 
+/* Bouton principal avec un rond blanc et une flèche : <button class="avec-fleche">Texte
+   <span class="rond" aria-hidden="true">→</span></button> */
+.mise-en-page button.avec-fleche,
+.centre-page button.avec-fleche,
+a.bouton.avec-fleche {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 52px;
+  padding: 0 6px 0 22px;
+}
+
+.avec-fleche .rond {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--blanc);
+  color: var(--vert);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.avec-fleche:not(:disabled):hover .rond {
+  transform: translateX(3px);
+}
+
+.mise-en-page button.danger,
 button.danger {
   background: var(--erreur);
+}
+
+.mise-en-page button.danger:not(:disabled):hover {
+  background: #8f1e18;
 }
 
 .danger-texte {
@@ -107,17 +200,18 @@ button.danger {
 a.bouton {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
-  padding: 0 18px;
-  border-radius: 12px;
+  min-height: 46px;
+  padding: 0 22px;
+  border-radius: 999px;
   background: var(--vert);
   color: var(--blanc);
-  font-weight: 700;
+  font-weight: 600;
   text-decoration: none;
+  transition: background-color 0.15s;
 }
 
 a.bouton:hover {
-  filter: brightness(1.15);
+  background: var(--vert-clair);
 }
 
 kbd {
@@ -140,7 +234,7 @@ kbd {
 
 .centre-page {
   min-height: 100vh;
-  max-width: 420px;
+  max-width: 440px;
   margin: 0 auto;
   padding: 16px;
   display: flex;
@@ -151,11 +245,41 @@ kbd {
   text-align: center;
 }
 
+.centre-page h1 {
+  margin: 4px 0 8px;
+}
+
 .formulaire {
   display: flex;
   flex-direction: column;
   gap: 16px;
   text-align: left;
+}
+
+.formulaire button.avec-fleche {
+  width: 100%;
+}
+
+/* Champs : arrondis, bordure fine, anneau vert au clic. */
+.mise-en-page input:not([type='checkbox']):not([type='radio']),
+.mise-en-page select,
+.mise-en-page textarea,
+.centre-page input {
+  border: 1px solid rgba(17, 17, 17, 0.14);
+  border-radius: 14px;
+  background: var(--blanc);
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.mise-en-page input:not([type='checkbox']):not([type='radio']):focus-visible,
+.mise-en-page select:focus-visible,
+.mise-en-page textarea:focus-visible,
+.centre-page input:focus-visible {
+  outline: none;
+  border-color: var(--vert);
+  box-shadow: 0 0 0 4px rgba(31, 92, 71, 0.15);
 }
 
 /* ------------------------------------------------------------------ Cadre des pages */
@@ -166,24 +290,28 @@ kbd {
   flex-direction: column;
 }
 
+/* En-tête clair : logo vert à gauche, menu en pilule au centre, compte à droite. */
 .barre {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: var(--vert);
-  color: var(--blanc);
+  background: rgba(247, 244, 234, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--noir);
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: 1fr auto 1fr;
   grid-template-areas: 'logo nav droite';
   align-items: center;
-  gap: 8px 24px;
+  gap: 10px 24px;
   /* Sur grand écran, le contenu de la barre s'aligne sur la colonne de la page (1240 px). */
-  padding: 10px max(var(--marge), calc((100% - var(--largeur)) / 2 + var(--marge)));
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+  padding: 14px max(var(--marge), calc((100% - var(--largeur)) / 2 + var(--marge)));
+  border-bottom: 1px solid var(--trait);
 }
 
 .barre-logo {
   grid-area: logo;
+  justify-self: start;
   display: flex;
   color: inherit;
   border-radius: 8px;
@@ -192,9 +320,14 @@ kbd {
 .navigation {
   grid-area: nav;
   display: flex;
-  gap: 4px;
+  gap: 2px;
+  padding: 4px;
+  max-width: 100%;
   overflow-x: auto;
   scrollbar-width: none;
+  background: var(--blanc);
+  border: 1px solid var(--trait);
+  border-radius: 999px;
 }
 
 .navigation::-webkit-scrollbar {
@@ -202,42 +335,47 @@ kbd {
 }
 
 .navigation a {
-  color: var(--blanc);
+  color: var(--gris);
   text-decoration: none;
-  padding: 8px 14px;
+  padding: 8px 16px;
   border-radius: 999px;
+  font-size: 0.92rem;
   font-weight: 600;
   white-space: nowrap;
-  opacity: 0.8;
   transition:
     background-color 0.15s,
-    opacity 0.15s;
+    color 0.15s;
 }
 
-.navigation a.actif,
 .navigation a:hover {
-  background: rgba(255, 255, 255, 0.16);
-  opacity: 1;
+  color: var(--noir);
+  background: var(--ivoire);
+}
+
+.navigation a.actif {
+  background: var(--vert);
+  color: var(--blanc);
 }
 
 .navigation a:focus-visible,
 .barre-logo:focus-visible {
-  outline: 3px solid var(--blanc);
+  outline: 3px solid var(--vert);
   outline-offset: 2px;
 }
 
 .barre-droite {
   grid-area: droite;
+  justify-self: end;
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   min-width: 0;
 }
 
 .utilisateur {
-  opacity: 0.85;
-  max-width: 240px;
+  color: var(--gris);
+  max-width: 220px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -245,31 +383,33 @@ kbd {
 
 .barre button.secondaire {
   background: transparent;
-  color: var(--blanc);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  color: var(--noir);
+  border: 1px solid rgba(17, 17, 17, 0.18);
 }
 
 .barre button.secondaire:not(:disabled):hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--blanc);
 }
 
-/* Téléphone : logo et déconnexion en haut, menu en dessous (défilant si besoin). */
-@media (max-width: 760px) {
+/* Écran moyen : le menu passe sous le logo. Téléphone : il défile de côté. */
+@media (max-width: 1080px) {
   .barre {
     grid-template-columns: 1fr auto;
     grid-template-areas:
       'logo droite'
       'nav nav';
-    padding-bottom: 6px;
-  }
-
-  .utilisateur {
-    display: none;
+    padding-top: 10px;
+    padding-bottom: 10px;
   }
 
   .navigation {
-    margin: 0 calc(-1 * var(--marge));
-    padding: 0 var(--marge) 4px;
+    justify-self: start;
+  }
+}
+
+@media (max-width: 760px) {
+  .utilisateur {
+    display: none;
   }
 }
 
@@ -278,7 +418,7 @@ kbd {
   width: 100%;
   max-width: var(--largeur);
   margin: 0 auto;
-  padding: 28px var(--marge) 40px;
+  padding: 32px var(--marge) 48px;
 }
 
 .pied {
@@ -294,9 +434,9 @@ kbd {
 .carte {
   background: var(--blanc);
   border: 1px solid var(--trait);
-  border-radius: var(--rayon);
+  border-radius: var(--rayon-carte);
   box-shadow: var(--ombre);
-  padding: clamp(16px, 2.5vw, 24px);
+  padding: clamp(18px, 2.8vw, 28px);
   margin-bottom: 20px;
   width: 100%;
   min-width: 0;
@@ -323,8 +463,8 @@ kbd {
 
 .message {
   margin: 0 0 16px;
-  padding: 12px 16px;
-  border-radius: 12px;
+  padding: 12px 18px;
+  border-radius: 16px;
   font-weight: 600;
   text-align: left;
 }
@@ -349,7 +489,7 @@ kbd {
   background: var(--vert);
   color: var(--blanc);
   border-radius: 999px;
-  padding: 2px 12px;
+  padding: 4px 12px;
   margin: 2px 6px 2px 0;
   font-size: 0.85rem;
   font-weight: 600;
@@ -366,9 +506,9 @@ kbd {
 
 .etape {
   display: inline-block;
-  padding: 2px 10px;
+  padding: 4px 11px;
   border-radius: 999px;
-  background: var(--ivoire);
+  background: var(--sable);
   font-size: 0.85rem;
   font-weight: 600;
   white-space: nowrap;
@@ -391,9 +531,9 @@ kbd {
 textarea {
   font: inherit;
   width: 100%;
-  padding: 8px 12px;
-  border: 2px solid var(--bordure);
-  border-radius: 12px;
+  padding: 10px 14px;
+  border: 1px solid rgba(17, 17, 17, 0.14);
+  border-radius: 14px;
 }
 
 /* Tableaux : ils défilent dans leur cadre, jamais la page entière. */
@@ -416,9 +556,9 @@ textarea {
   text-align: left;
   color: var(--gris);
   font-weight: 600;
-  font-size: 0.85rem;
-  border-bottom: 2px solid var(--bordure);
-  padding: 8px;
+  font-size: 0.8rem;
+  border-bottom: 1px solid var(--trait);
+  padding: 10px;
   position: sticky;
   top: 0;
   background: var(--blanc);
@@ -427,8 +567,12 @@ textarea {
 
 .tableau td {
   border-bottom: 1px solid var(--trait);
-  padding: 8px;
+  padding: 12px 10px;
   vertical-align: middle;
+}
+
+.tableau tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .tableau tbody tr:hover td {
@@ -459,8 +603,8 @@ textarea {
   .tableau.empile tr {
     display: block;
     border: 1px solid var(--trait);
-    border-radius: 12px;
-    padding: 10px 12px;
+    border-radius: 18px;
+    padding: 12px 14px;
     margin-bottom: 10px;
   }
 
@@ -571,9 +715,69 @@ textarea {
 
 /* ------------------------------------------------------------------ Accueil */
 
+/* Haut de l'accueil : étiquette, grand titre en deux tons, rôles, actions principales. */
+.heros {
+  padding: 8px 0 28px;
+  max-width: 880px;
+}
+
+.heros h1 {
+  font-size: clamp(2.2rem, 1.3rem + 3.4vw, 4rem);
+  line-height: 1.02;
+  margin: 18px 0 16px;
+}
+
+.heros .boutons {
+  margin-top: 24px;
+}
+
 .roles {
   color: var(--gris);
-  margin: 0 0 20px;
+  margin: 0;
+}
+
+/* Bande décorative de pilules (« Lire · Enregistrer · → · Partager »). */
+.pilules {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 36px;
+}
+
+.pilules span {
+  height: clamp(56px, 8vw, 104px);
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-family: var(--titres);
+  font-weight: 650;
+  font-size: clamp(1.05rem, 0.7rem + 1.4vw, 1.9rem);
+  letter-spacing: -0.035em;
+}
+
+.pilules span:nth-child(1) {
+  background: var(--blanc);
+}
+
+.pilules span:nth-child(2) {
+  background: var(--degrade);
+  color: #e9f3ec;
+}
+
+.pilules span:nth-child(3) {
+  background: var(--noir);
+  color: var(--blanc);
+}
+
+.pilules span:nth-child(4) {
+  background: var(--sable);
+  color: #b5b09f;
+}
+
+@media (max-width: 599px) {
+  .pilules {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .cartes-compteurs {
@@ -589,9 +793,9 @@ textarea {
   color: var(--noir);
   border: 1px solid var(--trait);
   box-shadow: var(--ombre);
-  border-radius: var(--rayon);
-  min-height: 104px;
-  padding: 16px 40px 16px 18px;
+  border-radius: var(--rayon-carte);
+  min-height: 132px;
+  padding: 18px 52px 18px 20px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -602,29 +806,56 @@ textarea {
 }
 
 .mise-en-page button.compteur:not(:disabled):hover {
-  filter: none;
-  border-color: var(--vert-clair);
-  transform: translateY(-1px);
+  background: var(--blanc);
+  border-color: rgba(31, 92, 71, 0.4);
+  transform: translateY(-2px);
+}
+
+/* Le premier compteur (le plus urgent) est en vert profond. */
+.mise-en-page button.compteur:first-child,
+.mise-en-page button.compteur:first-child:not(:disabled):hover {
+  background: var(--vert);
+  border-color: var(--vert);
+  color: var(--blanc);
+}
+
+.compteur:first-child .aide {
+  color: #b9d3c6;
 }
 
 .compteur strong {
-  font-size: 2rem;
-  line-height: 1.1;
-  color: var(--vert);
+  order: -1;
+  font-family: var(--titres);
+  font-size: 2.6rem;
+  font-weight: 650;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  margin-bottom: auto;
+  padding-bottom: 14px;
 }
 
 .compteur-fleche {
   position: absolute;
   top: 14px;
-  right: 16px;
-  color: var(--gris);
-  font-size: 1.1rem;
-  transition: transform 0.15s;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--ivoire);
+  color: var(--vert);
+  font-size: 1rem;
+  transition: transform 0.2s;
+}
+
+.compteur:first-child .compteur-fleche {
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--blanc);
 }
 
 .compteur:hover .compteur-fleche {
-  transform: translateX(3px);
-  color: var(--vert);
+  transform: translate(2px, -2px);
 }
 
 @media (max-width: 599px) {
@@ -633,18 +864,20 @@ textarea {
   }
 
   .mise-en-page button.compteur {
-    min-height: 96px;
-    padding: 12px 28px 12px 14px;
+    min-height: 120px;
+    padding: 14px 14px 14px 16px;
     font-size: 0.9rem;
   }
 
   .compteur strong {
-    font-size: 1.6rem;
+    font-size: 2rem;
   }
 
   .compteur-fleche {
     top: 10px;
     right: 10px;
+    width: 30px;
+    height: 30px;
   }
 }
 
@@ -685,8 +918,8 @@ textarea {
   background: var(--blanc);
   border: 1px solid var(--trait);
   box-shadow: var(--ombre);
-  border-radius: var(--rayon);
-  padding: 16px 18px;
+  border-radius: var(--rayon-carte);
+  padding: 18px 20px;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -694,9 +927,22 @@ textarea {
 }
 
 .tuile strong {
-  font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
-  line-height: 1.15;
-  letter-spacing: -0.01em;
+  font-family: var(--titres);
+  font-size: clamp(1.7rem, 1.3rem + 1.2vw, 2.4rem);
+  font-weight: 650;
+  line-height: 1.1;
+  letter-spacing: -0.045em;
+}
+
+/* Première tuile en noir, comme une carte « vedette ». */
+.tuiles > .tuile:first-child {
+  background: var(--noir);
+  border-color: var(--noir);
+  color: var(--blanc);
+}
+
+.tuiles > .tuile:first-child > span {
+  color: #b5b5ad;
 }
 
 .tuile > span {
@@ -715,12 +961,14 @@ textarea {
   display: flex;
   flex-direction: column;
   background: var(--ivoire);
-  border-radius: 12px;
-  padding: 10px 12px;
+  border-radius: 16px;
+  padding: 12px 14px;
 }
 
 .chiffres strong {
-  font-size: 1.4rem;
+  font-family: var(--titres);
+  letter-spacing: -0.03em;
+  font-size: 1.5rem;
   line-height: 1.2;
 }
 
@@ -741,7 +989,7 @@ textarea {
 
 .quotas li {
   background: var(--ivoire);
-  border-radius: 12px;
+  border-radius: 18px;
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
@@ -765,7 +1013,9 @@ textarea {
 }
 
 .quota-chiffres strong {
-  font-size: 1.4rem;
+  font-family: var(--titres);
+  letter-spacing: -0.03em;
+  font-size: 1.5rem;
 }
 
 .jauge {
@@ -782,7 +1032,7 @@ textarea {
   position: absolute;
   inset: 0 auto 0 0;
   border-radius: 5px;
-  background: var(--vert-clair);
+  background: var(--degrade);
 }
 
 /* Trait noir : l'objectif à atteindre. */
@@ -893,8 +1143,8 @@ progress {
   top: 0;
   transform: translateX(-50%);
   background: var(--blanc);
-  border: 1px solid var(--bordure);
-  border-radius: 10px;
+  border: 1px solid var(--trait);
+  border-radius: 14px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   padding: 8px 12px;
   font-size: 0.85rem;
@@ -917,7 +1167,7 @@ progress {
 .lien-invitation {
   display: block;
   background: var(--ivoire);
-  border-radius: 8px;
+  border-radius: 14px;
   padding: 10px 12px;
   word-break: break-all;
   font-size: 0.9rem;
@@ -974,7 +1224,7 @@ progress {
   height: 96px;
   cursor: pointer;
   background: var(--ivoire);
-  border-radius: 8px;
+  border-radius: 16px;
 }
 
 .lecteur.compact .onde {
@@ -1020,6 +1270,12 @@ progress {
 
 .mise-en-page .onglets button.secondaire {
   background: transparent;
+  color: var(--gris);
+}
+
+.mise-en-page .onglets button.secondaire:not(:disabled):hover {
+  background: var(--ivoire);
+  color: var(--noir);
 }
 
 .entete-audio {
@@ -1030,9 +1286,10 @@ progress {
 }
 
 .texte-attendu {
-  font-size: clamp(1.3rem, 1rem + 1.5vw, 1.8rem);
-  line-height: 1.3;
+  font-size: clamp(1.4rem, 1rem + 1.6vw, 2rem);
+  line-height: 1.25;
   font-weight: 700;
+  letter-spacing: -0.01em;
   margin: 16px 0 4px;
 }
 
@@ -1042,9 +1299,9 @@ progress {
   gap: 8px 16px;
   font-size: 0.9rem;
   margin: 8px 0 16px;
-  padding: 12px 14px;
+  padding: 12px 16px;
   background: var(--ivoire);
-  border-radius: 12px;
+  border-radius: 16px;
 }
 
 .indicateurs .attention {
@@ -1124,10 +1381,10 @@ progress {
   align-items: center;
   flex-wrap: wrap;
   gap: 8px 16px;
-  padding: 10px 12px;
+  padding: 12px 16px;
   background: var(--blanc);
   border: 1px solid var(--trait);
-  border-radius: 12px;
+  border-radius: 18px;
 }
 
 .liste-demandes p {

@@ -132,7 +132,7 @@ function TopBar({
           navigate('/');
         }}
       >
-        <Logo size={28} color="var(--blanc)" />
+        <Logo size={30} />
       </a>
       {children}
       <div className="barre-droite">
