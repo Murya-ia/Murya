@@ -17,7 +17,8 @@ grant usage on schema auth to anon, authenticated, service_role;
 
 create table auth.users (
   id uuid primary key default gen_random_uuid(),
-  email text unique
+  email text unique,
+  last_sign_in_at timestamptz
 );
 
 -- Même définition que dans Supabase : l'identifiant de l'utilisateur vient du jeton JWT,

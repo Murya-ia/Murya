@@ -55,7 +55,7 @@ describe('équipe', () => {
   it('refuse un troisième admin', async () => {
     await createMember(db, 'admin1', ['admin']);
     await createMember(db, 'admin2', ['admin', 'verificateur']);
-    await expect(createMember(db, 'admin3', ['admin'])).rejects.toThrow('Deux admins au maximum');
+    await expect(createMember(db, 'admin3', ['admin'])).rejects.toThrow('deux_admins_max');
   });
 
   it('refuse un rôle inconnu', async () => {
