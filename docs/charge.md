@@ -41,13 +41,20 @@ recrutement de toute façon.
 
 ## Résultats
 
-| Date       | Voix | Palier | Audios/s | Erreurs                 | Temps de réponse (95 %)                       | Conclusion                                                    |
-| ---------- | ---- | ------ | -------- | ----------------------- | --------------------------------------------- | ------------------------------------------------------------- |
-| 28/10/2026 | 20   | 1 min  | 1,3      | 0,1 % (1 dépôt R2)      | —                                             | rodage : les scripts marchent                                 |
-| 28/10/2026 | 500  | 5 min  | **14**   | **0 %** (21 829 appels) | préparer 13 s, confirmer 22,6 s, dépôt R2 1 s | aucun audio perdu, mais trop lent : objectif 50/s non atteint |
+| Date       | Voix | Palier | Audios/s | Erreurs                 | Temps de réponse (95 %)                       | Conclusion                                                                 |
+| ---------- | ---- | ------ | -------- | ----------------------- | --------------------------------------------- | -------------------------------------------------------------------------- |
+| 28/10/2026 | 20   | 1 min  | 1,3      | 0,1 % (1 dépôt R2)      | —                                             | rodage : les scripts marchent                                              |
+| 28/10/2026 | 500  | 5 min  | **14**   | **0 %** (21 829 appels) | préparer 13 s, confirmer 22,6 s, dépôt R2 1 s | aucun audio perdu, mais trop lent : objectif 50/s non atteint              |
+| 28/10/2026 | 500  | 5 min  | **14**   | 0,5 %                   | préparer 33 s, confirmer 33 s                 | après optimisation (confirmation en 1 appel au lieu de 2) : aucun gain     |
+| 28/10/2026 | 500  | 3 min  | **6**    | 2 %                     | —                                             | diagnostic **directement contre Supabase**, sans l'API : encore moins bien |
 
 Analyse du 28/10/2026 : les requêtes SQL elles-mêmes restent rapides (2 à 3 ms en moyenne,
 tableau « Query Performance » de Supabase) ; c'est l'entrée de Supabase (petite machine
 partagée du palier gratuit, mémoire proche de sa limite) qui fait la queue. Pistes : moins
 d'appels à Supabase par audio (la confirmation en fait deux), puis une machine Supabase plus
 grande si cela ne suffit pas.
+
+Conclusion après optimisation et diagnostic : retirer un appel par audio n'a rien changé, et
+Supabase seul (sans l'API) fait encore moins bien. **La limite est la machine Supabase gratuite**
+(entrée et petite machine partagée), pas notre code ni Cloudflare. Pour atteindre 50 audios par
+seconde : formule Supabase payante avec une machine plus grande, puis refaire l'essai.
