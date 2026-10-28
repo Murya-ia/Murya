@@ -204,16 +204,16 @@ Conséquences pour le code :
 
 ## Jalons
 
-| Jalon                  | Contenu                                                                                  | Dates indicatives                              |
-| ---------------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| J1 Fondations ✓        | dépôt, CI, schéma + RLS + tests, connexion équipe, déploiement, **page de preuve audio** | terminé le 27 oct                              |
-| J2 Parcours voix ✓     | invitation, consentement, fiche, tutoriel, test, enregistrement, hors ligne              | construit le 27 oct (test iPhone à faire)      |
-| J3 Espace équipe ✓     | import CSV, recrutement, validation des tests, écoute, À refaire                         | construit le 27 oct (test à 2 membres à faire) |
-| J4 Qualité ✓           | vérifs serveur, double écoute, quotas, alertes, tableau de bord                          | terminé le 27 oct (worker actif)               |
-| J6a Protection ✓       | sauvegardes + restauration, retrait d'une voix, journal                                  | terminé le 28 oct (sauvegardes actives)        |
-| J7 Charge et lancement | k6 2 000 utilisateurs, test des 5 membres, README                                        | 4 – 15 jan                                     |
-| J5 Voix principale     | séances, audio de référence, verrou                                                      | fin janvier                                    |
-| J6b Exports ✓          | CSV/JSONL/README, partition d'examen, Hugging Face                                       | terminé le 28 oct (exports actifs)             |
+| Jalon                  | Contenu                                                                                  | Dates indicatives                                         |
+| ---------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| J1 Fondations ✓        | dépôt, CI, schéma + RLS + tests, connexion équipe, déploiement, **page de preuve audio** | terminé le 27 oct                                         |
+| J2 Parcours voix ✓     | invitation, consentement, fiche, tutoriel, test, enregistrement, hors ligne              | construit le 27 oct (test iPhone à faire)                 |
+| J3 Espace équipe ✓     | import CSV, recrutement, validation des tests, écoute, À refaire                         | construit le 27 oct (test à 2 membres à faire)            |
+| J4 Qualité ✓           | vérifs serveur, double écoute, quotas, alertes, tableau de bord                          | terminé le 27 oct (worker actif)                          |
+| J6a Protection ✓       | sauvegardes + restauration, retrait d'une voix, journal                                  | terminé le 28 oct (sauvegardes actives)                   |
+| J7 Charge et lancement | k6 2 000 utilisateurs, test des 5 membres, README                                        | outils prêts le 28 oct (essai à 5 et 50 audios/s à faire) |
+| J5 Voix principale     | séances, audio de référence, verrou                                                      | fin janvier                                               |
+| J6b Exports ✓          | CSV/JSONL/README, partition d'examen, Hugging Face                                       | terminé le 28 oct (exports actifs)                        |
 
 ## Points d'attention
 
