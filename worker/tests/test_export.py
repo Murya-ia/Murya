@@ -59,7 +59,7 @@ def test_construit_les_fichiers_les_parties_et_l_archive(tmp_path: Path) -> None
         "dje/varie/v001/metadata.csv", "dje/varie/v001/metadata.jsonl",
     ]
     assert stats["audios"] == 3 and stats["voix"] == 2
-    assert stats["train"] == {"audios": 2, "heures": 0.0, "voix": 1}
+    assert stats["train"] == {"audios": 2, "heures": 0.0011, "voix": 1}
     assert stats["test"]["voix"] == 1
     assert stats["voix_liste"] == ["V001", "V002"] and stats["voix_examen"] == ["V002"]
     assert stats["differences"] is None
@@ -92,10 +92,11 @@ def test_la_fiche_dit_ce_qui_a_change_depuis_la_version_precedente(tmp_path: Pat
 
     assert hf_repo is None  # Hugging Face non configuré
     assert stats["differences"] == {
-        "version": 1, "voix_ajoutees": ["V003"], "voix_absentes": ["V002"], "audios": -3, "heures": -1.0,
+        "version": 1, "voix_ajoutees": ["V003"], "voix_absentes": ["V002"], "audios": -3, "heures": -0.9989,
     }
     readme = exports.get("dje/varie/v002/README.md").decode()
     assert "Voix ajoutées : V003" in readme
+    assert "-3 audios, −1 h 00 min." in readme
     assert "retirées à leur demande depuis la version précédente** : V002" in readme
 
 

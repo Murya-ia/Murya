@@ -58,7 +58,16 @@ def wav_seconds(data: bytes) -> float:
 
 
 def hours(seconds: float) -> float:
-    return round(seconds / 3600, 2)
+    return round(seconds / 3600, 4)
+
+
+def duration(hours_: float) -> str:
+    """Durée lisible : « 12 h 05 min », « 7 min », « 40 s »."""
+    seconds = round(hours_ * 3600)
+    if seconds < 60:
+        return f"{seconds} s"
+    h, m = divmod(round(seconds / 60), 60)
+    return f"{h} h {m:02d} min" if h else f"{m} min"
 
 
 def download_audios(audios: list[dict[str, Any]], store: Store, root: Path) -> list[dict[str, Any]]:
@@ -141,7 +150,7 @@ def differences(stats: dict[str, Any], previous: dict[str, Any] | None) -> dict[
         "voix_ajoutees": sorted(new - old),
         "voix_absentes": sorted(old - new),
         "audios": stats["audios"] - before.get("audios", 0),
-        "heures": round(stats["heures"] - before.get("heures", 0), 2),
+        "heures": round(stats["heures"] - before.get("heures", 0), 4),
     }
 
 
@@ -174,12 +183,12 @@ def readme(job: dict[str, Any], stats: dict[str, Any], diff: dict[str, Any] | No
         "",
         "## En chiffres",
         "",
-        "| | Audios | Heures | Voix |",
+        "| | Audios | Durée | Voix |",
         "| --- | ---: | ---: | ---: |",
-        f"| Total | {stats['audios']} | {stats['heures']} | {stats['voix']} |",
-        f"| `train` (entraînement) | {stats['train']['audios']} | {stats['train']['heures']} "
+        f"| Total | {stats['audios']} | {duration(stats['heures'])} | {stats['voix']} |",
+        f"| `train` (entraînement) | {stats['train']['audios']} | {duration(stats['train']['heures'])} "
         f"| {stats['train']['voix']} |",
-        f"| `test` (examen) | {stats['test']['audios']} | {stats['test']['heures']} "
+        f"| `test` (examen) | {stats['test']['audios']} | {duration(stats['test']['heures'])} "
         f"| {stats['test']['voix']} |",
         "",
         "Partie `test` : tous les audios des voix « examen », qui n'apparaissent jamais dans "
@@ -198,7 +207,7 @@ def readme(job: dict[str, Any], stats: dict[str, Any], diff: dict[str, Any] | No
     else:
         lines += [
             f"Par rapport à la version {diff['version']:03d} : {diff['audios']:+d} audios, "
-            f"{diff['heures']:+.2f} heures.",
+            f"{'+' if diff['heures'] >= 0 else '−'}{duration(abs(diff['heures']))}.",
             "",
             f"- Voix ajoutées : {', '.join(diff['voix_ajoutees']) or 'aucune'}",
             f"- Voix absentes de cette version : {', '.join(diff['voix_absentes']) or 'aucune'}",
