@@ -1,9 +1,15 @@
-# Diagnostic ponctuel (à supprimer ensuite) : comment le service de comptes de Supabase
-# accepte la clé secrète, pour créer un compte depuis l'API. Crée puis efface un compte d'essai.
+# Diagnostic ponctuel (à supprimer ensuite) : rejoue la création d'un membre comme le fait
+# la page « Membres » (compte, puis place dans l'équipe avec les droits d'un admin), sur un
+# compte d'essai qui est effacé à la fin. N'affiche aucune adresse e-mail.
 name: Diagnostic création de compte
 
 on:
   workflow_dispatch:
+    inputs:
+      environnement:
+        type: choice
+        options: [staging, production]
+        default: production
 
 permissions:
   contents: read
@@ -11,27 +17,40 @@ permissions:
 jobs:
   diagnostic:
     runs-on: ubuntu-latest
-    environment: staging
+    environment: ${{ inputs.environnement }}
     env:
-      URL: ${{ vars.SUPABASE_URL }}
+      URL: ${{ inputs.environnement == 'production' && 'https://agmwkzuxydcvzsprotaw.supabase.co' || 'https://zsjvyiirvpqigqsvwcgy.supabase.co' }}
       KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      DB: ${{ secrets.SUPABASE_DB_URL }}
     steps:
       - name: Essais
         run: |
-          essai() {
-            local nom="$1"; shift
-            local email="diagnostic-$nom-$(date +%s)@murya.test"
-            local out
-            out=$(curl -s -w '\n%{http_code}' -X POST "$URL/auth/v1/admin/users" "$@" \
-              -H 'Content-Type: application/json' \
-              -d "{\"email\":\"$email\",\"password\":\"essai-diagnostic-123\",\"email_confirm\":true}")
-            local code=$(echo "$out" | tail -1)
-            echo "$nom : HTTP $code — $(echo "$out" | head -1 | jq -c '{code: (.code // .error_code // null), msg: (.msg // .message // null), id: (.id != null)}' 2>/dev/null)"
-            local id=$(echo "$out" | head -1 | jq -r '.id // empty' 2>/dev/null)
-            if [ -n "$id" ]; then
-              curl -s -o /dev/null -w "  (compte d'essai effacé : HTTP %{http_code})\n" -X DELETE \
-                "$URL/auth/v1/admin/users/$id" -H "apikey: $KEY" -H "Authorization: Bearer $KEY"
-            fi
-          }
-          essai apikey-seule -H "apikey: $KEY"
-          essai apikey-et-bearer -H "apikey: $KEY" -H "Authorization: Bearer $KEY"
+          sudo apt-get install -y -qq postgresql-client >/dev/null 2>&1 || true
+          echo "== Comptes sans place dans l'équipe :"
+          psql "$DB" -tAc "select count(*) from auth.users u where not exists (select 1 from public.team_members t where t.user_id = u.id)"
+          echo "== Membres (admins actifs) :"
+          psql "$DB" -tAc "select count(*), count(*) filter (where active and 'admin' = any(roles)) from public.team_members"
+          echo "== Fonctions présentes :"
+          psql "$DB" -tAc "select string_agg(n.nspname||'.'||p.proname, ', ') from pg_proc p join pg_namespace n on n.oid = p.pronamespace where p.proname in ('add_team_member','team_directory','has_role')"
+
+          email="diagnostic-$(date +%s)@murya.test"
+          out=$(curl -s -w '\n%{http_code}' -X POST "$URL/auth/v1/admin/users" -H "apikey: $KEY" \
+            -H 'Content-Type: application/json' \
+            -d "{\"email\":\"$email\",\"password\":\"abcd-efgh-234\",\"email_confirm\":true}")
+          echo "== Création du compte : HTTP $(echo "$out" | tail -1) — $(echo "$out" | head -1 | jq -c '{code: (.code // .error_code // null), msg: (.msg // .message // null), id: (.id != null)}' 2>/dev/null)"
+          id=$(echo "$out" | head -1 | jq -r '.id // empty' 2>/dev/null)
+          [ -z "$id" ] && exit 0
+
+          admin=$(psql "$DB" -tAc "select user_id from public.team_members where active and 'admin' = any(roles) limit 1")
+          echo "== Place dans l'équipe (avec les droits d'un admin, puis annulé) :"
+          psql "$DB" -v ON_ERROR_STOP=1 <<SQL 2>&1 | grep -vE "^(BEGIN|ROLLBACK|SET|$)" || true
+          begin;
+          select set_config('request.jwt.claims', json_build_object('sub', '$admin', 'role', 'authenticated')::text, true);
+          set local role authenticated;
+          select public.has_role('admin') as est_admin;
+          select public.add_team_member('$id', 'Essai', '{verificateur}') as ajout;
+          rollback;
+          SQL
+
+          curl -s -o /dev/null -w "== Compte d'essai effacé : HTTP %{http_code}\n" -X DELETE \
+            "$URL/auth/v1/admin/users/$id" -H "apikey: $KEY"
