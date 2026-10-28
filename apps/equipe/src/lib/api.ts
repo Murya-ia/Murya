@@ -27,6 +27,26 @@ export function sendOralConsent(session: Session, form: FormData): Promise<{ num
   return call(session, '/equipe/consentement-oral', { method: 'POST', body: form });
 }
 
+/** Audio de l'accord (admins) : la base vérifie le rôle. */
+export async function sendConsentAudio(session: Session, form: FormData): Promise<void> {
+  if (import.meta.env.DEV && session.access_token === 'demo') return;
+  await call(session, '/equipe/accord-audio', { method: 'POST', body: form });
+}
+
+/** Adresse d'écoute (15 min) d'un audio de l'accord. */
+export async function consentAudioUrl(
+  session: Session,
+  versionId: number,
+  language: string,
+  kind: string,
+): Promise<string> {
+  if (import.meta.env.DEV && session.access_token === 'demo') {
+    return (await import('../demo/audio')).demoAudioUrl();
+  }
+  const path = `/equipe/accord-audio/${versionId}/${language}/${kind}`;
+  return (await call<{ url: string }>(session, path)).url;
+}
+
 export type ExportFile = 'archive.zip' | 'README.md' | 'metadata.csv' | 'metadata.jsonl';
 
 /** Lien de téléchargement signé (15 minutes) d'un fichier d'export (admins). */

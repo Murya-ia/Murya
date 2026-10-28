@@ -211,6 +211,8 @@ const PRINCIPAL = {
 const TABLES: Record<string, unknown[]> = {
   team_members: MEMBERS,
   exports: EXPORTS,
+  consent_versions: [{ id: 1, version: 1 }],
+  consent_audios: [{ ui_language: 'dje', kind: 'complet', uploaded_at: day(-2) }],
   withdrawal_requests: [
     {
       speaker_id: 'spk-3',

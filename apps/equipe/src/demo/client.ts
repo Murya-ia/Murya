@@ -37,6 +37,12 @@ class DemoQuery implements PromiseLike<Result> {
   eq() {
     return this;
   }
+  not() {
+    return this;
+  }
+  limit() {
+    return this;
+  }
   in() {
     return this;
   }

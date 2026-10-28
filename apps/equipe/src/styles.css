@@ -1505,3 +1505,62 @@ progress {
   padding: 12px 14px;
   margin: 10px 0;
 }
+
+/* ------------------------------------------------------------------ Audios de l'accord */
+
+.liste-audios-accord {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 10px;
+}
+
+.liste-audios-accord li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--ivoire);
+  border-radius: 18px;
+}
+
+.audio-accord {
+  width: 100%;
+  max-width: 280px;
+  margin-top: 8px;
+}
+
+/* Bouton « Envoyer un audio » : un vrai bouton, le champ fichier reste caché. */
+.bouton-fichier {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 16px;
+  margin: 0;
+  border-radius: 999px;
+  background: var(--vert);
+  color: var(--blanc);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.bouton-fichier:hover {
+  background: var(--vert-clair);
+}
+
+.bouton-fichier input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.bouton-fichier:focus-within {
+  outline: 3px solid var(--vert);
+  outline-offset: 2px;
+}

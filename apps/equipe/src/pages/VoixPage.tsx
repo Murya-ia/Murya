@@ -10,6 +10,7 @@ import { AudioPlayer } from '../components/AudioPlayer';
 import { sendOralConsent } from '../lib/api';
 import { errorText, useTeam } from '../lib/team';
 import { InviteForm } from './InviteForm';
+import { AccordAudios } from './AccordAudios';
 import { VoixPrincipale } from './VoixPrincipale';
 import {
   CancelRequestButton,
@@ -104,6 +105,15 @@ export function VoixPage() {
     else void load();
   }
 
+  async function toggleAssisted(speakerId: string, value: boolean) {
+    const { error: rpcError } = await client.rpc('set_assisted_reading', {
+      p_speaker_id: speakerId,
+      p_value: value,
+    });
+    if (rpcError) setError(errorText(rpcError));
+    else void load();
+  }
+
   const speakerOf = (invite: InviteRow): Speaker | null =>
     Array.isArray(invite.speakers) ? (invite.speakers[0] ?? null) : invite.speakers;
 
@@ -148,6 +158,7 @@ export function VoixPage() {
       {has('recruteur') && <InviteForm onCreated={() => void load()} />}
       {has('admin') && <SpeakerSearch onWithdraw={openWithdraw} />}
       {(has('admin') || has('qualite')) && <VoixPrincipale />}
+      {has('admin') && <AccordAudios />}
       {error && <p className="message erreur">{error}</p>}
 
       <section className="carte">
@@ -188,7 +199,9 @@ export function VoixPage() {
                       <td data-label="Voix">
                         {speaker?.number ?? '—'}
                         {speaker?.assisted_reading && (
-                          <span className="pastille-discrete">oral</span>
+                          <span className="pastille-discrete" title="Mode « écouter puis répéter »">
+                            répète
+                          </span>
                         )}
                       </td>
                       <td data-label="Étape">
@@ -218,6 +231,19 @@ export function VoixPage() {
                             onClick={() => setOpen({ kind: 'oral', invite })}
                           >
                             Consentement oral
+                          </button>
+                        )}
+                        {mine && speaker && speaker.status !== 'terminee' && (
+                          <button
+                            className="petit secondaire"
+                            title="Pour une personne qui ne lit pas : l’appli lui fait entendre chaque phrase avant qu’elle la dise."
+                            onClick={() =>
+                              void toggleAssisted(speaker.id, !speaker.assisted_reading)
+                            }
+                          >
+                            {speaker.assisted_reading
+                              ? 'Arrêter « écouter puis répéter »'
+                              : 'Écouter puis répéter'}
                           </button>
                         )}
                         {mine && !invite.revoked_at && (

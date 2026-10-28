@@ -40,6 +40,8 @@ const ACTIONS: Record<string, string> = {
   export_telecharge: 'Export téléchargé',
   voix_principale: 'Voix principale désignée ou retirée',
   reference_choisie: 'Audio de référence choisi',
+  audio_accord: 'Audio de l’accord envoyé',
+  lecture_assistee: '« Écouter puis répéter » activé ou arrêté',
 };
 
 /** Détail court et lisible selon l'action. */
