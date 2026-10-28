@@ -1,0 +1,36 @@
+# État de la base, à la main : GitHub > Actions > « État de la base » > Run workflow.
+# Montre les tâches automatiques de la base (pg_cron) et leurs dernières exécutions, ainsi
+# que la file de tâches du worker. Lecture seule ; n'affiche aucune donnée personnelle.
+name: État de la base
+
+on:
+  workflow_dispatch:
+    inputs:
+      environnement:
+        description: staging ou production
+        type: choice
+        options: [staging, production]
+        default: production
+
+permissions:
+  contents: read
+
+jobs:
+  etat:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environnement }}
+    steps:
+      - name: Lire l'état
+        env:
+          DB: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          sudo apt-get install -y -qq postgresql-client >/dev/null 2>&1 || true
+          q() { echo; echo "== $1"; psql "$DB" -v ON_ERROR_STOP=1 -P pager=off -c "begin read only; $2; commit;" | grep -vE "^(BEGIN|COMMIT)$"; }
+          q "Tâches automatiques" \
+            "select jobname as tache, schedule as quand, active as active from cron.job order by jobname"
+          q "Dernières exécutions (10)" \
+            "select j.jobname as tache, d.status as resultat, to_char(d.start_time at time zone 'UTC', 'DD/MM HH24:MI') as debut_utc, left(coalesce(d.return_message, ''), 60) as message from cron.job_run_details d join cron.job j using (jobid) order by d.start_time desc limit 10"
+          q "Échecs des 7 derniers jours" \
+            "select j.jobname as tache, count(*) as echecs from cron.job_run_details d join cron.job j using (jobid) where d.status = 'failed' and d.start_time > now() - interval '7 days' group by 1"
+          q "File du worker" \
+            "select kind as type, status as etat, count(*) as nombre from public.jobs group by 1, 2 order by 1, 2"
