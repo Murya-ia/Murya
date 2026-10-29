@@ -1,8 +1,11 @@
 // Gestion de l'équipe (admins) : créer un compte pour un nouveau membre, changer ses rôles,
-// le désactiver. Tout est noté au journal. Deux admins au maximum ; il en reste toujours un.
+// lui donner un nouveau mot de passe (les membres ne changent pas le leur eux-mêmes), le
+// désactiver. Tout est noté au journal. Deux admins au maximum ; il en reste toujours un.
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { createMember } from '../lib/api';
+import { Feuille } from '../components/Feuille';
+import { Chevron } from '../components/Icones';
+import { createMember, resetPassword } from '../lib/api';
 import { errorText, useTeam } from '../lib/team';
 import { ROLE_LABELS, type Role } from '../supabase';
 
@@ -33,10 +36,27 @@ function temporaryPassword(): string {
   return `${word()}-${word()}-${pick(digits)}${pick(digits)}${pick(digits)}`;
 }
 
+const initialOf = (name: string) => name.trim().charAt(0).toUpperCase() || '?';
+
+/** « vu aujourd'hui », « vu hier », « vu le 12/10 », « jamais connecté ». */
+function lastSeen(date: string | null): string {
+  if (!date) return 'jamais connecté';
+  const day = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const days = Math.round((day(new Date()) - day(new Date(date))) / 86_400_000);
+  if (days <= 0) return 'vu aujourd’hui';
+  if (days === 1) return 'vu hier';
+  return `vu le ${new Date(date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}`;
+}
+
+const rolesText = (roles: Role[]) =>
+  roles.length === 0 ? 'aucun rôle' : roles.map((r) => ROLE_LABELS[r]).join(' · ');
+
 export function MembresPage() {
   const { client, member: me } = useTeam();
   const [members, setMembers] = useState<Member[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const { data, error: rpcError } = await client.rpc('team_directory');
@@ -48,55 +68,90 @@ export function MembresPage() {
     void load();
   }, [load]);
 
+  const active = members?.filter((m) => m.actif) ?? [];
+  const inactive = members?.filter((m) => !m.actif) ?? [];
+  const opened = members?.find((m) => m.user_id === openId) ?? null;
+
+  const row = (m: Member) => (
+    <button key={m.user_id} className="ligne" onClick={() => setOpenId(m.user_id)}>
+      <span
+        className={`rond-initiale${m.user_id === me.user_id ? '' : ' clair'}`}
+        aria-hidden="true"
+      >
+        {initialOf(m.nom)}
+      </span>
+      <span className="ligne-texte">
+        <strong>
+          {m.nom}
+          {m.user_id === me.user_id && <span className="aide"> (vous)</span>}
+        </strong>
+        <small>
+          {m.actif ? `${rolesText(m.roles)} · ${lastSeen(m.derniere_connexion)}` : 'Désactivé'}
+        </small>
+      </span>
+      <Chevron />
+    </button>
+  );
+
   return (
     <>
-      <span className="etiquette">Équipe</span>
-      <h1>
-        Membres. <span className="doux">Qui fait quoi.</span>
-      </h1>
+      <div className="titre-page">
+        <h1>Membres</h1>
+        <button className="bouton-ajout" onClick={() => setAdding((v) => !v)}>
+          {adding ? 'Fermer' : '+ Ajouter'}
+        </button>
+      </div>
       <p className="intro gris">
-        Créez un compte pour chaque membre, puis donnez-lui ses rôles. Il se connecte avec son
-        e-mail et le mot de passe provisoire, qu’il change ensuite avec le bouton « Mot de passe »,
-        en haut à droite.
+        {members ? `${active.length} membre(s) actif(s) · ` : ''}touchez un nom pour ses rôles et
+        son mot de passe.
       </p>
       {error && <p className="message erreur">{error}</p>}
-      <NewMember onCreated={load} />
-      <section className="carte">
-        <h2>L’équipe</h2>
-        {members === null ? (
-          <p className="gris">Chargement…</p>
-        ) : (
-          <ul className="liste-membres">
-            {members.map((m) => (
-              <MemberRow
-                key={m.user_id}
-                member={m}
-                isMe={m.user_id === me.user_id}
-                onSaved={load}
-              />
-            ))}
-          </ul>
-        )}
-      </section>
+      {adding && <NewMember onCreated={load} />}
+      {members === null ? (
+        <p className="gris">Chargement…</p>
+      ) : (
+        <>
+          <section className="liste-lignes">{active.map(row)}</section>
+          {inactive.length > 0 && (
+            <section className="liste-lignes inactifs">
+              <h2>Désactivés</h2>
+              {inactive.map(row)}
+            </section>
+          )}
+        </>
+      )}
+      {opened && (
+        <MemberSheet
+          key={opened.user_id}
+          member={opened}
+          isMe={opened.user_id === me.user_id}
+          onClose={() => setOpenId(null)}
+          onSaved={load}
+        />
+      )}
     </>
   );
 }
 
 function RoleBoxes({ roles, onChange }: { roles: Role[]; onChange: (roles: Role[]) => void }) {
   return (
-    <div className="cases-roles">
-      {ROLES.map((role) => (
-        <label key={role} className="case-ligne" title={ROLE_HELP[role]}>
-          <input
-            type="checkbox"
-            checked={roles.includes(role)}
-            onChange={(e) =>
-              onChange(e.target.checked ? [...roles, role] : roles.filter((r) => r !== role))
-            }
-          />
-          {ROLE_LABELS[role]}
-        </label>
-      ))}
+    <div className="choix-roles">
+      {ROLES.map((role) => {
+        const on = roles.includes(role);
+        return (
+          <button
+            key={role}
+            type="button"
+            aria-pressed={on}
+            className={on ? 'actif' : ''}
+            title={ROLE_HELP[role]}
+            onClick={() => onChange(on ? roles.filter((r) => r !== role) : [...roles, role])}
+          >
+            {on && <span aria-hidden="true">✓ </span>}
+            {ROLE_LABELS[role]}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -147,7 +202,7 @@ function NewMember({ onCreated }: { onCreated: () => void }) {
             <br />
             E-mail : {done.email}
             <br />
-            Mot de passe provisoire : {done.password}
+            Mot de passe : {done.password}
           </p>
         </div>
       )}
@@ -173,7 +228,7 @@ function NewMember({ onCreated }: { onCreated: () => void }) {
             />
           </div>
           <div>
-            <label htmlFor="membre-mdp">Mot de passe provisoire</label>
+            <label htmlFor="membre-mdp">Mot de passe</label>
             <input
               id="membre-mdp"
               value={password}
@@ -201,19 +256,24 @@ function NewMember({ onCreated }: { onCreated: () => void }) {
   );
 }
 
-function MemberRow({
+/** Fiche d'un membre : rôles, nouveau mot de passe, désactivation. */
+function MemberSheet({
   member,
   isMe,
+  onClose,
   onSaved,
 }: {
   member: Member;
   isMe: boolean;
+  onClose: () => void;
   onSaved: () => void;
 }) {
-  const { client } = useTeam();
+  const { client, session } = useTeam();
   const [roles, setRoles] = useState<Role[]>(member.roles);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const changed = [...roles].sort().join() !== [...member.roles].sort().join();
 
   async function save(update: { roles?: Role[]; active?: boolean }) {
@@ -228,44 +288,92 @@ function MemberRow({
     else onSaved();
   }
 
+  async function givePassword() {
+    const password = temporaryPassword();
+    setBusy(true);
+    setError(null);
+    setCopied(false);
+    try {
+      await resetPassword(session, member.user_id, password);
+      setNewPassword(password);
+    } catch (e) {
+      setError(errorText(e as Error));
+    }
+    setBusy(false);
+  }
+
+  async function copy() {
+    if (!newPassword) return;
+    try {
+      await navigator.clipboard.writeText(newPassword);
+      setCopied(true);
+    } catch {
+      // Copie refusée par le navigateur : le mot de passe reste affiché, à recopier.
+    }
+  }
+
   return (
-    <li className={member.actif ? '' : 'inactif'}>
-      <div className="membre-tete">
+    <Feuille label={member.nom} onClose={onClose}>
+      <div className="fiche-tete">
+        <span className="rond-initiale grand clair" aria-hidden="true">
+          {initialOf(member.nom)}
+        </span>
         <div>
           <strong>
             {member.nom}
-            {isMe ? ' (vous)' : ''}
+            {isMe && ' (vous)'}
           </strong>
-          <p className="aide">
-            {member.email} ·{' '}
-            {member.derniere_connexion
-              ? `dernière connexion le ${new Date(member.derniere_connexion).toLocaleDateString('fr-FR')}`
-              : 'jamais connecté'}
-            {!member.actif && ' · désactivé'}
-          </p>
+          <span className="aide">
+            {member.email} · {lastSeen(member.derniere_connexion)}
+          </span>
         </div>
-        {!isMe && (
-          <button
-            className="petit secondaire"
-            disabled={busy}
-            onClick={() => void save({ active: !member.actif })}
-          >
-            {member.actif ? 'Désactiver' : 'Réactiver'}
-          </button>
+      </div>
+
+      <div className="fiche-partie">
+        <h3>Rôles</h3>
+        <RoleBoxes roles={roles} onChange={setRoles} />
+        {changed && (
+          <div className="boutons">
+            <button className="petit" disabled={busy} onClick={() => void save({ roles })}>
+              Enregistrer les rôles
+            </button>
+            <button className="petit lien" onClick={() => setRoles(member.roles)}>
+              Annuler
+            </button>
+          </div>
         )}
       </div>
-      <RoleBoxes roles={roles} onChange={setRoles} />
+
+      <div className="fiche-partie">
+        <h3>Mot de passe</h3>
+        {newPassword && (
+          <div className="nouveau-mdp">
+            <p>Nouveau mot de passe de {member.nom}. L’ancien ne marche plus.</p>
+            <div className="nouveau-mdp-ligne">
+              <code>{newPassword}</code>
+              <button className="petit" onClick={() => void copy()}>
+                {copied ? 'Copié' : 'Copier'}
+              </button>
+            </div>
+            <p className="aide">Envoyez-le-lui, par exemple sur WhatsApp.</p>
+          </div>
+        )}
+        <button className="secondaire" disabled={busy} onClick={() => void givePassword()}>
+          {newPassword ? 'En donner un autre' : 'Donner un nouveau mot de passe'}
+        </button>
+      </div>
+
       {error && <p className="message erreur">{error}</p>}
-      {changed && (
-        <div className="boutons">
-          <button className="petit" disabled={busy} onClick={() => void save({ roles })}>
-            Enregistrer les rôles
-          </button>
-          <button className="petit lien" onClick={() => setRoles(member.roles)}>
-            Annuler
-          </button>
-        </div>
+
+      {!isMe && (
+        <button
+          className={`lien${member.actif ? ' danger-texte' : ''}`}
+          disabled={busy}
+          onClick={() => void save({ active: !member.actif })}
+        >
+          {member.actif ? 'Désactiver ce compte' : 'Réactiver ce compte'}
+        </button>
       )}
-    </li>
+    </Feuille>
   );
 }

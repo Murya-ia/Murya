@@ -92,7 +92,7 @@ label {
 
 /* ------------------------------------------------------------------ Boutons (pilules) */
 
-.mise-en-page button,
+:is(.mise-en-page, .feuille) button,
 .centre-page button {
   min-height: 46px;
   padding: 0 22px;
@@ -104,30 +104,30 @@ label {
     transform 0.15s;
 }
 
-.mise-en-page button:not(:disabled):active,
+:is(.mise-en-page, .feuille) button:not(:disabled):active,
 .centre-page button:not(:disabled):active {
   transform: scale(0.98);
 }
 
-.mise-en-page button:not(:disabled):hover,
+:is(.mise-en-page, .feuille) button:not(:disabled):hover,
 .centre-page button:not(:disabled):hover {
   background-color: var(--vert-clair);
 }
 
 /* Bouton discret : fond sable, sans bordure. */
-.mise-en-page button.secondaire,
+:is(.mise-en-page, .feuille) button.secondaire,
 .centre-page button.secondaire {
   background: var(--sable);
   color: var(--noir);
   border: none;
 }
 
-.mise-en-page button.secondaire:not(:disabled):hover,
+:is(.mise-en-page, .feuille) button.secondaire:not(:disabled):hover,
 .centre-page button.secondaire:not(:disabled):hover {
   background: var(--sable-fonce);
 }
 
-.mise-en-page button.petit {
+:is(.mise-en-page, .feuille) button.petit {
   min-height: 38px;
   padding: 0 16px;
   font-size: 0.9rem;
@@ -135,7 +135,7 @@ label {
 
 /* Bouton principal avec un rond blanc et une flèche : <button class="avec-fleche">Texte
    <span class="rond" aria-hidden="true">→</span></button> */
-.mise-en-page button.avec-fleche,
+:is(.mise-en-page, .feuille) button.avec-fleche,
 .centre-page button.avec-fleche,
 a.bouton.avec-fleche {
   display: inline-flex;
@@ -162,12 +162,12 @@ a.bouton.avec-fleche {
   transform: translateX(3px);
 }
 
-.mise-en-page button.danger,
+:is(.mise-en-page, .feuille) button.danger,
 button.danger {
   background: var(--erreur);
 }
 
-.mise-en-page button.danger:not(:disabled):hover {
+:is(.mise-en-page, .feuille) button.danger:not(:disabled):hover {
   background: #8f1e18;
 }
 
@@ -176,7 +176,7 @@ button.danger {
   border-color: var(--erreur) !important;
 }
 
-.mise-en-page button.lien {
+:is(.mise-en-page, .feuille) button.lien {
   background: none;
   color: var(--vert);
   text-decoration: underline;
@@ -185,7 +185,7 @@ button.danger {
   min-height: 36px;
 }
 
-.mise-en-page button.lien:not(:disabled):hover {
+:is(.mise-en-page, .feuille) button.lien:not(:disabled):hover {
   filter: none;
   background: none;
   color: var(--vert-clair);
@@ -378,14 +378,6 @@ kbd {
   min-width: 0;
 }
 
-.utilisateur {
-  color: var(--gris);
-  max-width: 220px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .barre button.secondaire {
   background: transparent;
   color: var(--noir);
@@ -413,10 +405,6 @@ kbd {
 }
 
 @media (max-width: 760px) {
-  .utilisateur {
-    display: none;
-  }
-
   .barre-droite {
     gap: 6px;
   }
@@ -729,174 +717,6 @@ textarea {
 .erreur-ligne {
   color: var(--erreur);
   margin: 2px 0;
-}
-
-/* ------------------------------------------------------------------ Accueil */
-
-/* Haut de l'accueil : étiquette, grand titre en deux tons, rôles, actions principales. */
-.heros {
-  padding: 8px 0 28px;
-  max-width: 880px;
-}
-
-.heros h1 {
-  font-size: clamp(2.2rem, 1.3rem + 3.4vw, 4rem);
-  line-height: 1.02;
-  margin: 18px 0 16px;
-}
-
-.heros .boutons {
-  margin-top: 24px;
-}
-
-.roles {
-  color: var(--gris);
-  margin: 0;
-}
-
-/* Bande décorative de pilules (« Lire · Enregistrer · → · Partager »). */
-.pilules {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-  margin: 0 0 36px;
-}
-
-.pilules span {
-  height: clamp(56px, 8vw, 104px);
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  font-family: var(--titres);
-  font-weight: 650;
-  font-size: clamp(1.05rem, 0.7rem + 1.4vw, 1.9rem);
-  letter-spacing: -0.035em;
-}
-
-.pilules span:nth-child(1) {
-  background: var(--blanc);
-}
-
-.pilules span:nth-child(2) {
-  background: var(--degrade);
-  color: #e9f3ec;
-}
-
-.pilules span:nth-child(3) {
-  background: var(--noir);
-  color: var(--blanc);
-}
-
-.pilules span:nth-child(4) {
-  background: var(--sable);
-  color: #b5b09f;
-}
-
-@media (max-width: 599px) {
-  .pilules {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-.cartes-compteurs {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
-  gap: 12px;
-  margin: 0 0 32px;
-}
-
-.mise-en-page button.compteur {
-  position: relative;
-  background: var(--blanc);
-  color: var(--noir);
-  border: 1px solid var(--trait);
-  box-shadow: var(--ombre);
-  border-radius: var(--rayon-carte);
-  min-height: 132px;
-  padding: 18px 52px 18px 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
-  gap: 2px;
-  text-align: left;
-  font-weight: 400;
-}
-
-.mise-en-page button.compteur:not(:disabled):hover {
-  background: var(--blanc);
-  border-color: rgba(31, 92, 71, 0.4);
-  transform: translateY(-2px);
-}
-
-/* Le premier compteur (le plus urgent) est en vert profond. */
-.mise-en-page button.compteur:first-child,
-.mise-en-page button.compteur:first-child:not(:disabled):hover {
-  background: var(--vert);
-  border-color: var(--vert);
-  color: var(--blanc);
-}
-
-.compteur:first-child .aide {
-  color: #b9d3c6;
-}
-
-.compteur strong {
-  order: -1;
-  font-family: var(--titres);
-  font-size: 2.6rem;
-  font-weight: 650;
-  letter-spacing: -0.05em;
-  line-height: 1;
-  margin-bottom: auto;
-  padding-bottom: 14px;
-}
-
-.compteur-fleche {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: var(--ivoire);
-  color: var(--vert);
-  font-size: 1rem;
-  transition: transform 0.2s;
-}
-
-.compteur:first-child .compteur-fleche {
-  background: rgba(255, 255, 255, 0.14);
-  color: var(--blanc);
-}
-
-.compteur:hover .compteur-fleche {
-  transform: translate(2px, -2px);
-}
-
-@media (max-width: 599px) {
-  .cartes-compteurs {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .mise-en-page button.compteur {
-    min-height: 120px;
-    padding: 14px 14px 14px 16px;
-    font-size: 0.9rem;
-  }
-
-  .compteur strong {
-    font-size: 2rem;
-  }
-
-  .compteur-fleche {
-    top: 10px;
-    right: 10px;
-    width: 30px;
-    height: 30px;
-  }
 }
 
 /* ------------------------------------------------------------------ Tableau de bord */
@@ -1578,42 +1398,811 @@ progress {
   outline-offset: 2px;
 }
 
-/* ------------------------------------------------------------------ Membres */
+/* ------------------------------------------------------------------ Compte (en haut à droite) */
 
-.liste-membres {
-  list-style: none;
-  margin: 0;
+.barre-droite button.compte {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 5px 0 16px;
+  background: var(--blanc);
+  color: var(--noir);
+  border: 1px solid var(--trait);
+  font-weight: 700;
+}
+
+.barre-droite button.compte:not(:disabled):hover {
+  background: var(--blanc);
+  border-color: rgba(17, 17, 17, 0.2);
+}
+
+.compte-nom {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rond-initiale {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--vert);
+  color: var(--blanc);
+  display: inline-grid;
+  place-items: center;
+  font-family: var(--titres);
+  font-weight: 700;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+.rond-initiale.clair {
+  background: var(--sable);
+  color: var(--vert);
+}
+
+.rond-initiale.grand {
+  width: 56px;
+  height: 56px;
+  font-size: 1.35rem;
+}
+
+/* ------------------------------------------------------------------ Menu du bas (téléphone) */
+
+.menu-bas {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  /* Le menu du haut passe en bas ; en haut, il ne reste que le logo et le compte. */
+  .barre .navigation {
+    display: none;
+  }
+
+  .barre {
+    grid-template-columns: 1fr auto;
+    grid-template-areas: 'logo droite';
+  }
+
+  .barre-droite button.compte {
+    padding: 0;
+    border: none;
+    background: transparent;
+    min-height: 44px;
+  }
+
+  .barre-droite button.compte .rond-initiale {
+    width: 44px;
+    height: 44px;
+    font-size: 1.05rem;
+  }
+
+  .compte-nom {
+    display: none;
+  }
+
+  .avec-menu-bas {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  }
+
+  .menu-bas {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    z-index: 20;
+    height: 68px;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    align-items: center;
+    background: var(--blanc);
+    border: 1px solid var(--trait);
+    border-radius: 24px;
+    box-shadow: 0 18px 40px -24px rgba(15, 61, 46, 0.45);
+  }
+
+  .menu-bas a,
+  .mise-en-page .menu-bas button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-height: 60px;
+    padding: 4px 0 0;
+    border-radius: 18px;
+    background: transparent;
+    color: var(--gris);
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .mise-en-page .menu-bas button:not(:disabled):hover {
+    background: transparent;
+  }
+
+  .menu-bas-icone {
+    width: 46px;
+    height: 30px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    transition: background-color 0.15s;
+  }
+
+  .menu-bas .actif {
+    color: var(--vert);
+    font-weight: 700;
+  }
+
+  .menu-bas .actif .menu-bas-icone {
+    background: var(--vert-pale);
+  }
+
+  .menu-bas a:focus-visible,
+  .menu-bas button:focus-visible {
+    outline: 3px solid var(--vert);
+    outline-offset: -3px;
+  }
+}
+
+/* ------------------------------------------------------------------ Fenêtres (feuilles) */
+
+.feuille-fond {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(17, 17, 17, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: apparait 0.15s ease-out;
+}
+
+.feuille {
+  width: min(100%, 460px);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  background: var(--blanc);
+  border-radius: 28px;
+  padding: 24px 22px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.5);
+  font-size: 16px;
+}
+
+.feuille:focus {
+  outline: none;
+}
+
+.feuille-poignee {
+  display: none;
+}
+
+/* Sur téléphone, la fenêtre monte du bas de l'écran (sauf une petite confirmation). */
+@media (max-width: 760px) {
+  .feuille-fond:not(.centre) {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .feuille-fond:not(.centre) .feuille {
+    width: 100%;
+    border-radius: 28px 28px 0 0;
+    padding: 12px 20px calc(24px + env(safe-area-inset-bottom));
+    max-height: 88vh;
+    animation: monte 0.2s ease-out;
+  }
+
+  .feuille-poignee {
+    display: block;
+    align-self: center;
+    width: 40px;
+    height: 5px;
+    border-radius: 999px;
+    background: var(--sable-fonce);
+  }
+}
+
+@keyframes apparait {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes monte {
+  from {
+    transform: translateY(40px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feuille-fond,
+  .feuille {
+    animation: none !important;
+  }
+}
+
+.fiche-tete {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.fiche-tete > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.fiche-tete strong {
+  font-family: var(--titres);
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+}
+
+.fiche-tete .aide {
+  overflow-wrap: anywhere;
+}
+
+.pastilles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pastille-role {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--sable);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.pastille-role.admin {
+  background: var(--vert-pale);
+  color: var(--vert);
+  font-weight: 700;
+}
+
+.boutons-pleins {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.boutons-pleins button {
+  width: 100%;
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.confirmation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.confirmation h2 {
+  margin: 4px 0 0;
+}
+
+.confirmation .boutons-pleins {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.confirmation-icone {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--sable);
+  color: var(--vert);
+  display: grid;
+  place-items: center;
+}
+
+/* ------------------------------------------------------------------ Listes en lignes */
+
+.liste-lignes {
+  background: var(--blanc);
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon-carte);
+  padding: 6px 0;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.liste-lignes.sans-cadre {
+  border: none;
   padding: 0;
+  margin: 0;
+}
+
+.liste-lignes h2 {
+  margin: 0;
+  padding: 14px 20px 6px;
+  font-family: var(--police);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--gris);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ligne,
+:is(.mise-en-page, .feuille) button.ligne {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 60px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--noir);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+}
+
+.liste-lignes .ligne + .ligne {
+  border-top: 1px solid rgba(17, 17, 17, 0.06);
+}
+
+.ligne:hover,
+:is(.mise-en-page, .feuille) button.ligne:not(:disabled):hover {
+  background: rgba(239, 234, 219, 0.45);
+}
+
+.ligne:focus-visible {
+  outline: 3px solid var(--vert);
+  outline-offset: -3px;
+}
+
+.ligne-texte {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 2px;
 }
 
-.liste-membres li {
-  padding: 14px 18px;
-  background: var(--ivoire);
-  border-radius: 18px;
+.ligne-texte small {
+  color: var(--gris);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.ligne-icone {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--sable);
+  color: var(--vert);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.ligne .chevron {
+  color: var(--doux);
+  flex-shrink: 0;
+}
+
+.nombre {
+  min-width: 30px;
+  height: 30px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: var(--sable);
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: inline-grid;
+  place-items: center;
+}
+
+.nombre.vert {
+  background: var(--vert-pale);
+  color: var(--vert);
+}
+
+.nombre.ambre {
+  background: var(--ambre-pale);
+  color: var(--alerte);
+}
+
+.nombre.rouge {
+  background: var(--rouge-pale);
+  color: var(--erreur);
+}
+
+.liste-lignes.inactifs {
+  background: transparent;
+  border-style: dashed;
+}
+
+.liste-lignes.inactifs .ligne {
+  color: var(--gris);
+}
+
+/* Ligne seule qui mène à une autre page (ex. « Tableau de bord »). */
+:is(.mise-en-page, .feuille) button.ligne.carte-lien {
+  background: var(--blanc);
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon-carte);
+  padding: 16px 20px;
+}
+
+.carte-lien strong {
+  font-family: var(--titres);
+  font-size: 1.05rem;
+}
+
+/* ------------------------------------------------------------------ Accueil */
+
+.accueil {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 24px;
 }
 
-.liste-membres li.inactif {
-  opacity: 0.6;
+.accueil h1 {
+  margin: 0;
 }
 
-.membre-tete {
+.accueil-grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+.accueil-grille .liste-lignes {
+  margin: 0;
+}
+
+.bloc-principal {
+  background: var(--vert);
+  color: var(--blanc);
+  border-radius: 28px;
+  padding: clamp(22px, 3vw, 32px);
   display: flex;
+  flex-direction: column;
   justify-content: space-between;
-  align-items: flex-start;
+  gap: 24px;
+  min-height: 220px;
+}
+
+.bloc-principal p {
+  margin: 0;
+}
+
+.bloc-sur-titre {
+  font-size: 0.85rem;
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+.bloc-chiffre {
+  font-family: var(--titres);
+  font-size: clamp(2.4rem, 1.8rem + 2.5vw, 3.5rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1.05;
+  margin-top: 6px !important;
+}
+
+.bloc-libelle {
+  font-size: 1.05rem;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.bloc-note {
+  margin-top: 6px !important;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+:is(.mise-en-page, .feuille) button.avec-fleche.bouton-clair {
+  align-self: flex-start;
+  background: var(--blanc);
+  color: var(--vert);
+  font-weight: 700;
+}
+
+:is(.mise-en-page, .feuille) button.avec-fleche.bouton-clair:not(:disabled):hover {
+  background: var(--ivoire);
+}
+
+.bouton-clair .rond {
+  background: var(--vert);
+  color: var(--blanc);
+}
+
+@media (max-width: 599px) {
+  :is(.mise-en-page, .feuille) button.avec-fleche.bouton-clair {
+    align-self: stretch;
+  }
+}
+
+/* ------------------------------------------------------------------ Titres, onglets, filtres */
+
+.titre-page {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
+  margin-bottom: 16px;
 }
 
-.cases-roles {
+.titre-page h1 {
+  margin: 0;
+}
+
+:is(.mise-en-page, .feuille) button.bouton-ajout {
+  min-height: 44px;
+  padding: 0 18px;
+  font-weight: 700;
+}
+
+/* Onglets en segments : « Suivi », « Principale »… */
+.segments {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 18px;
+  background: var(--sable);
+  border-radius: 999px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.segments::-webkit-scrollbar {
+  display: none;
+}
+
+:is(.mise-en-page, .feuille) .segments button {
+  flex: 1 0 auto;
+  min-height: 40px;
+  padding: 0 16px;
+  background: transparent;
+  color: var(--gris);
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+:is(.mise-en-page, .feuille) .segments button:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--noir);
+}
+
+:is(.mise-en-page, .feuille) .segments button.actif,
+:is(.mise-en-page, .feuille) .segments button.actif:not(:disabled):hover {
+  background: var(--blanc);
+  color: var(--noir);
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(17, 17, 17, 0.08);
+}
+
+.badge {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--erreur);
+  color: var(--blanc);
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: inline-grid;
+  place-items: center;
+}
+
+.filtres {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.filtres::-webkit-scrollbar {
+  display: none;
+}
+
+:is(.mise-en-page, .feuille) .filtres button {
+  flex-shrink: 0;
+  min-height: 38px;
+  padding: 0 14px;
+  background: var(--blanc);
+  color: var(--noir);
+  border: 1px solid var(--trait);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+:is(.mise-en-page, .feuille) .filtres button:not(:disabled):hover {
+  background: var(--blanc);
+  border-color: rgba(17, 17, 17, 0.2);
+}
+
+:is(.mise-en-page, .feuille) .filtres button.actif,
+:is(.mise-en-page, .feuille) .filtres button.actif:not(:disabled):hover {
+  background: var(--noir);
+  color: var(--blanc);
+  border-color: var(--noir);
+}
+
+.vide {
+  color: var(--gris);
+  text-align: center;
+  padding: 32px 16px;
+}
+
+/* ------------------------------------------------------------------ Écoute : mesures repliées */
+
+.mesures {
+  margin: 4px 0 8px;
+}
+
+.mesures summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--vert-pale);
+  color: var(--vert);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+
+.mesures summary::-webkit-details-marker {
+  display: none;
+}
+
+.mesures summary::before {
+  content: '✓';
+}
+
+.mesures.a-surveiller summary {
+  background: var(--ambre-pale);
+  color: var(--alerte);
+}
+
+.mesures.a-surveiller summary::before {
+  content: '!';
+  font-weight: 800;
+}
+
+.mesures summary::after {
+  content: '▾';
+  transition: transform 0.15s;
+}
+
+.mesures[open] summary::after {
+  transform: rotate(180deg);
+}
+
+.mesures summary:focus-visible {
+  outline: 3px solid var(--vert);
+  outline-offset: 2px;
+}
+
+.mesures .indicateurs {
+  margin-top: 12px;
+}
+
+/* ------------------------------------------------------------------ Membres */
+
+.choix-roles {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 18px;
+  gap: 8px;
+}
+
+:is(.mise-en-page, .feuille) .choix-roles button {
+  min-height: 40px;
+  padding: 0 14px;
+  background: var(--blanc);
+  color: var(--noir);
+  border: 1px solid rgba(17, 17, 17, 0.14);
+  font-size: 0.9rem;
+}
+
+:is(.mise-en-page, .feuille) .choix-roles button:not(:disabled):hover {
+  background: var(--ivoire);
+}
+
+:is(.mise-en-page, .feuille) .choix-roles button.actif,
+:is(.mise-en-page, .feuille) .choix-roles button.actif:not(:disabled):hover {
+  background: var(--vert);
+  color: var(--blanc);
+  border-color: var(--vert);
+  font-weight: 700;
+}
+
+.fiche-partie {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fiche-partie h3 {
+  margin: 0;
+  font-family: var(--police);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--gris);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.fiche-partie .boutons {
+  margin: 0;
+}
+
+.nouveau-mdp {
+  background: var(--vert-pale);
+  border-radius: 20px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nouveau-mdp p {
+  margin: 0;
+  color: var(--vert);
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.nouveau-mdp-ligne {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nouveau-mdp-ligne code {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--blanc);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  overflow-wrap: anywhere;
+}
+
+.feuille > button.lien {
+  align-self: center;
 }
 
 .etiquette-champ {
@@ -1626,20 +2215,4 @@ progress {
   font-family: ui-monospace, Consolas, monospace;
   font-weight: 500;
   overflow-wrap: anywhere;
-}
-
-/* Petite fenêtre au-dessus de la page (mot de passe). */
-.fenetre-fond {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  background: rgba(17, 17, 17, 0.35);
-  display: grid;
-  place-items: center;
-  padding: 16px;
-}
-
-.fenetre {
-  width: min(100%, 440px);
-  margin: 0;
 }

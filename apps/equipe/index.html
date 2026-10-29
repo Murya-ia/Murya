@@ -12,9 +12,93 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-title" content="Murya Équipe" />
+    <!-- Écran de chargement : visible dès l'ouverture (avant le code), remplacé par l'appli. -->
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #f7f4ea;
+      }
+      .demarrage {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 22px;
+        font-family:
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+      }
+      .demarrage-logo {
+        width: 112px;
+        height: 112px;
+        border-radius: 32px;
+        background: #fff;
+        border: 1px solid rgba(17, 17, 17, 0.08);
+        box-shadow: 0 24px 48px -30px rgba(15, 61, 46, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .demarrage-nom {
+        text-align: center;
+        color: #0f3d2e;
+        font-size: 30px;
+        font-weight: 800;
+        letter-spacing: -0.045em;
+        line-height: 1.1;
+      }
+      .demarrage-nom small {
+        display: block;
+        color: #5f5f5a;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0;
+      }
+      .demarrage-barre {
+        width: 120px;
+        height: 4px;
+        border-radius: 999px;
+        background: #e6e0cc;
+        overflow: hidden;
+      }
+      .demarrage-barre::after {
+        content: '';
+        display: block;
+        width: 45%;
+        height: 100%;
+        border-radius: 999px;
+        background: #0f3d2e;
+        animation: demarrage 1.1s ease-in-out infinite alternate;
+      }
+      @keyframes demarrage {
+        from {
+          transform: translateX(-20%);
+        }
+        to {
+          transform: translateX(140%);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .demarrage-barre::after {
+          animation: none;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <div class="demarrage" role="status" aria-label="Chargement de l'espace équipe">
+        <div class="demarrage-logo"><img src="/favicon.svg" alt="" width="64" height="64" /></div>
+        <div class="demarrage-nom">murya<small>Espace équipe</small></div>
+        <div class="demarrage-barre" aria-hidden="true"></div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

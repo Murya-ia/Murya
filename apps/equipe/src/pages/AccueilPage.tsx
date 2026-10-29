@@ -1,11 +1,10 @@
-// Accueil : ce qui attend la personne connectée (tests à écouter, audios à vérifier…),
-// puis le tableau de bord de la langue (heures, quotas, alertes).
+// Accueil : ce qui attend la personne connectée, en un écran : le travail principal (souvent
+// l'écoute) en grand, la liste « À faire », et un lien vers le tableau de bord.
 
 import { useEffect, useState } from 'react';
 import { navigate } from '../lib/router';
 import { LANGUAGE, useTeam } from '../lib/team';
-import { ROLE_LABELS } from '../supabase';
-import { TableauDeBord } from './TableauDeBord';
+import { Chevron, IconeGraphique } from '../components/Icones';
 
 /** Compteurs de l'écoute : mêmes règles que la file (voir `review_counts` en base). */
 export interface ReviewCounts {
@@ -45,93 +44,111 @@ export function AccueilPage() {
     })();
   }, [client, member.user_id, has]);
 
-  const cards = [
+  const listens = has('verificateur') || has('qualite') || has('admin');
+  const recruits = has('recruteur') || has('admin');
+
+  // Le bloc principal : l'écoute d'abord, sinon les tests des voix, sinon les phrases.
+  const main = listens
+    ? {
+        n: review?.a_verifier ?? null,
+        label: 'audios à vérifier',
+        note: ownRecruits(review?.a_verifier_vos_recrues),
+        action: 'Commencer l’écoute',
+        path: '/ecoute',
+        kicker: 'Écoute',
+      }
+    : recruits
+      ? {
+          n: tests,
+          label: 'tests de voix à écouter',
+          note: null,
+          action: 'Voir les voix',
+          path: '/voix',
+          kicker: 'Voix',
+        }
+      : {
+          n: flags,
+          label: 'phrases signalées',
+          note: null,
+          action: 'Voir les phrases',
+          path: '/phrases',
+          kicker: 'Phrases',
+        };
+
+  const todo = [
     // Une demande de retrait passe avant tout le reste (droit à l'effacement).
     has('admin') && withdrawals
-      ? { n: withdrawals, label: 'demande(s) de retrait à confirmer', path: '/voix', note: null }
+      ? { n: withdrawals, label: 'Demandes de retrait', path: '/voix', tone: 'rouge' }
       : null,
-    has('recruteur') || has('admin')
-      ? { n: tests, label: 'test(s) de voix à écouter', path: '/voix', note: null }
-      : null,
-    has('verificateur') || has('qualite') || has('admin')
-      ? {
-          n: review?.a_verifier ?? null,
-          label: 'audio(s) à vérifier',
-          path: '/ecoute',
-          note: ownRecruits(review?.a_verifier_vos_recrues),
-        }
+    listens && recruits
+      ? { n: tests, label: 'Tests de voix à écouter', path: '/voix', tone: 'vert' }
       : null,
     has('qualite') || has('admin')
       ? {
           n: review?.doutes ?? null,
-          label: 'audio(s) en doute à trancher',
+          label: 'Doutes à trancher',
           path: '/ecoute?file=doutes',
-          note: ownRecruits(review?.doutes_vos_recrues),
+          tone: 'ambre',
         }
       : null,
-    { n: flags, label: 'signalement(s) « je n’arrive pas à lire »', path: '/phrases', note: null },
+    listens || recruits
+      ? { n: flags, label: 'Phrases signalées', path: '/phrases', tone: '' }
+      : null,
   ].filter((c) => c !== null);
 
-  // Action principale selon les rôles : l'écoute d'abord, sinon les voix, sinon les phrases.
-  const listens = has('verificateur') || has('qualite') || has('admin');
-  const recruits = has('recruteur') || has('admin');
-  const main = listens
-    ? { label: 'Commencer l’écoute', path: '/ecoute' }
-    : recruits
-      ? { label: 'Voir les voix', path: '/voix' }
-      : { label: 'Voir les phrases', path: '/phrases' };
-
   return (
-    <>
-      <section className="heros">
-        <span className="etiquette">Espace équipe</span>
+    <div className="accueil">
+      <div>
         <h1>
-          Bonjour {member.display_name}. <span className="doux">Chaque voix compte.</span>
+          Bonjour {member.display_name}. <span className="doux">Voici ce qui vous attend.</span>
         </h1>
-        <p className="roles">
-          Vos rôles :{' '}
-          {member.roles.length === 0
-            ? 'aucun pour le moment'
-            : member.roles.map((role) => (
-                <span key={role} className="pastille">
-                  {ROLE_LABELS[role]}
-                </span>
-              ))}
-        </p>
-        <div className="boutons">
-          <button className="avec-fleche" onClick={() => navigate(main.path)}>
-            {main.label}
+        {member.roles.length === 0 && (
+          <p className="message alerte">
+            Vous n’avez encore aucun rôle : demandez à un admin de vous en donner.
+          </p>
+        )}
+      </div>
+      <div className="accueil-grille">
+        <section className="bloc-principal">
+          <div>
+            <p className="bloc-sur-titre">{main.kicker}</p>
+            <p className="bloc-chiffre">{main.n?.toLocaleString('fr-FR') ?? '…'}</p>
+            <p className="bloc-libelle">{main.label}</p>
+            {main.note && <p className="bloc-note">{main.note}</p>}
+          </div>
+          <button className="avec-fleche bouton-clair" onClick={() => navigate(main.path)}>
+            {main.action}
             <span className="rond" aria-hidden="true">
               →
             </span>
           </button>
-          {listens && recruits && (
-            <button className="secondaire" onClick={() => navigate('/voix')}>
-              Inviter une voix
-            </button>
-          )}
-        </div>
-      </section>
-      <div className="pilules" aria-hidden="true">
-        <span>Lire</span>
-        <span>Enregistrer</span>
-        <span>→</span>
-        <span>Partager</span>
+        </section>
+        {todo.length > 0 && (
+          <section className="liste-lignes">
+            <h2>À faire</h2>
+            {todo.map((item) => (
+              <button key={item.label} className="ligne" onClick={() => navigate(item.path)}>
+                <span className="ligne-texte">{item.label}</span>
+                <span className={`nombre ${item.tone}`}>
+                  {item.n?.toLocaleString('fr-FR') ?? '…'}
+                </span>
+                <Chevron />
+              </button>
+            ))}
+          </section>
+        )}
       </div>
-      <div className="cartes-compteurs">
-        {cards.map((card) => (
-          <button key={card.label} className="compteur" onClick={() => navigate(card.path)}>
-            <strong>{card.n?.toLocaleString('fr-FR') ?? '…'}</strong>
-            <span>{card.label}</span>
-            {card.note && <small className="aide">{card.note}</small>}
-            <span className="compteur-fleche" aria-hidden="true">
-              ↗
-            </span>
-          </button>
-        ))}
-      </div>
-      <TableauDeBord />
-    </>
+      <button className="ligne carte-lien" onClick={() => navigate('/tableau-de-bord')}>
+        <span className="ligne-icone" aria-hidden="true">
+          <IconeGraphique />
+        </span>
+        <span className="ligne-texte">
+          <strong>Tableau de bord</strong>
+          <small>Heures, quotas de diversité, voix par statut, double écoute</small>
+        </span>
+        <Chevron />
+      </button>
+    </div>
   );
 }
 

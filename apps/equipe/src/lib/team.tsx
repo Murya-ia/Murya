@@ -72,6 +72,7 @@ export function errorText(error: { message?: string } | null | undefined): strin
     email_existe: 'Un compte existe déjà avec cet e-mail.',
     weak_password: 'Mot de passe trop faible : 10 caractères au moins.',
     same_password: 'Le nouveau mot de passe doit être différent de l’ancien.',
+    membre_inconnu: 'Ce membre n’existe plus.',
   };
   return known[code] ?? 'Une erreur est survenue. Réessayez.';
 }

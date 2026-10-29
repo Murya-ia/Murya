@@ -57,6 +57,15 @@ const STAGES: Record<string, { label: string; className: string }> = {
   terminee: { label: 'Terminée', className: 'succes' },
 };
 
+type Tab = 'suivi' | 'principale' | 'retraits' | 'accord';
+type Filter = 'toutes' | 'a_ecouter' | 'actives';
+
+const FILTERS: [Filter, string][] = [
+  ['toutes', 'Toutes'],
+  ['a_ecouter', 'Test à écouter'],
+  ['actives', 'Actives'],
+];
+
 export function VoixPage() {
   const { client, member, has } = useTeam();
   const [invites, setInvites] = useState<InviteRow[] | null>(null);
@@ -66,6 +75,9 @@ export function VoixPage() {
   const [requests, setRequests] = useState<WithdrawalRequest[]>([]);
   const [withdrawTarget, setWithdrawTarget] = useState<WithdrawTarget | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>('suivi');
+  const [filter, setFilter] = useState<Filter>('toutes');
+  const [inviting, setInviting] = useState(false);
 
   const load = useCallback(async () => {
     // La RLS ne renvoie que les invitations du recruteur (toutes pour un admin).
@@ -133,9 +145,40 @@ export function VoixPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  const tabs: { id: Tab; label: string; badge?: number }[] = [
+    { id: 'suivi', label: 'Suivi' },
+    ...(has('admin') || has('qualite') ? [{ id: 'principale' as const, label: 'Principale' }] : []),
+    ...(has('admin')
+      ? [
+          { id: 'retraits' as const, label: 'Retraits', badge: requests.length },
+          { id: 'accord' as const, label: 'Accord' },
+        ]
+      : []),
+  ];
+  const stageOf = (invite: InviteRow) => speakerOf(invite)?.status ?? 'invitee';
+  const shown = (invites ?? []).filter(
+    (invite) =>
+      filter === 'toutes' ||
+      (filter === 'a_ecouter' && stageOf(invite) === 'test_en_attente') ||
+      (filter === 'actives' && stageOf(invite) === 'active'),
+  );
+  const count = (f: Filter) =>
+    f === 'toutes'
+      ? (invites?.length ?? 0)
+      : (invites ?? []).filter(
+          (i) => stageOf(i) === (f === 'a_ecouter' ? 'test_en_attente' : 'active'),
+        ).length;
+
   return (
     <>
-      <h1>Voix</h1>
+      <div className="titre-page">
+        <h1>Voix</h1>
+        {has('recruteur') && (
+          <button className="bouton-ajout" onClick={() => setInviting((v) => !v)}>
+            {inviting ? 'Fermer' : '+ Inviter'}
+          </button>
+        )}
+      </div>
       {withdrawTarget && (
         <WithdrawPanel
           key={withdrawTarget.id}
@@ -146,155 +189,200 @@ export function VoixPage() {
           }}
         />
       )}
-      {has('admin') && (
-        <WithdrawalRequests
-          requests={requests}
-          numbers={numbers}
-          names={names}
-          onWithdraw={openWithdraw}
-          onChanged={() => void load()}
+      {inviting && (
+        <InviteForm
+          onCreated={() => {
+            void load();
+          }}
         />
       )}
-      {has('recruteur') && <InviteForm onCreated={() => void load()} />}
-      {has('admin') && <SpeakerSearch onWithdraw={openWithdraw} />}
-      {(has('admin') || has('qualite')) && <VoixPrincipale />}
-      {has('admin') && <AccordAudios />}
+      {tabs.length > 1 && (
+        <div className="segments" role="tablist" aria-label="Parties de la page Voix">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              role="tab"
+              aria-selected={tab === t.id}
+              className={tab === t.id ? 'actif' : ''}
+              onClick={() => setTab(t.id)}
+            >
+              {t.label}
+              {t.badge ? <span className="badge">{t.badge}</span> : null}
+            </button>
+          ))}
+        </div>
+      )}
       {error && <p className="message erreur">{error}</p>}
-
-      <section className="carte">
-        <h2>Suivi des voix</h2>
-        {!invites ? (
-          <p>Chargement…</p>
-        ) : invites.length === 0 ? (
-          <p className="aide">Aucune invitation pour le moment.</p>
+      {tab === 'principale' && <VoixPrincipale />}
+      {tab === 'accord' && <AccordAudios />}
+      {tab === 'retraits' &&
+        (requests.length === 0 ? (
+          <p className="vide">Aucune demande de retrait à confirmer.</p>
         ) : (
-          <div className="tableau-defilant">
-            <table className="tableau empile">
-              <thead>
-                <tr>
-                  <th>Personne</th>
-                  <th>Voix</th>
-                  <th>Étape</th>
-                  <th>Avancement</th>
-                  {has('admin') && <th>Recruteur</th>}
-                  <th>Lien</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {invites.map((invite) => {
-                  const speaker = speakerOf(invite);
-                  const stage = STAGES[speaker?.status ?? 'invitee']!;
-                  const p = speaker ? progress.get(speaker.id) : undefined;
-                  const linkState = invite.revoked_at
-                    ? 'révoqué'
-                    : new Date(invite.expires_at) < new Date()
-                      ? 'expiré'
-                      : `jusqu’au ${new Date(invite.expires_at).toLocaleDateString('fr-FR')}`;
-                  const mine = invite.recruiter_id === member.user_id || has('admin');
-                  const request = speaker ? requestOf.get(speaker.id) : undefined;
-                  return (
-                    <tr key={invite.id}>
-                      <td className="titre-ligne-tableau">{invite.label}</td>
-                      <td data-label="Voix">
-                        {speaker?.number ?? '—'}
-                        {speaker?.assisted_reading && (
-                          <span className="pastille-discrete" title="Mode « écouter puis répéter »">
-                            répète
-                          </span>
+          <WithdrawalRequests
+            requests={requests}
+            numbers={numbers}
+            names={names}
+            onWithdraw={openWithdraw}
+            onChanged={() => void load()}
+          />
+        ))}
+      {tab === 'suivi' && has('admin') && <SpeakerSearch onWithdraw={openWithdraw} />}
+      {tab === 'suivi' && invites && invites.length > 0 && (
+        <div className="filtres" role="group" aria-label="Filtrer les voix">
+          {FILTERS.map(([f, label]) => (
+            <button
+              key={f}
+              aria-pressed={filter === f}
+              className={filter === f ? 'actif' : ''}
+              onClick={() => setFilter(f)}
+            >
+              {label} · {count(f)}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {tab === 'suivi' && (
+        <section className="carte">
+          {!invites ? (
+            <p>Chargement…</p>
+          ) : invites.length === 0 ? (
+            <p className="aide">Aucune invitation pour le moment.</p>
+          ) : shown.length === 0 ? (
+            <p className="aide">Aucune voix dans ce filtre.</p>
+          ) : (
+            <div className="tableau-defilant">
+              <table className="tableau empile">
+                <thead>
+                  <tr>
+                    <th>Personne</th>
+                    <th>Voix</th>
+                    <th>Étape</th>
+                    <th>Avancement</th>
+                    {has('admin') && <th>Recruteur</th>}
+                    <th>Lien</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {shown.map((invite) => {
+                    const speaker = speakerOf(invite);
+                    const stage = STAGES[speaker?.status ?? 'invitee']!;
+                    const p = speaker ? progress.get(speaker.id) : undefined;
+                    const linkState = invite.revoked_at
+                      ? 'révoqué'
+                      : new Date(invite.expires_at) < new Date()
+                        ? 'expiré'
+                        : `jusqu’au ${new Date(invite.expires_at).toLocaleDateString('fr-FR')}`;
+                    const mine = invite.recruiter_id === member.user_id || has('admin');
+                    const request = speaker ? requestOf.get(speaker.id) : undefined;
+                    return (
+                      <tr key={invite.id}>
+                        <td className="titre-ligne-tableau">{invite.label}</td>
+                        <td data-label="Voix">
+                          {speaker?.number ?? '—'}
+                          {speaker?.assisted_reading && (
+                            <span
+                              className="pastille-discrete"
+                              title="Mode « écouter puis répéter »"
+                            >
+                              répète
+                            </span>
+                          )}
+                        </td>
+                        <td data-label="Étape">
+                          <span className={`etape ${stage.className}`}>{stage.label}</span>
+                        </td>
+                        <td data-label="Avancement">
+                          {p && p.total > 0 ? `${p.enregistrees + p.sautees} / ${p.total}` : '—'}
+                        </td>
+                        {has('admin') && (
+                          <td data-label="Recruteur">{names.get(invite.recruiter_id) ?? '—'}</td>
                         )}
-                      </td>
-                      <td data-label="Étape">
-                        <span className={`etape ${stage.className}`}>{stage.label}</span>
-                      </td>
-                      <td data-label="Avancement">
-                        {p && p.total > 0 ? `${p.enregistrees + p.sautees} / ${p.total}` : '—'}
-                      </td>
-                      {has('admin') && (
-                        <td data-label="Recruteur">{names.get(invite.recruiter_id) ?? '—'}</td>
-                      )}
-                      <td data-label="Lien" className="aide">
-                        {linkState}
-                      </td>
-                      <td className="actions">
-                        {mine && speaker?.status === 'test_en_attente' && (
-                          <button
-                            className="petit"
-                            onClick={() => setOpen({ kind: 'test', invite })}
-                          >
-                            Écouter le test
-                          </button>
-                        )}
-                        {mine && !speaker && !invite.revoked_at && (
-                          <button
-                            className="petit secondaire"
-                            onClick={() => setOpen({ kind: 'oral', invite })}
-                          >
-                            Consentement oral
-                          </button>
-                        )}
-                        {mine && speaker && speaker.status !== 'terminee' && (
-                          <button
-                            className="petit secondaire"
-                            title="Pour une personne qui ne lit pas : l’appli lui fait entendre chaque phrase avant qu’elle la dise."
-                            onClick={() =>
-                              void toggleAssisted(speaker.id, !speaker.assisted_reading)
-                            }
-                          >
-                            {speaker.assisted_reading
-                              ? 'Arrêter « écouter puis répéter »'
-                              : 'Écouter puis répéter'}
-                          </button>
-                        )}
-                        {mine && !invite.revoked_at && (
-                          <RevokeButton onConfirm={() => void revoke(invite)} />
-                        )}
-                        {speaker && request && (
-                          <>
-                            <span className="etape alerte">Retrait demandé</span>
-                            {(has('admin') || request.requested_by === member.user_id) && (
-                              <CancelRequestButton
+                        <td data-label="Lien" className="aide">
+                          {linkState}
+                        </td>
+                        <td className="actions">
+                          {mine && speaker?.status === 'test_en_attente' && (
+                            <button
+                              className="petit"
+                              onClick={() => setOpen({ kind: 'test', invite })}
+                            >
+                              Écouter le test
+                            </button>
+                          )}
+                          {mine && !speaker && !invite.revoked_at && (
+                            <button
+                              className="petit secondaire"
+                              onClick={() => setOpen({ kind: 'oral', invite })}
+                            >
+                              Consentement oral
+                            </button>
+                          )}
+                          {mine && speaker && speaker.status !== 'terminee' && (
+                            <button
+                              className="petit secondaire"
+                              title="Pour une personne qui ne lit pas : l’appli lui fait entendre chaque phrase avant qu’elle la dise."
+                              onClick={() =>
+                                void toggleAssisted(speaker.id, !speaker.assisted_reading)
+                              }
+                            >
+                              {speaker.assisted_reading
+                                ? 'Arrêter « écouter puis répéter »'
+                                : 'Écouter puis répéter'}
+                            </button>
+                          )}
+                          {mine && !invite.revoked_at && (
+                            <RevokeButton onConfirm={() => void revoke(invite)} />
+                          )}
+                          {speaker && request && (
+                            <>
+                              <span className="etape alerte">Retrait demandé</span>
+                              {(has('admin') || request.requested_by === member.user_id) && (
+                                <CancelRequestButton
+                                  speakerId={speaker.id}
+                                  onDone={() => void load()}
+                                />
+                              )}
+                            </>
+                          )}
+                          {speaker &&
+                            !request &&
+                            !has('admin') &&
+                            invite.recruiter_id === member.user_id && (
+                              <RequestWithdrawalButton
                                 speakerId={speaker.id}
                                 onDone={() => void load()}
                               />
                             )}
-                          </>
-                        )}
-                        {speaker &&
-                          !request &&
-                          !has('admin') &&
-                          invite.recruiter_id === member.user_id && (
-                            <RequestWithdrawalButton
-                              speakerId={speaker.id}
-                              onDone={() => void load()}
-                            />
+                          {speaker && has('admin') && (
+                            <>
+                              <IdentityButton speakerId={speaker.id} />
+                              <button
+                                className="petit lien danger-texte"
+                                onClick={() =>
+                                  openWithdraw({
+                                    id: speaker.id,
+                                    number: speaker.number,
+                                    label: invite.label,
+                                  })
+                                }
+                              >
+                                Retirer…
+                              </button>
+                            </>
                           )}
-                        {speaker && has('admin') && (
-                          <>
-                            <IdentityButton speakerId={speaker.id} />
-                            <button
-                              className="petit lien danger-texte"
-                              onClick={() =>
-                                openWithdraw({
-                                  id: speaker.id,
-                                  number: speaker.number,
-                                  label: invite.label,
-                                })
-                              }
-                            >
-                              Retirer…
-                            </button>
-                          </>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      )}
 
       {open?.kind === 'test' && (
         <TestReview

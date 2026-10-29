@@ -92,3 +92,17 @@ export async function withdrawSpeaker(
     body: JSON.stringify({ confirmation }),
   });
 }
+
+/** Nouveau mot de passe d'un membre, donné par un admin (la base vérifie le rôle). */
+export async function resetPassword(
+  session: Session,
+  userId: string,
+  password: string,
+): Promise<void> {
+  if (import.meta.env.DEV && session.access_token === 'demo') return;
+  await call(session, `/equipe/membres/${userId}/mot-de-passe`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mot_de_passe: password }),
+  });
+}

@@ -34,6 +34,7 @@ const ACTIONS: Record<string, string> = {
   phrase_reactivee: 'Phrase réactivée',
   membre_ajoute: 'Membre ajouté',
   membre_modifie: 'Rôles d’un membre modifiés',
+  mot_de_passe_change: 'Mot de passe donné par un admin',
   voix_examen: 'Voix examen modifiées',
   export_demande: 'Export demandé',
   export_termine: 'Export prêt',

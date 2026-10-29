@@ -403,3 +403,13 @@ function Breakdown({
     </div>
   );
 }
+
+/** Page « Tableau de bord » (liée depuis l'accueil et le menu). */
+export function TableauDeBordPage() {
+  return (
+    <>
+      <h1>Tableau de bord</h1>
+      <TableauDeBord />
+    </>
+  );
+}

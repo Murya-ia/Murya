@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { Logo } from '@murya/commun/logo';
+import { Demarrage } from './components/Demarrage';
 import { LoginPage } from './LoginPage';
 import { TeamShell } from './TeamShell';
 
@@ -20,7 +21,7 @@ function AuthGate({ client }: { client: SupabaseClient }) {
     return () => data.subscription.unsubscribe();
   }, [client]);
 
-  if (session === undefined) return null;
+  if (session === undefined) return <Demarrage />;
   if (!session) return <LoginPage client={client} />;
   return <TeamShell client={client} session={session} />;
 }

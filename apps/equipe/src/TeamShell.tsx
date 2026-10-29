@@ -1,5 +1,5 @@
-// Cadre de l'espace équipe : charge le membre connecté (et ses rôles), affiche la barre de
-// navigation selon ses rôles, puis la page demandée.
+// Cadre de l'espace équipe : charge le membre connecté (et ses rôles), affiche les menus
+// selon ses rôles (en haut sur ordinateur, en bas sur téléphone), puis la page demandée.
 
 import { useEffect, useState } from 'react';
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
@@ -11,10 +11,25 @@ import { EcoutePage } from './pages/EcoutePage';
 import { ExportsPage } from './pages/ExportsPage';
 import { JournalPage } from './pages/JournalPage';
 import { MembresPage } from './pages/MembresPage';
-import { MotDePasse } from './components/MotDePasse';
 import { PhrasesPage } from './pages/PhrasesPage';
+import { TableauDeBordPage } from './pages/TableauDeBord';
 import { VoixPage } from './pages/VoixPage';
-import type { Role, TeamMember } from './supabase';
+import { Demarrage } from './components/Demarrage';
+import { Feuille } from './components/Feuille';
+import {
+  Chevron,
+  IconeAccueil,
+  IconeDeconnexion,
+  IconeEcoute,
+  IconeExports,
+  IconeGraphique,
+  IconeJournal,
+  IconeMembres,
+  IconePhrases,
+  IconePlus,
+  IconeVoix,
+} from './components/Icones';
+import { ROLE_LABELS, type Role, type TeamMember } from './supabase';
 
 type State =
   | { status: 'chargement' }
@@ -41,12 +56,12 @@ export function TeamShell({ client, session }: { client: SupabaseClient; session
 
   const signOut = () => void client.auth.signOut();
 
+  if (state.status === 'chargement') return <Demarrage />;
   if (state.status !== 'pret') {
     return (
       <div className="mise-en-page">
-        <TopBar email={session.user.email} onSignOut={signOut} />
+        <TopBar />
         <main className="contenu">
-          {state.status === 'chargement' && <p>Chargement…</p>}
           {state.status === 'erreur' && (
             <p className="message erreur">Impossible de charger vos informations. Réessayez.</p>
           )}
@@ -56,6 +71,9 @@ export function TeamShell({ client, session }: { client: SupabaseClient; session
               ajouter.
             </p>
           )}
+          <button className="secondaire" onClick={signOut}>
+            Se déconnecter
+          </button>
         </main>
       </div>
     );
@@ -63,43 +81,75 @@ export function TeamShell({ client, session }: { client: SupabaseClient; session
 
   return (
     <TeamProvider value={{ client, session, member: state.member }}>
-      <div className="mise-en-page">
-        <TopBar email={session.user.email} onSignOut={signOut} account={<MotDePasse />}>
+      <div className="mise-en-page avec-menu-bas">
+        <TopBar account={<Compte onSignOut={signOut} />}>
           <Navigation />
         </TopBar>
         <main className="contenu">
           <Page />
         </main>
         <Footer />
+        <MenuBas />
       </div>
     </TeamProvider>
   );
 }
 
-const PAGES: { path: string; label: string; roles: Role[] | null }[] = [
-  { path: '/', label: 'Accueil', roles: null },
-  { path: '/voix', label: 'Voix', roles: ['recruteur', 'admin'] },
-  { path: '/ecoute', label: 'Écoute', roles: ['verificateur', 'qualite', 'admin'] },
-  { path: '/phrases', label: 'Phrases', roles: null },
-  { path: '/exports', label: 'Exports', roles: ['admin'] },
-  { path: '/membres', label: 'Membres', roles: ['admin'] },
-  { path: '/journal', label: 'Journal', roles: ['admin'] },
+interface PageLink {
+  path: string;
+  label: string;
+  roles: Role[] | null;
+  icon: () => React.ReactElement;
+  /** Sur téléphone : dans la barre du bas, ou dans « Plus ». */
+  phone: 'barre' | 'plus';
+}
+
+const PAGES: PageLink[] = [
+  { path: '/', label: 'Accueil', roles: null, icon: IconeAccueil, phone: 'barre' },
+  { path: '/voix', label: 'Voix', roles: ['recruteur', 'admin'], icon: IconeVoix, phone: 'barre' },
+  {
+    path: '/ecoute',
+    label: 'Écoute',
+    roles: ['verificateur', 'qualite', 'admin'],
+    icon: IconeEcoute,
+    phone: 'barre',
+  },
+  { path: '/phrases', label: 'Phrases', roles: null, icon: IconePhrases, phone: 'barre' },
+  {
+    path: '/tableau-de-bord',
+    label: 'Tableau de bord',
+    roles: null,
+    icon: IconeGraphique,
+    phone: 'plus',
+  },
+  { path: '/exports', label: 'Exports', roles: ['admin'], icon: IconeExports, phone: 'plus' },
+  { path: '/membres', label: 'Membres', roles: ['admin'], icon: IconeMembres, phone: 'plus' },
+  { path: '/journal', label: 'Journal', roles: ['admin'], icon: IconeJournal, phone: 'plus' },
 ];
 
-function Navigation() {
+function usePages(): PageLink[] {
   const { has } = useTeam();
+  return PAGES.filter((p) => !p.roles || p.roles.some(has));
+}
+
+function go(e: React.MouseEvent, path: string) {
+  e.preventDefault();
+  navigate(path);
+}
+
+/** Menu du haut, sur ordinateur (caché sur téléphone : il passe en bas). */
+function Navigation() {
+  const pages = usePages();
   const path = usePath();
   return (
-    <nav className="navigation">
-      {PAGES.filter((p) => !p.roles || p.roles.some(has)).map((p) => (
+    <nav className="navigation" aria-label="Menu">
+      {pages.map((p) => (
         <a
           key={p.path}
           href={p.path}
           className={path === p.path ? 'actif' : ''}
-          onClick={(e) => {
-            e.preventDefault();
-            navigate(p.path);
-          }}
+          aria-current={path === p.path ? 'page' : undefined}
+          onClick={(e) => go(e, p.path)}
         >
           {p.label}
         </a>
@@ -108,26 +158,166 @@ function Navigation() {
   );
 }
 
+/** Menu du bas, sur téléphone : les pages principales à portée de pouce, le reste dans « Plus ». */
+function MenuBas() {
+  const pages = usePages();
+  const path = usePath();
+  const [more, setMore] = useState(false);
+  const bar = pages.filter((p) => p.phone === 'barre');
+  const rest = pages.filter((p) => p.phone === 'plus');
+  const restActive = rest.some((p) => p.path === path);
+  return (
+    <>
+      <nav className="menu-bas" aria-label="Menu">
+        {bar.map((p) => (
+          <a
+            key={p.path}
+            href={p.path}
+            className={path === p.path ? 'actif' : ''}
+            aria-current={path === p.path ? 'page' : undefined}
+            onClick={(e) => go(e, p.path)}
+          >
+            <span className="menu-bas-icone">
+              <p.icon />
+            </span>
+            {p.label}
+          </a>
+        ))}
+        {rest.length > 0 && (
+          <button className={restActive ? 'actif' : ''} onClick={() => setMore(true)}>
+            <span className="menu-bas-icone">
+              <IconePlus />
+            </span>
+            Plus
+          </button>
+        )}
+      </nav>
+      {more && (
+        <Feuille label="Plus" onClose={() => setMore(false)}>
+          <div className="liste-lignes sans-cadre">
+            {rest.map((p) => (
+              <a
+                key={p.path}
+                href={p.path}
+                className="ligne"
+                onClick={(e) => {
+                  setMore(false);
+                  go(e, p.path);
+                }}
+              >
+                <span className="ligne-icone">
+                  <p.icon />
+                </span>
+                <span className="ligne-texte">{p.label}</span>
+                <Chevron />
+              </a>
+            ))}
+          </div>
+        </Feuille>
+      )}
+    </>
+  );
+}
+
 function Page() {
   const path = usePath();
   if (path === '/voix') return <VoixPage />;
   if (path === '/ecoute') return <EcoutePage />;
   if (path === '/phrases') return <PhrasesPage />;
+  if (path === '/tableau-de-bord') return <TableauDeBordPage />;
   if (path === '/exports') return <ExportsPage />;
   if (path === '/membres') return <MembresPage />;
   if (path === '/journal') return <JournalPage />;
   return <AccueilPage />;
 }
 
+/**
+ * Le compte, en haut à droite : un rond avec l'initiale (et le prénom sur ordinateur). Il
+ * ouvre une fenêtre avec le nom, les rôles et « Se déconnecter », qui demande confirmation.
+ * Pas de changement de mot de passe ici : ce sont les admins qui les donnent (page Membres).
+ */
+function Compte({ onSignOut }: { onSignOut: () => void }) {
+  const { member, session } = useTeam();
+  const [open, setOpen] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const initial = member.display_name.trim().charAt(0).toUpperCase() || '?';
+  const close = () => {
+    setConfirming(false);
+    setOpen(false);
+  };
+  return (
+    <>
+      <button
+        className="compte"
+        aria-label={`Mon compte (${member.display_name})`}
+        onClick={() => setOpen(true)}
+      >
+        <span className="compte-nom">{member.display_name}</span>
+        <span className="rond-initiale" aria-hidden="true">
+          {initial}
+        </span>
+      </button>
+      {open && !confirming && (
+        <Feuille label="Mon compte" onClose={close}>
+          <div className="fiche-tete">
+            <span className="rond-initiale grand" aria-hidden="true">
+              {initial}
+            </span>
+            <div>
+              <strong>{member.display_name}</strong>
+              <span className="aide">{session.user.email}</span>
+            </div>
+          </div>
+          <div className="pastilles">
+            {member.roles.length === 0 ? (
+              <span className="aide">Aucun rôle pour le moment.</span>
+            ) : (
+              member.roles.map((role) => (
+                <span key={role} className={`pastille-role${role === 'admin' ? ' admin' : ''}`}>
+                  {ROLE_LABELS[role]}
+                </span>
+              ))
+            )}
+          </div>
+          <p className="aide">Pour changer de mot de passe, demandez à un admin.</p>
+          <div className="boutons-pleins">
+            <button className="secondaire" onClick={() => setConfirming(true)}>
+              <IconeDeconnexion /> Se déconnecter
+            </button>
+            <button className="lien" onClick={close}>
+              Fermer
+            </button>
+          </div>
+        </Feuille>
+      )}
+      {confirming && (
+        <Feuille label="Confirmer la déconnexion" centre onClose={close}>
+          <div className="confirmation">
+            <span className="confirmation-icone" aria-hidden="true">
+              <IconeDeconnexion />
+            </span>
+            <h2>Se déconnecter ?</h2>
+            <p className="aide">
+              Vous devrez retaper votre e-mail et votre mot de passe pour revenir.
+            </p>
+            <div className="boutons-pleins">
+              <button onClick={onSignOut}>Oui, me déconnecter</button>
+              <button className="secondaire" onClick={close}>
+                Annuler
+              </button>
+            </div>
+          </div>
+        </Feuille>
+      )}
+    </>
+  );
+}
+
 function TopBar({
-  email,
-  onSignOut,
   account,
   children,
 }: {
-  email: string | undefined;
-  onSignOut: () => void;
-  /** Boutons du compte (ex. « Mon mot de passe »), seulement une fois le membre chargé. */
+  /** Le compte (rond avec l'initiale), une fois le membre chargé. */
   account?: React.ReactNode;
   children?: React.ReactNode;
 }) {
@@ -137,25 +327,12 @@ function TopBar({
         className="barre-logo"
         href="/"
         aria-label="Murya — accueil de l'espace équipe"
-        onClick={(e) => {
-          e.preventDefault();
-          navigate('/');
-        }}
+        onClick={(e) => go(e, '/')}
       >
         <Logo size={30} />
       </a>
       {children}
-      <div className="barre-droite">
-        {email && (
-          <span className="utilisateur" title={email}>
-            {email}
-          </span>
-        )}
-        {account}
-        <button className="secondaire petit" onClick={onSignOut}>
-          Se déconnecter
-        </button>
-      </div>
+      <div className="barre-droite">{account}</div>
     </header>
   );
 }

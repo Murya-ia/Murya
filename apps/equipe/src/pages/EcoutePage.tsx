@@ -193,25 +193,25 @@ export function EcoutePage() {
 
   return (
     <>
-      <div className="titre-ligne">
-        <h1>Écoute</h1>
-        {canArbitrate && (
-          <div className="onglets">
-            {MODES.map(([value, label]) => (
-              <button
-                key={value}
-                className={mode === value ? '' : 'secondaire'}
-                onClick={() => {
-                  setOutcome(null);
-                  setMode(value);
-                }}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      <h1>Écoute</h1>
+      {canArbitrate && (
+        <div className="segments" role="tablist" aria-label="Files d’écoute">
+          {MODES.map(([value, label]) => (
+            <button
+              key={value}
+              role="tab"
+              aria-selected={mode === value}
+              className={mode === value ? 'actif' : ''}
+              onClick={() => {
+                setOutcome(null);
+                setMode(value);
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
       {mode === 'double' && (
         <p className="aide">
           Double écoute à l’aveugle : la décision de la première écoute n’est pas montrée. En cas de
@@ -421,18 +421,26 @@ function Indicators({ item }: { item: Item }) {
     ],
     ['Mots par seconde (approx.)', wordsPerSecond ? fr(wordsPerSecond, 1) : '—', false],
   ];
+  // Replié par défaut : on voit d'un coup d'œil si le son pose problème, le détail sur demande.
+  const warning =
+    facts.some(([, , warn]) => warn) ||
+    Boolean(m.valide_quand_meme) ||
+    Boolean(item.verifications_serveur?.alertes.length);
   return (
-    <div className="indicateurs">
-      {facts.map(([label, value, warn]) => (
-        <span key={label} className={warn ? 'attention' : ''}>
-          {label} : <strong>{value}</strong>
-        </span>
-      ))}
-      {m.valide_quand_meme && (
-        <span className="attention">Validé par la voix malgré une alerte</span>
-      )}
-      <ServerIndicators checks={item.verifications_serveur} />
-    </div>
+    <details className={`mesures${warning ? ' a-surveiller' : ''}`}>
+      <summary>{warning ? 'Son à surveiller' : 'Son correct'} · voir le détail</summary>
+      <div className="indicateurs">
+        {facts.map(([label, value, warn]) => (
+          <span key={label} className={warn ? 'attention' : ''}>
+            {label} : <strong>{value}</strong>
+          </span>
+        ))}
+        {m.valide_quand_meme && (
+          <span className="attention">Validé par la voix malgré une alerte</span>
+        )}
+        <ServerIndicators checks={item.verifications_serveur} />
+      </div>
+    </details>
   );
 }
 
