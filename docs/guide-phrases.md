@@ -74,7 +74,14 @@ les nasales (a̰, ḛ, ḭ, o̰, ṵ), ŋ, ɲ et des voyelles longues (aa, ee…
 
 ## 4. L'orthographe zarma
 
-Référence : **arrêté n° 0215/MEN/SP-CNRE du 19 octobre 1999** (31 lettres).
+Référence : **arrêté n° 0215/MEN/SP-CNRE du 19 octobre 1999 fixant l'orthographe de la langue
+soŋay-zarma** (ministère de l'Éducation nationale du Niger), texte saisi par l'Université Abdou
+Moumouni de Niamey :
+[copie archivée](https://web.archive.org/web/20210512070544/http://www.songhay.org/fr/documents/grammaire/Guide_Niger.pdf).
+
+L'alphabet a **30 lettres** :
+a a̰ b c d e ḛ f g h i ḭ j k l m n ŋ ɲ o o̰ p r s t u ṵ w y z.
+
 Lettres à copier-coller :
 
 | Lettre    | Majuscule | À ne pas écrire                 |
@@ -84,7 +91,17 @@ Lettres à copier-coller :
 | a̰ ḛ ḭ o̰ ṵ | A̰ Ḛ Ḭ O̰ Ṵ | ã ẽ ĩ õ ũ (tilde **au-dessus**) |
 
 - Les **nasales** prennent le tilde **sous** la voyelle.
-- Les **voyelles longues** s'écrivent en doublant la lettre : `aa`, `a̰a̰`.
+- Les **voyelles longues** s'écrivent en doublant la lettre : `aa`, `a̰a̰`. La longueur ne
+  s'écrit pas en début de mot, ni en fin de mot, sauf pour le défini des mots en -a :
+  `karga` (chaise) → `kargaa` (la chaise).
+- Les **tons ne s'écrivent pas**.
+- **Majuscule** en début de phrase, après `.` `?` `!`, et aux noms propres.
+- **Trait d'union** dans les mots composés (`fondo-fay`) et les mots entièrement redoublés
+  (`hina-hina`) ; pas de trait d'union dans les nombres (`iway cindi fo`, onze).
+- `-yaŋ` qui fait un nom à partir d'un verbe est **collé** (`karyaŋ`) ; `yaŋ` du pluriel est
+  **séparé** (`boro yaŋ`, des personnes).
+- On écrit les mots **séparément**, sans les contractions de l'oral (`a no a se`), sauf
+  l'apostrophe devant un pronom complément : `Ay kond'a lokkol`.
 - Quand l'équipe hésite sur un mot, le responsable qualité tranche et l'ajoute à la liste
   **Mots décidés** (espace équipe → Phrases). Consultez-la avant d'écrire.
 

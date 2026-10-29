@@ -184,7 +184,7 @@ Tous les textes de phrases sont normalisés en Unicode **NFC** (contrôlé par l
 ## Orthographe zarma
 
 Référence : **arrêté n° 0215/MEN/SP-CNRE du 19 octobre 1999** fixant l'orthographe du
-soŋay-zarma (31 lettres). Lettres hors alphabet français :
+soŋay-zarma (30 lettres). Lettres hors alphabet français :
 
 | Lettre           | Majuscule | Unicode (après normalisation NFC) | Remarque                              |
 | ---------------- | --------- | --------------------------------- | ------------------------------------- |
