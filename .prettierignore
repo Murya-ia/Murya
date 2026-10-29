@@ -8,3 +8,9 @@ MURYA_SPEC.md
 docs/exemples
 worker/.venv
 worker/.pytest_cache
+
+# Fichiers de travail des vidéos (non suivis par Git)
+infra/video/**/voix.json
+infra/video/**/images/
+infra/video/**/apercu/
+infra/video/**/ecrans/
