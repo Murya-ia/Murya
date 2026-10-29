@@ -33,6 +33,7 @@ const BUSINESS_ERRORS: Record<string, number> = {
   confirmation_incorrecte: 400,
   deux_admins_max: 409,
   dernier_admin: 409,
+  membre_inconnu: 404,
 };
 
 export function businessStatus(code: string): number {

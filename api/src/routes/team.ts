@@ -275,3 +275,31 @@ team.post('/membres', async (c) => {
   }
   return c.json({ ok: true, email });
 });
+
+/**
+ * Nouveau mot de passe d'un membre, donné par un admin (page « Membres ») : les membres ne
+ * changent pas le leur eux-mêmes. La base vérifie le droit et note le changement au journal,
+ * puis le service de comptes de Supabase (clé secrète) remplace le mot de passe.
+ */
+team.post('/membres/:id/mot-de-passe', async (c) => {
+  const id = c.req.param('id');
+  const body = (await c.req.json().catch(() => null)) as { mot_de_passe?: unknown } | null;
+  const password = typeof body?.mot_de_passe === 'string' ? body.mot_de_passe : '';
+  if (!isUuid(id) || password.length < 10 || password.length > 72) {
+    return c.json({ erreur: 'requete_invalide' }, 400);
+  }
+  await rpcAsUser(c.env, c.get('jwt'), 'log_password_reset', { p_user_id: id });
+  const updated = await fetch(`${c.env.SUPABASE_URL}/auth/v1/admin/users/${id}`, {
+    method: 'PUT',
+    headers: { apikey: c.env.SUPABASE_SECRET_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password }),
+  });
+  if (!updated.ok) {
+    const { error_code: reason } = (await updated.json().catch(() => ({}))) as {
+      error_code?: string;
+    };
+    if (reason === 'weak_password') return c.json({ erreur: 'weak_password' }, 400);
+    throw new Error(`mot de passe : HTTP ${updated.status} ${reason ?? ''}`);
+  }
+  return c.json({ ok: true });
+});

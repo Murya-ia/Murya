@@ -8,6 +8,7 @@ let isAdmin: boolean;
 let authStatus: number;
 let authError: string;
 let addMember: { status: number; body: unknown };
+let logReset: { status: number; body: unknown };
 
 beforeEach(() => {
   calls = [];
@@ -15,6 +16,7 @@ beforeEach(() => {
   authStatus = 200;
   authError = '';
   addMember = { status: 200, body: null };
+  logReset = { status: 200, body: null };
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -28,6 +30,9 @@ beforeEach(() => {
       if (url.endsWith('/rpc/is_admin')) return new Response(JSON.stringify(isAdmin));
       if (url.endsWith('/rpc/add_team_member')) {
         return new Response(JSON.stringify(addMember.body), { status: addMember.status });
+      }
+      if (url.endsWith('/rpc/log_password_reset')) {
+        return new Response(JSON.stringify(logReset.body), { status: logReset.status });
       }
       if (url.endsWith('/auth/v1/admin/users')) {
         const body = authStatus === 200 ? { id: USER } : { error_code: authError };
@@ -109,6 +114,43 @@ describe("création d'un membre (page « Membres »)", () => {
   it('refuse un mot de passe trop court ou un rôle inconnu', async () => {
     expect((await create({ ...member, mot_de_passe: 'court' })).status).toBe(400);
     expect((await create({ ...member, roles: ['patron'] })).status).toBe(400);
+    expect(calls).toEqual([]);
+  });
+});
+
+const reset = (id: string, body: unknown) =>
+  app.request(
+    `/equipe/membres/${id}/mot-de-passe`,
+    {
+      method: 'POST',
+      headers: { Authorization: 'Bearer jeton-admin', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    },
+    testEnv(),
+  );
+
+describe('nouveau mot de passe donné par un admin', () => {
+  it('fait vérifier le droit par la base (session de l’admin), puis change le mot de passe', async () => {
+    const res = await reset(USER, { mot_de_passe: 'nouveau-mdp-482' });
+    expect(res.status).toBe(200);
+    const logged = calls.findIndex((c) => c.url.endsWith('/rpc/log_password_reset'));
+    const changed = calls.findIndex((c) => c.url.endsWith(`/auth/v1/admin/users/${USER}`));
+    expect(logged).toBeGreaterThanOrEqual(0);
+    expect(changed).toBeGreaterThan(logged);
+    expect(calls[logged]!.headers.get('Authorization')).toBe('Bearer jeton-admin');
+    expect(calls[changed]!.method).toBe('PUT');
+    expect(calls[changed]!.headers.get('apikey')).toBe('sb_secret_test');
+    expect(calls[changed]!.body).toEqual({ password: 'nouveau-mdp-482' });
+  });
+
+  it('ne change rien si la base refuse (pas admin)', async () => {
+    logReset = { status: 400, body: { code: 'P0001', message: 'acces_refuse' } };
+    expect((await reset(USER, { mot_de_passe: 'nouveau-mdp-482' })).status).toBe(403);
+    expect(calls.some((c) => c.url.includes('/auth/v1/'))).toBe(false);
+  });
+
+  it('refuse un mot de passe trop court', async () => {
+    expect((await reset(USER, { mot_de_passe: 'court' })).status).toBe(400);
     expect(calls).toEqual([]);
   });
 });

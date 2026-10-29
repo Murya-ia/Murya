@@ -51,6 +51,20 @@ describe("gestion de l'équipe", () => {
     expect(roles).toEqual(['verificateur']);
   });
 
+  it('note au journal un mot de passe donné par un admin ; refusé aux autres', async () => {
+    await as(admin, `select public.log_password_reset($1) as r`, [recruiter]);
+    const { rows } = await db.query<{ action: string; target_id: string }>(
+      `select action, target_id from public.audit_log where action = 'mot_de_passe_change'`,
+    );
+    expect(rows).toEqual([{ action: 'mot_de_passe_change', target_id: recruiter }]);
+    await expect(
+      as(recruiter, `select public.log_password_reset($1) as r`, [admin]),
+    ).rejects.toThrow('acces_refuse');
+    await expect(
+      as(admin, `select public.log_password_reset(gen_random_uuid()) as r`),
+    ).rejects.toThrow('membre_inconnu');
+  });
+
   it('garde toujours au moins un admin actif', async () => {
     await expect(
       asUser(db, admin, () =>
