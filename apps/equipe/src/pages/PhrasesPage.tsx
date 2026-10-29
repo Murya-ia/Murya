@@ -225,7 +225,10 @@ function CsvImport({ onImported }: { onImported: () => void }) {
     setError(null);
     const { data, error: rpcError } = await client.rpc('import_sentences', {
       p_language: LANGUAGE,
-      p_rows: rows,
+      // Seules les lignes « Validée » comptent : les autres partent vides (elles gardent leur
+      // place, pour que les numéros de ligne des erreurs restent justes). Un fichier de
+      // milliers de phrases à écrire reste ainsi léger à envoyer.
+      p_rows: rows.map((row) => (isValidated(row) ? row : {})),
     });
     setBusy(false);
     if (rpcError) return setError(errorText(rpcError));
