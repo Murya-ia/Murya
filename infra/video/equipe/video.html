@@ -1,0 +1,957 @@
+<!doctype html>
+<!--
+  Vidéo de présentation de l'espace équipe (motion design, format téléphone 1080 × 1920).
+  Les écrans sont de vraies captures de l'appli en mode démo (capturer.cjs) ; la voix off et
+  les sous-titres disent le même texte (textes.json). filmer.cjs l'enregistre image par image
+  en appelant window.seek(t).
+-->
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @font-face {
+        font-family: Manrope;
+        src: url(manrope.woff2) format('woff2-variations');
+        font-weight: 200 800;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: #f7f4ea;
+        color: #111;
+        font-family: Manrope, system-ui, sans-serif;
+      }
+      #fond {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+      }
+      .onde {
+        position: absolute;
+        left: -260px;
+        top: 960px;
+        border-radius: 50%;
+        border: 2px solid rgba(15, 61, 46, 0.07);
+        transform: translate(-50%, -50%);
+      }
+      /* En-tête : chapitre et titre de la scène. */
+      #chapitre {
+        position: absolute;
+        top: 92px;
+        left: 50%;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 28px;
+        border-radius: 999px;
+        background: #fff;
+        border: 2px solid rgba(17, 17, 17, 0.06);
+        font-size: 30px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      #chapitre::before {
+        content: '';
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #0f3d2e;
+      }
+      #titre {
+        position: absolute;
+        top: 180px;
+        left: 60px;
+        right: 60px;
+        text-align: center;
+        font-size: 68px;
+        font-weight: 700;
+        letter-spacing: -0.045em;
+        line-height: 1.05;
+      }
+      #titre span {
+        color: #9a978b;
+      }
+      /* Téléphone. */
+      #telephone {
+        position: absolute;
+        width: 568px;
+        height: 1197px;
+        left: 256px;
+        top: 352px;
+        border-radius: 72px;
+        background: #121212;
+        box-shadow:
+          0 60px 120px -50px rgba(15, 61, 46, 0.55),
+          inset 0 0 0 3px #2a2a2a;
+      }
+      #ecran {
+        position: absolute;
+        left: 14px;
+        top: 14px;
+        width: 540px;
+        height: 1169px;
+        border-radius: 58px;
+        overflow: hidden;
+        background: #f7f4ea;
+      }
+      .camera {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 540px;
+        height: 1169px;
+        transform-origin: 0 0;
+      }
+      .camera img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+      .projecteur {
+        position: absolute;
+        border-radius: 18px;
+        border: 5px solid #1f5c47;
+        box-shadow:
+          0 0 0 4000px rgba(17, 17, 17, 0.32),
+          0 0 30px rgba(31, 92, 71, 0.6);
+        pointer-events: none;
+      }
+      .toucher {
+        position: absolute;
+        width: 70px;
+        height: 70px;
+        margin: -35px 0 0 -35px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.85);
+        border: 4px solid #0f3d2e;
+      }
+      /* Ordinateur portable. */
+      #portable {
+        position: absolute;
+        left: 40px;
+        top: 560px;
+        width: 1000px;
+      }
+      #portable-ecran {
+        position: relative;
+        margin: 0 auto;
+        width: 960px;
+        height: 600px;
+        border: 20px solid #121212;
+        border-radius: 34px 34px 0 0;
+        overflow: hidden;
+        background: #f7f4ea;
+      }
+      #portable-ecran img {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      #portable-socle {
+        height: 34px;
+        margin: 0 -10px;
+        border-radius: 0 0 40px 40px;
+        background: linear-gradient(#d9d4c3, #b9b3a0);
+      }
+      /* Sous-titres. */
+      #sous-titre {
+        position: absolute;
+        left: 60px;
+        right: 60px;
+        top: 1600px;
+        min-height: 230px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #sous-titre div {
+        background: #0f3d2e;
+        color: #fff;
+        font-size: 42px;
+        font-weight: 600;
+        line-height: 1.3;
+        text-align: center;
+        padding: 26px 38px;
+        border-radius: 34px;
+        max-width: 960px;
+        box-sizing: border-box;
+      }
+      /* Scènes dessinées (intro, rôles, file, fin). */
+      .plan {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+      }
+      .carte {
+        position: absolute;
+        background: #fff;
+        border: 2px solid rgba(17, 17, 17, 0.07);
+        border-radius: 40px;
+        box-shadow: 0 30px 60px -40px rgba(15, 61, 46, 0.45);
+        box-sizing: border-box;
+      }
+      .rond {
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="fond"></div>
+    <div id="plans"></div>
+    <div id="portable">
+      <div id="portable-ecran"><img id="portable-img" alt="" /></div>
+      <div id="portable-socle"></div>
+    </div>
+    <div id="telephone">
+      <div id="ecran">
+        <div class="camera" id="cam-a"><img alt="" /></div>
+        <div class="camera" id="cam-b"><img alt="" /></div>
+        <div class="projecteur" id="projecteur"></div>
+        <div class="toucher" id="toucher"></div>
+      </div>
+    </div>
+    <div id="chapitre"></div>
+    <div id="titre"></div>
+    <div id="sous-titre"><div></div></div>
+
+    <script>
+      // ------------------------------------------------------------------ outils
+      const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+      const ease = (x) => {
+        x = clamp(x);
+        return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+      };
+      const out = (x) => 1 - Math.pow(1 - clamp(x), 3);
+      const back = (x) => {
+        x = clamp(x);
+        const c = 1.70158;
+        return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2);
+      };
+      const span = (t, a, b) => clamp((t - a) / (b - a));
+      const lerp = (a, b, k) => a + (b - a) * k;
+      const $ = (id) => document.getElementById(id);
+      const el = (html) => {
+        const d = document.createElement('div');
+        d.innerHTML = html.trim();
+        return d.firstElementChild;
+      };
+      const LOGO = window.LOGO;
+      const symbol = (size, color) =>
+        `<svg width="${(size * 501) / 489}" height="${size}" viewBox="${LOGO.sv}"><path fill="${color}" fill-rule="evenodd" d="${LOGO.sp}"/></svg>`;
+      const wordmark = (h, color) =>
+        `<svg width="${(h * 775) / 204}" height="${h}" viewBox="${LOGO.wv}"><path fill="${color}" fill-rule="evenodd" d="${LOGO.wp}"/></svg>`;
+      const icon = (paths, size = 56, color = '#0f3d2e') =>
+        `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
+      const ICONES = {
+        micro:
+          '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
+        casque:
+          '<path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="5" height="7" rx="2"/><rect x="16" y="14" width="5" height="7" rx="2"/>',
+        graphique: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+        loupe: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
+        cle: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/>',
+        cadenas:
+          '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+      };
+
+      // ------------------------------------------------------------------ fond
+      const fond = $('fond');
+      const ondes = [700, 1050, 1400, 1750, 2100].map((s) => {
+        const o = el(`<div class="onde" style="width:${s}px;height:${s}px"></div>`);
+        fond.appendChild(o);
+        return o;
+      });
+
+      // ------------------------------------------------------------------ scènes
+      const ECRANS = window.ECRANS; // ecrans.json : taille et zones de chaque capture
+      const TEXTES = window.TEXTES;
+      const D = window.DUREES;
+      const zone = (ecran, nom) => ECRANS[ecran].zones[nom];
+      const fixe = (x, y, w, h) => ({ x, y, w, h });
+
+      // type : tel (captures dans le téléphone), pc (ordinateur), dessin (scène dessinée).
+      // etapes : à quel moment de la phrase (0 → 1) on montre quel écran, et quelle zone.
+      const S = [
+        { id: 's01', chap: 'Bienvenue', type: 'dessin' },
+        { id: 's02', chap: 'Bienvenue', type: 'dessin', titre: ['Une équipe.', 'Trois missions.'] },
+        {
+          id: 's03',
+          chap: 'Bienvenue',
+          type: 'dessin',
+          titre: ['Les rôles.', 'Chacun les siens.'],
+        },
+        {
+          id: 's04',
+          chap: 'Pour tous',
+          type: 'tel',
+          titre: ['Se connecter.', 'Avec un admin.'],
+          etapes: [
+            { at: 0, e: 'connexion' },
+            { at: 0.15, e: 'connexion', z: 'formulaire' },
+          ],
+        },
+        {
+          id: 's05',
+          chap: 'Pour tous',
+          type: 'tel',
+          titre: ['Sur le téléphone.', 'Comme une appli.'],
+          etapes: [
+            { at: 0, e: 'chargement' },
+            { at: 0.3, e: 'chargement', z: 'logo' },
+          ],
+        },
+        {
+          id: 's06',
+          chap: 'Pour tous',
+          type: 'tel',
+          titre: ['L’accueil.', 'L’essentiel d’abord.'],
+          etapes: [
+            { at: 0, e: 'accueil' },
+            { at: 0.3, e: 'accueil', z: 'principal' },
+            { at: 0.62, e: 'accueil', z: 'afaire' },
+          ],
+        },
+        {
+          id: 's07',
+          chap: 'Pour tous',
+          type: 'tel',
+          titre: ['Le menu.', 'En bas de l’écran.'],
+          etapes: [
+            { at: 0, e: 'accueil', z: 'menu' },
+            { at: 0.55, e: 'plus', z: 'feuille' },
+          ],
+        },
+        {
+          id: 's08',
+          chap: 'Pour tous',
+          type: 'tel',
+          titre: ['Votre compte.', 'Le rond, en haut.'],
+          etapes: [
+            { at: 0, e: 'accueil', z: 'compte', tap: true },
+            { at: 0.28, e: 'compte', z: 'feuille' },
+            { at: 0.62, e: 'deconnexion', z: 'feuille' },
+          ],
+        },
+        {
+          id: 's09',
+          chap: 'Recruteurs',
+          type: 'tel',
+          titre: ['Page Voix.', 'Le suivi.'],
+          etapes: [
+            { at: 0, e: 'voix', z: 'onglets' },
+            { at: 0.42, e: 'voix-repeter', z: 'fiche' },
+          ],
+        },
+        {
+          id: 's10',
+          chap: 'Recruteurs',
+          type: 'tel',
+          titre: ['Inviter une voix.', 'Par WhatsApp.'],
+          etapes: [
+            { at: 0, e: 'voix', z: 'inviter', tap: true },
+            { at: 0.25, e: 'invitation', z: 'formulaire' },
+            { at: 0.58, e: 'invitation', z: 'lien' },
+          ],
+        },
+        {
+          id: 's11',
+          chap: 'Recruteurs',
+          type: 'tel',
+          titre: ['Le test.', 'Écouter, puis décider.'],
+          etapes: [
+            { at: 0, e: 'test', z: 'panneau' },
+            { at: 0.42, e: 'test-decision', z: 'boutons' },
+          ],
+        },
+        {
+          id: 's12',
+          chap: 'Recruteurs',
+          type: 'tel',
+          titre: ['Écouter puis répéter.', 'Pour qui ne lit pas.'],
+          etapes: [
+            { at: 0, e: 'voix-repeter' },
+            { at: 0.25, e: 'voix-repeter', z: 'repeter', tap: true },
+          ],
+        },
+        {
+          id: 's13',
+          chap: 'Vérificateurs',
+          type: 'tel',
+          titre: ['Page Écoute.', 'Un audio à la fois.'],
+          etapes: [
+            { at: 0, e: 'ecoute' },
+            { at: 0.45, e: 'ecoute', z: 'phrase' },
+            { at: 0.75, e: 'ecoute', z: 'lecteur' },
+          ],
+        },
+        {
+          id: 's14',
+          chap: 'Vérificateurs',
+          type: 'tel',
+          titre: ['Décider.', 'En un geste.'],
+          etapes: [{ at: 0, e: 'ecoute', z: 'decisions' }],
+        },
+        {
+          id: 's15',
+          chap: 'Vérificateurs',
+          type: 'tel',
+          titre: ['À corriger.', 'Le texte exact.'],
+          etapes: [{ at: 0, e: 'ecoute-corriger', z: 'complement' }],
+        },
+        {
+          id: 's16',
+          chap: 'Vérificateurs',
+          type: 'tel',
+          titre: ['Le son.', 'Vérifié pour vous.'],
+          etapes: [
+            { at: 0, e: 'ecoute', z: 'mesures' },
+            { at: 0.62, e: 'ecoute-mesures', z: 'mesures' },
+          ],
+        },
+        {
+          id: 's17',
+          chap: 'Vérificateurs',
+          type: 'dessin',
+          titre: ['Une seule file.', 'Pour toute l’équipe.'],
+        },
+        {
+          id: 's18',
+          chap: 'Responsable qualité',
+          type: 'tel',
+          titre: ['Les doutes.', 'Tranchés par la qualité.'],
+          etapes: [
+            { at: 0, e: 'doutes', z: 'onglets' },
+            { at: 0.45, e: 'doutes', z: 'avis' },
+          ],
+        },
+        {
+          id: 's19',
+          chap: 'Responsable qualité',
+          type: 'tel',
+          titre: ['La double écoute.', 'À l’aveugle.'],
+          etapes: [
+            { at: 0, e: 'double', z: 'onglets' },
+            { at: 0.35, e: 'double', z: 'carte' },
+          ],
+        },
+        {
+          id: 's20',
+          chap: 'Responsable qualité',
+          type: 'tel',
+          titre: ['La voix principale.', 'Séance par séance.'],
+          etapes: [{ at: 0, e: 'principale', z: 'carte' }],
+        },
+        {
+          id: 's21',
+          chap: 'Pour tous',
+          type: 'tel',
+          titre: ['Page Phrases.', 'Ce que lisent les voix.'],
+          etapes: [{ at: 0, e: 'phrases' }],
+        },
+        {
+          id: 's22',
+          chap: 'Pour tous',
+          type: 'tel',
+          titre: ['Tableau de bord.', 'La collecte en chiffres.'],
+          etapes: [
+            { at: 0, e: 'tableau' },
+            { at: 0.3, e: 'tableau', z: 'tuiles' },
+          ],
+        },
+        {
+          id: 's23',
+          chap: 'Admins',
+          type: 'tel',
+          titre: ['Page Membres.', 'Rôles et mots de passe.'],
+          etapes: [
+            { at: 0, e: 'membres', z: 'ajouter', tap: true },
+            { at: 0.38, e: 'membre-fiche', z: 'roles' },
+            { at: 0.66, e: 'membre-fiche', z: 'mdp' },
+          ],
+        },
+        {
+          id: 's24',
+          chap: 'Admins',
+          type: 'tel',
+          titre: ['Page Activité.', 'Qui fait quoi.'],
+          etapes: [
+            { at: 0, e: 'activite', z: 'chiffres' },
+            { at: 0.4, e: 'activite', z: 'carte' },
+          ],
+        },
+        {
+          id: 's25',
+          chap: 'Admins',
+          type: 'tel',
+          titre: ['Exports et journal.', 'Données et traces.'],
+          etapes: [
+            { at: 0, e: 'exports' },
+            { at: 0.55, e: 'journal' },
+          ],
+        },
+        {
+          id: 's26',
+          chap: 'Sur ordinateur',
+          type: 'pc',
+          titre: ['Sur ordinateur.', 'Le menu en haut.'],
+          etapes: [
+            { at: 0, e: 'ordinateur' },
+            { at: 0.35, e: 'ordinateur', z: 'menu' },
+            { at: 0.75, e: 'ordinateur', z: 'compte' },
+          ],
+        },
+        { id: 's27', chap: null, type: 'dessin' },
+      ];
+      // Zones ajoutées à la main (repérées sur les captures).
+      ECRANS['voix-repeter'].zones.fiche = fixe(35, 375, 320, 375);
+      ECRANS['doutes'].zones.avis = fixe(35, 529, 320, 100);
+      ECRANS['ecoute'].zones.phrase = fixe(35, 296, 320, 92); // phrase et sa traduction
+
+      // Durées : respiration avant et après chaque phrase.
+      const AVANT = 0.5,
+        APRES = 0.8;
+      let curseur = 0;
+      for (const s of S) {
+        const debut = AVANT + (s.id === 's01' ? 0.8 : 0);
+        s.start = curseur;
+        s.voix = curseur + debut;
+        s.vd = D[s.id];
+        s.dur = debut + D[s.id] + APRES + (s.id === 's27' ? 2.4 : 0);
+        curseur += s.dur;
+      }
+      window.TOTAL = curseur;
+      window.VOIX = S.map((s) => ({ id: s.id, at: s.voix }));
+
+      // Sous-titres : chaque phrase coupée en morceaux de deux lignes au plus, affichés au
+      // rythme de la voix (proportionnellement au nombre de lettres).
+      function morceaux(texte) {
+        const phrases = texte.match(/[^.?!]+[.?!]+(\s|$)/g) ?? [texte];
+        const res = [];
+        for (let p of phrases.map((x) => x.trim())) {
+          while (p.length > 84) {
+            const milieu = p.length / 2;
+            const coupes = [...p.matchAll(/[,:] /g)].map((m) => m.index + 1);
+            if (!coupes.length) break;
+            const c = coupes.reduce((a, b) =>
+              Math.abs(b - milieu) < Math.abs(a - milieu) ? b : a,
+            );
+            res.push(p.slice(0, c).trim());
+            p = p.slice(c).trim();
+          }
+          res.push(p);
+        }
+        return res;
+      }
+      for (const s of S) {
+        const m = morceaux(TEXTES[s.id]);
+        const total = m.reduce((n, x) => n + x.length, 0);
+        let t = s.voix;
+        s.st = m.map((texte) => {
+          const d = (s.vd * texte.length) / total;
+          const r = { texte, a: t, b: t + d };
+          t += d;
+          return r;
+        });
+      }
+
+      // ------------------------------------------------------------------ téléphone
+      const SW = 540,
+        SH = 1169,
+        K = SW / 390; // pixels de capture (CSS) → pixels de l'écran dans la vidéo
+      const images = {};
+      for (const nom of Object.keys(ECRANS)) {
+        const img = new Image();
+        img.src = `ecrans/${nom}.png`;
+        images[nom] = img;
+      }
+
+      /** Cadrage pour une étape : grossissement et décalage de la capture, cadre du projecteur. */
+      function cadrage(etape) {
+        if (!etape?.z) return { s: 1, tx: 0, ty: 0, r: null };
+        let z = zone(etape.e, etape.z);
+        // Zone coupée par le bas de l'écran : on garde la partie visible.
+        z = { ...z, h: Math.min(z.h, 844 - 8 - z.y) };
+        const s = clamp(Math.min((0.84 * 390) / z.w, (0.78 * 844) / z.h), 1, 1.75);
+        const cx = (z.x + z.w / 2) * K * s,
+          cy = (z.y + z.h / 2) * K * s;
+        const tx = clamp(SW / 2 - cx, SW - SW * s, 0),
+          ty = clamp(SH / 2 - cy, SH - SH * s, 0);
+        const m = 10;
+        return {
+          s,
+          tx,
+          ty,
+          r: {
+            x: tx + z.x * K * s - m,
+            y: ty + z.y * K * s - m,
+            w: z.w * K * s + 2 * m,
+            h: z.h * K * s + 2 * m,
+          },
+        };
+      }
+      const mix = (a, b, k) => ({
+        s: lerp(a.s, b.s, k),
+        tx: lerp(a.tx, b.tx, k),
+        ty: lerp(a.ty, b.ty, k),
+      });
+
+      /** Étape en cours (et la précédente) d'une scène avec écrans, au temps local t. */
+      function etapes(i, t) {
+        const s = S[i];
+        const list = s.etapes.map((e) => ({
+          ...e,
+          t: e.at === 0 ? 0 : s.voix - s.start + e.at * s.vd,
+        }));
+        let k = 0;
+        while (k + 1 < list.length && t >= list[k + 1].t) k++;
+        const prevScene = S[i - 1];
+        const prev =
+          k > 0
+            ? list[k - 1]
+            : prevScene && prevScene.type === s.type
+              ? prevScene.etapes[prevScene.etapes.length - 1]
+              : { e: list[0].e };
+        return { cur: list[k], prev, depuis: t - list[k].t };
+      }
+
+      function afficheTelephone(i, t) {
+        const { cur, prev, depuis } = etapes(i, t);
+        const k = ease(span(depuis, 0, 0.8));
+        const ca = cadrage(prev),
+          cb = cadrage(cur);
+        const cam = mix(ca, cb, k);
+        // Deux couches : l'écran précédent et le nouveau, qui apparaît en fondu.
+        const a = $('cam-a'),
+          b = $('cam-b');
+        const ia = a.firstElementChild,
+          ib = b.firstElementChild;
+        const sa = images[prev.e].src,
+          sb = images[cur.e].src;
+        if (ia.src !== sa) ia.src = sa;
+        if (ib.src !== sb) ib.src = sb;
+        const tr = `translate(${cam.tx}px, ${cam.ty}px) scale(${cam.s})`;
+        a.style.transform = b.style.transform = tr;
+        b.style.opacity = prev.e === cur.e ? 1 : ease(span(depuis, 0, 0.45));
+        a.style.opacity = 1;
+        // Projecteur : suit la zone ; apparaît quand il n'y en avait pas.
+        const p = $('projecteur');
+        if (cb.r) {
+          const ra = ca.r ?? cb.r;
+          const kr = ease(span(depuis, 0.15, 0.85));
+          p.style.left = `${lerp(ra.x, cb.r.x, kr)}px`;
+          p.style.top = `${lerp(ra.y, cb.r.y, kr)}px`;
+          p.style.width = `${lerp(ra.w, cb.r.w, kr)}px`;
+          p.style.height = `${lerp(ra.h, cb.r.h, kr)}px`;
+          p.style.opacity = ca.r ? 1 : ease(span(depuis, 0.4, 0.9));
+        } else {
+          p.style.opacity = ca.r ? 1 - ease(span(depuis, 0, 0.4)) : 0;
+          if (ca.r) {
+            p.style.left = `${ca.r.x}px`;
+            p.style.top = `${ca.r.y}px`;
+          }
+        }
+        // Doigt qui touche un bouton.
+        const doigt = $('toucher');
+        if (cur.tap && cb.r) {
+          const d = span(depuis, 0.9, 1.6);
+          doigt.style.left = `${cb.r.x + cb.r.w / 2}px`;
+          doigt.style.top = `${cb.r.y + cb.r.h / 2}px`;
+          doigt.style.opacity = d > 0 && d < 1 ? Math.sin(d * Math.PI) : 0;
+          doigt.style.transform = `scale(${1.3 - 0.4 * Math.sin(d * Math.PI)})`;
+        } else doigt.style.opacity = 0;
+      }
+
+      function affichePortable(i, t) {
+        const { cur, prev, depuis } = etapes(i, t);
+        const img = $('portable-img');
+        if (!img.src.endsWith(`${cur.e}.png`)) img.src = images[cur.e].src;
+        // Projecteur dans l'écran du portable (sans grossissement).
+        let p = $('portable-ecran').querySelector('.projecteur');
+        if (!p) {
+          p = el('<div class="projecteur"></div>');
+          $('portable-ecran').appendChild(p);
+        }
+        const k = 960 / 1280,
+          m = 8;
+        const rect = (e) => {
+          if (!e?.z) return null;
+          const z = zone(e.e, e.z);
+          return { x: z.x * k - m, y: z.y * k - m, w: z.w * k + 2 * m, h: z.h * k + 2 * m };
+        };
+        const ra = rect(prev),
+          rb = rect(cur);
+        const kr = ease(span(depuis, 0.1, 0.8));
+        if (rb) {
+          const a = ra ?? rb;
+          p.style.left = `${lerp(a.x, rb.x, kr)}px`;
+          p.style.top = `${lerp(a.y, rb.y, kr)}px`;
+          p.style.width = `${lerp(a.w, rb.w, kr)}px`;
+          p.style.height = `${lerp(a.h, rb.h, kr)}px`;
+          p.style.opacity = ra ? 1 : kr;
+        } else p.style.opacity = 0;
+      }
+
+      // ------------------------------------------------------------------ scènes dessinées
+      const plans = {};
+      const plan = (id, html) => {
+        const p = el(`<div class="plan" id="p-${id}">${html}</div>`);
+        $('plans').appendChild(p);
+        plans[id] = p;
+        return p;
+      };
+
+      // s01 — Bienvenue.
+      plan(
+        's01',
+        `<div style="position:absolute;left:0;right:0;top:560px;display:flex;flex-direction:column;align-items:center;gap:46px">
+          <div id="s01-sym">${symbol(320, '#0f3d2e')}</div>
+          <div id="s01-mot">${wordmark(130, '#0f3d2e')}</div>
+          <div id="s01-pill" style="padding:18px 36px;border-radius:999px;background:#fff;border:2px solid rgba(17,17,17,.06);font-size:40px;font-weight:700">Espace équipe</div>
+          <div id="s01-tag" style="font-size:64px;font-weight:700;letter-spacing:-.045em;text-align:center;line-height:1.1">Le mode d’emploi.<br><span style="color:#9a978b">Page par page.</span></div>
+        </div>`,
+      );
+
+      // s02 — trois missions.
+      const missions = [
+        ['micro', 'Recruter', 'les voix'],
+        ['casque', 'Écouter', 'leurs enregistrements'],
+        ['graphique', 'Suivre', 'la collecte'],
+      ];
+      plan(
+        's02',
+        missions
+          .map(
+            (
+              [i, a, b],
+              k,
+            ) => `<div class="carte s02-c" style="left:110px;right:110px;top:${520 + k * 300}px;height:250px;display:flex;align-items:center;gap:44px;padding:0 54px">
+              <div class="rond" style="width:150px;height:150px;background:#e3f0ea">${icon(ICONES[i], 78)}</div>
+              <div style="font-size:66px;font-weight:800;letter-spacing:-.04em;line-height:1.05">${a}<br><span style="color:#9a978b;font-weight:700;font-size:48px">${b}</span></div>
+            </div>`,
+          )
+          .join('') +
+          `<div id="s02-note" style="position:absolute;left:0;right:0;top:1440px;text-align:center;font-size:40px;font-weight:700;color:#0f3d2e">Pour les langues locales africaines.</div>`,
+      );
+
+      // s03 — les rôles.
+      const roles = [
+        ['micro', 'Recruteur', 'invite les voix,<br>écoute leur test'],
+        ['casque', 'Vérificateur', 'écoute les audios<br>et décide'],
+        ['loupe', 'Responsable<br>qualité', 'tranche les doutes,<br>double écoute'],
+        ['cle', 'Admin', 'gère l’équipe<br>et les exports'],
+      ];
+      plan(
+        's03',
+        roles
+          .map(
+            (
+              [i, nom, desc],
+              k,
+            ) => `<div class="carte s03-c" style="left:${80 + (k % 2) * 470}px;top:${470 + Math.floor(k / 2) * 470}px;width:450px;height:430px;padding:44px;display:flex;flex-direction:column;gap:22px">
+              <div class="rond" style="width:110px;height:110px;background:${k === 3 ? '#0f3d2e' : '#e3f0ea'}">${icon(ICONES[i], 58, k === 3 ? '#fff' : '#0f3d2e')}</div>
+              <div style="font-size:50px;font-weight:800;letter-spacing:-.035em;line-height:1.05">${nom}</div>
+              <div style="font-size:33px;color:#5f5f5a;line-height:1.3">${desc}</div>
+            </div>`,
+          )
+          .join('') +
+          `<div id="s03-note" style="position:absolute;left:0;right:0;top:1440px;display:flex;justify-content:center"><div style="padding:20px 36px;border-radius:999px;background:#0f3d2e;color:#fff;font-size:36px;font-weight:700">Vous ne voyez que les pages de vos rôles</div></div>`,
+      );
+
+      // s17 — la file commune.
+      const FILE = [
+        ['Audio', 'suspect', '#fff4dc', '#8a5a00'],
+        ['Audio', 'suspect', '#fff4dc', '#8a5a00'],
+        ['Audio', 'il y a 3 jours', '#efeadb', '#5f5f5a'],
+        ['Audio', 'il y a 2 jours', '#efeadb', '#5f5f5a'],
+        ['Audio', 'hier', '#efeadb', '#5f5f5a'],
+        ['Audio', 'aujourd’hui', '#efeadb', '#5f5f5a'],
+        ['Audio', 'aujourd’hui', '#efeadb', '#5f5f5a'],
+        ['Audio', 'aujourd’hui', '#efeadb', '#5f5f5a'],
+      ];
+      const MEMBRES = ['A', 'B', 'M', 'R'];
+      plan(
+        's17',
+        `<div style="position:absolute;left:80px;top:440px;font-size:34px;font-weight:800;color:#5f5f5a">File d’écoute</div>
+         <div style="position:absolute;left:690px;top:440px;font-size:34px;font-weight:800;color:#5f5f5a">L’équipe</div>` +
+          FILE.map(
+            (
+              [a, b, bg, fg],
+              k,
+            ) => `<div class="carte s17-a" style="left:80px;top:0;width:470px;height:120px;border-radius:30px;display:flex;align-items:center;gap:22px;padding:0 26px">
+              <div class="rond" style="width:76px;height:76px;background:#0f3d2e">${icon('<path d="M8 5v14l11-7z" fill="#fff" stroke="none"/>', 40, '#fff')}</div>
+              <div style="font-size:38px;font-weight:800">${a}</div>
+              <div style="margin-left:auto;padding:8px 18px;border-radius:999px;background:${bg};color:${fg};font-size:28px;font-weight:700">${b}</div>
+            </div>`,
+          ).join('') +
+          MEMBRES.map(
+            (
+              m,
+              k,
+            ) => `<div class="s17-m" style="position:absolute;left:700px;top:${520 + k * 240}px;display:flex;align-items:center;gap:22px">
+              <div class="rond" style="width:150px;height:150px;background:${k === 0 ? '#0f3d2e' : '#efeadb'};color:${k === 0 ? '#fff' : '#0f3d2e'};font-size:62px;font-weight:800">${m}</div>
+              <div class="s17-n" style="font-size:44px;font-weight:800;color:#0f3d2e">0</div>
+            </div>`,
+          ).join('') +
+          `<div id="s17-note" class="carte" style="left:80px;right:80px;top:1440px;height:120px;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:20px;font-size:34px;font-weight:700">${icon(ICONES.cadenas, 46)} Réservé 5 min · jamais vos propres recrues</div>`,
+      );
+
+      // s27 — fin.
+      plan(
+        's27',
+        `<div style="position:absolute;left:0;right:0;top:600px;display:flex;flex-direction:column;align-items:center;gap:50px">
+          <div id="s27-sym">${symbol(280, '#0f3d2e')}</div>
+          <div style="font-size:84px;font-weight:800;letter-spacing:-.05em;text-align:center;line-height:1.05">Merci à toute<br>l’équipe.</div>
+          <div id="s27-tag" style="font-size:60px;font-weight:700;letter-spacing:-.04em;color:#9a978b">Chaque voix compte.</div>
+          <div id="s27-mot" style="margin-top:40px">${wordmark(90, '#0f3d2e')}</div>
+        </div>`,
+      );
+
+      function afficheDessin(s, t) {
+        const p = plans[s.id];
+        const v = (x) => s.voix - s.start + x * s.vd; // moment de la phrase (0 → 1)
+        if (s.id === 's01') {
+          $('s01-sym').style.transform = `scale(${back(span(t, 0.1, 0.9))})`;
+          $('s01-mot').style.opacity = out(span(t, 0.6, 1.2));
+          $('s01-mot').style.transform = `translateY(${30 * (1 - out(span(t, 0.6, 1.2)))}px)`;
+          $('s01-pill').style.opacity = out(span(t, 1, 1.5));
+          $('s01-tag').style.opacity = out(span(t, v(0.45), v(0.45) + 0.6));
+          $('s01-tag').style.transform =
+            `translateY(${40 * (1 - out(span(t, v(0.45), v(0.45) + 0.6)))}px)`;
+        }
+        if (s.id === 's02') {
+          p.querySelectorAll('.s02-c').forEach((c, k) => {
+            const a = out(span(t, v(0.12 + k * 0.24), v(0.12 + k * 0.24) + 0.6));
+            c.style.opacity = a;
+            c.style.transform = `translateX(${(1 - a) * (k % 2 ? 160 : -160)}px)`;
+          });
+          $('s02-note').style.opacity = out(span(t, v(0.85), v(0.85) + 0.5));
+        }
+        if (s.id === 's03') {
+          p.querySelectorAll('.s03-c').forEach((c, k) => {
+            const a = back(span(t, v(0.1 + k * 0.12), v(0.1 + k * 0.12) + 0.6));
+            c.style.opacity = clamp(a);
+            c.style.transform = `scale(${0.7 + 0.3 * a})`;
+          });
+          $('s03-note').style.opacity = out(span(t, v(0.68), v(0.68) + 0.5));
+          $('s03-note').style.transform =
+            `translateY(${30 * (1 - out(span(t, v(0.68), v(0.68) + 0.5)))}px)`;
+        }
+        if (s.id === 's17') {
+          // Les audios partent l'un après l'autre vers les membres, sans jamais se doubler.
+          const debut = v(0.05),
+            pas = (s.vd * 0.62) / FILE.length;
+          const depart = (k) => debut + k * pas;
+          const recus = [0, 0, 0, 0];
+          p.querySelectorAll('.s17-a').forEach((c, k) => {
+            const avant = FILE.slice(0, k).reduce(
+              (n, _, j) => n + ease(span(t, depart(j), depart(j) + 0.55)),
+              0,
+            );
+            const slot = k - avant;
+            const yFile = 520 + slot * 140;
+            const m = k % 4;
+            const go = ease(span(t, depart(k), depart(k) + 0.55));
+            const x = lerp(80, 690, go),
+              y = lerp(yFile, 520 + m * 240 + 15, go);
+            const fin = span(t, depart(k) + 0.55, depart(k) + 0.85);
+            if (fin > 0) recus[m] += 1;
+            c.style.left = `${x}px`;
+            c.style.top = `${y}px`;
+            c.style.transform = `scale(${lerp(1, 0.5, go)})`;
+            c.style.transformOrigin = 'left center';
+            c.style.opacity = (slot > 6.5 ? 0 : 1) * (1 - fin);
+          });
+          p.querySelectorAll('.s17-n').forEach((n, k) => (n.textContent = recus[k]));
+          $('s17-note').style.opacity = out(span(t, v(0.7), v(0.7) + 0.5));
+          $('s17-note').style.transform =
+            `translateY(${30 * (1 - out(span(t, v(0.7), v(0.7) + 0.5)))}px)`;
+        }
+        if (s.id === 's27') {
+          $('s27-sym').style.transform = `scale(${back(span(t, 0.1, 0.9))})`;
+          $('s27-tag').style.opacity = out(span(t, v(0.5), v(0.5) + 0.6));
+          $('s27-mot').style.opacity = out(span(t, v(1), v(1) + 0.8));
+        }
+      }
+
+      // ------------------------------------------------------------------ image au temps t
+      window.seek = (T) => {
+        let i = S.findIndex((s) => T < s.start + s.dur);
+        if (i < 0) i = S.length - 1;
+        const s = S[i],
+          t = T - s.start;
+        const prev = S[i - 1],
+          next = S[i + 1];
+
+        // Fond qui respire.
+        ondes.forEach((o, k) => {
+          o.style.transform = `translate(-50%, -50%) scale(${1 + 0.03 * Math.sin(T * 0.8 + k)})`;
+        });
+
+        // Entrée / sortie des appareils : seulement quand on change de type de scène.
+        const entree = !prev || prev.type !== s.type ? out(span(t, 0, 0.7)) : 1;
+        const sortie = !next || next.type !== s.type ? 1 - ease(span(t, s.dur - 0.45, s.dur)) : 1;
+        const vis = entree * sortie;
+
+        const tel = $('telephone');
+        tel.style.display = s.type === 'tel' ? 'block' : 'none';
+        if (s.type === 'tel') {
+          tel.style.opacity = vis;
+          tel.style.transform = `translateY(${(1 - entree) * 140 - (1 - sortie) * 60}px)`;
+          afficheTelephone(i, t);
+        }
+        const pc = $('portable');
+        pc.style.display = s.type === 'pc' ? 'block' : 'none';
+        if (s.type === 'pc') {
+          pc.style.opacity = vis;
+          pc.style.transform = `scale(${0.9 + 0.1 * entree})`;
+          affichePortable(i, t);
+        }
+        for (const [id, p] of Object.entries(plans)) {
+          if (id !== s.id) {
+            p.style.opacity = 0;
+            continue;
+          }
+          p.style.opacity = out(span(t, 0, 0.5)) * (1 - ease(span(t, s.dur - 0.45, s.dur)));
+          afficheDessin(s, t);
+        }
+
+        // Chapitre et titre.
+        const chap = $('chapitre');
+        chap.textContent = s.chap ?? '';
+        const nouveauChap = !prev || prev.chap !== s.chap;
+        const finChap = !next || next.chap !== s.chap;
+        const kc =
+          (nouveauChap ? back(span(t, 0.05, 0.6)) : 1) *
+          (finChap ? 1 - ease(span(t, s.dur - 0.4, s.dur)) : 1);
+        chap.style.opacity = s.chap ? clamp(kc) : 0;
+        chap.style.transform = `translateX(-50%) scale(${0.8 + 0.2 * kc})`;
+        const titre = $('titre');
+        titre.innerHTML = s.titre ? `${s.titre[0]}<br><span>${s.titre[1]}</span>` : '';
+        const kt = out(span(t, 0.1, 0.7)) * (1 - ease(span(t, s.dur - 0.35, s.dur)));
+        titre.style.opacity = kt;
+        titre.style.transform = `translateY(${(1 - out(span(t, 0.1, 0.7))) * 40}px)`;
+
+        // Sous-titre.
+        const st = $('sous-titre').firstElementChild;
+        const m = s.st.find(
+          (x, k) =>
+            T >= x.a - 0.15 && (T < x.b || (k === s.st.length - 1 && T < s.start + s.dur - 0.3)),
+        );
+        if (m) {
+          st.textContent = m.texte;
+          st.style.opacity = 1;
+        } else st.style.opacity = 0;
+        st.style.display = m ? 'block' : 'none';
+      };
+      window.seek(0);
+    </script>
+  </body>
+</html>
