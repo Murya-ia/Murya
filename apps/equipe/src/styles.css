@@ -2216,3 +2216,198 @@ progress {
   font-weight: 500;
   overflow-wrap: anywhere;
 }
+
+/* ------------------------------------------------------------------ Activité (admins) */
+
+.chiffres-equipe {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.chiffre {
+  background: var(--blanc);
+  border: 1px solid var(--trait);
+  border-radius: 20px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chiffre strong {
+  font-family: var(--titres);
+  font-size: clamp(1.35rem, 1rem + 1.5vw, 1.9rem);
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+
+.chiffre span {
+  color: var(--gris);
+  font-size: 0.85rem;
+  line-height: 1.3;
+}
+
+@media (max-width: 599px) {
+  .chiffre {
+    padding: 12px;
+    border-radius: 16px;
+  }
+}
+
+.cartes-activite {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.cartes-activite .carte {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.activite-ecoute {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.activite-total {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.activite-total strong {
+  font-family: var(--titres);
+  font-size: 2rem;
+  letter-spacing: -0.04em;
+  margin-right: 4px;
+}
+
+/* Répartition des décisions : segments séparés par un fin trait clair. */
+.barre-segments {
+  display: flex;
+  gap: 2px;
+  height: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--sable);
+}
+
+.segment,
+.puce {
+  background: var(--vert);
+}
+
+.segment.corrige,
+.puce.corrige {
+  background: #6f9c88;
+}
+
+.segment.rejete,
+.puce.rejete {
+  background: var(--erreur);
+}
+
+.segment.doute,
+.puce.doute {
+  background: #c58a12;
+}
+
+.legende-decisions {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 12px;
+  font-size: 0.88rem;
+}
+
+.legende-decisions li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.puce {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+/* Audios par jour. */
+.barres-jours {
+  margin: 0;
+}
+
+.barres-jours-trace {
+  height: 56px;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  border-bottom: 1px solid var(--trait);
+}
+
+.barre-jour {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  min-width: 2px;
+}
+
+.barre-jour span {
+  width: 100%;
+  border-radius: 3px 3px 0 0;
+  background: var(--vert);
+}
+
+.barre-jour:hover span {
+  background: var(--vert-clair);
+}
+
+.barres-jours figcaption {
+  margin-top: 6px;
+}
+
+.activite-faits {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.92rem;
+}
+
+.activite-faits div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.activite-faits dt {
+  color: var(--gris);
+}
+
+.activite-faits dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+.activite-faits .a-surveiller dd {
+  color: var(--alerte);
+}
+
+.activite-recrutement {
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--trait);
+  font-size: 0.92rem;
+}

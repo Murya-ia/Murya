@@ -7,6 +7,7 @@ import { Logo } from '@murya/commun/logo';
 import { navigate, usePath } from './lib/router';
 import { TeamProvider, useTeam } from './lib/team';
 import { AccueilPage } from './pages/AccueilPage';
+import { ActivitePage } from './pages/ActivitePage';
 import { EcoutePage } from './pages/EcoutePage';
 import { ExportsPage } from './pages/ExportsPage';
 import { JournalPage } from './pages/JournalPage';
@@ -19,6 +20,7 @@ import { Feuille } from './components/Feuille';
 import {
   Chevron,
   IconeAccueil,
+  IconeActivite,
   IconeDeconnexion,
   IconeEcoute,
   IconeExports,
@@ -122,6 +124,7 @@ const PAGES: PageLink[] = [
     icon: IconeGraphique,
     phone: 'plus',
   },
+  { path: '/activite', label: 'Activité', roles: ['admin'], icon: IconeActivite, phone: 'plus' },
   { path: '/exports', label: 'Exports', roles: ['admin'], icon: IconeExports, phone: 'plus' },
   { path: '/membres', label: 'Membres', roles: ['admin'], icon: IconeMembres, phone: 'plus' },
   { path: '/journal', label: 'Journal', roles: ['admin'], icon: IconeJournal, phone: 'plus' },
@@ -225,6 +228,7 @@ function Page() {
   if (path === '/ecoute') return <EcoutePage />;
   if (path === '/phrases') return <PhrasesPage />;
   if (path === '/tableau-de-bord') return <TableauDeBordPage />;
+  if (path === '/activite') return <ActivitePage />;
   if (path === '/exports') return <ExportsPage />;
   if (path === '/membres') return <MembresPage />;
   if (path === '/journal') return <JournalPage />;

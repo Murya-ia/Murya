@@ -140,6 +140,24 @@ dans Supabase.
 Deux règles protègent l'équipe : **deux admins au maximum**, et **toujours au moins un admin
 actif** (personne ne peut enlever le dernier). Chaque changement est noté au journal.
 
+## Activité (admins) : qui fait quoi
+
+Page **Activité** du menu (dans **« Plus »** sur téléphone). Choisissez la période :
+**Aujourd'hui**, **7 jours** ou **30 jours**. En haut, les chiffres de l'équipe (audios décidés,
+restant à vérifier, doutes à trancher). Puis une carte par membre :
+
+- **audios écoutés**, et la répartition de ses décisions (validés, corrigés, rejetés, doutes) ;
+- **par jour** : une petite barre par jour (le détail au survol) ;
+- **rythme** : le temps habituel entre deux décisions (les pauses de plus de 10 minutes ne
+  comptent pas). Un rythme très rapide avec presque tout « Validé » mérite un coup d'œil ;
+- **double écoute** : combien de ses décisions le responsable qualité, en les réécoutant sans
+  les voir, a confirmées. Sous 80 %, c'est marqué « à revoir ensemble » ;
+- **recrutement** : invitations créées et tests de voix validés ou à refaire.
+
+L'écoute reste une **file commune** : chacun prend l'audio libre suivant (les suspects d'abord,
+puis les plus anciens), réservé 5 minutes pour lui ; personne n'écoute ses propres recrues. Cette
+page sert à voir le travail de chacun, pas à le répartir.
+
 ## Journal (admins)
 
 Qui a fait quoi, et quand : invitations, décisions, retraits, consultations d'identité,

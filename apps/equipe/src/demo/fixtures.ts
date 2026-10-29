@@ -426,6 +426,8 @@ export function rpcResult(name: string, args: Record<string, unknown>): unknown 
         actif: true,
         derniere_connexion: i === 3 ? null : day(-i),
       }));
+    case 'team_activity':
+      return demoActivity(Number(args.p_days ?? 7));
     case 'principal_overview':
       return PRINCIPAL;
     case 'exam_overview':
@@ -437,4 +439,84 @@ export function rpcResult(name: string, args: Record<string, unknown>): unknown 
     default:
       return null;
   }
+}
+
+/** Activité d'exemple (page « Activité ») : Bachir écoute beaucoup, Awa un peu, Mariama recrute. */
+function demoActivity(days: number) {
+  const series = (base: number) =>
+    Array.from({ length: days }, (_, i) => ({
+      jour: day(i - days + 1).slice(0, 10),
+      n: Math.max(0, Math.round(base * (0.6 + ((i * 37) % 10) / 10)) - (i % 6 === 5 ? base : 0)),
+    }));
+  const listener = (base: number, rythme: number, controles: number, accords: number) => {
+    const par_jour = series(base);
+    const total = par_jour.reduce((sum, d) => sum + d.n, 0);
+    return {
+      premieres: total,
+      valide: Math.round(total * 0.82),
+      corrige: Math.round(total * 0.06),
+      rejete: Math.round(total * 0.09),
+      doute: total - Math.round(total * 0.82) - Math.round(total * 0.06) - Math.round(total * 0.09),
+      arbitrages: base > 30 ? 0 : Math.round(days * 1.5),
+      doubles: base > 30 ? 0 : Math.round(days * 2),
+      rythme_s: rythme,
+      par_jour,
+      controle: {
+        controles: Math.round((controles * days) / 7),
+        accords: Math.round((accords * days) / 7),
+      },
+    };
+  };
+  const awa = listener(12, 31, 0, 0);
+  const bachir = listener(48, 22, 20, 17);
+  const empty = {
+    premieres: 0,
+    valide: 0,
+    corrige: 0,
+    rejete: 0,
+    doute: 0,
+    arbitrages: 0,
+    doubles: 0,
+    rythme_s: null,
+    par_jour: null,
+  };
+  const member = (
+    m: (typeof MEMBERS)[number],
+    ecoute: typeof empty | ReturnType<typeof listener>,
+    recrutement: { invitations: number; tests_valides: number; tests_a_refaire: number },
+    hours: number,
+  ) => {
+    const { controle, ...rest } = { controle: { controles: 0, accords: 0 }, ...ecoute };
+    return {
+      user_id: m.user_id,
+      nom: m.display_name,
+      roles: m.roles,
+      actif: true,
+      derniere_connexion: new Date(Date.now() - hours * 3_600_000).toISOString(),
+      derniere_action: new Date(Date.now() - hours * 3_600_000).toISOString(),
+      ecoute: rest,
+      controle,
+      recrutement,
+    };
+  };
+  const membres = [
+    member(MEMBERS[1]!, bachir, { invitations: 0, tests_valides: 0, tests_a_refaire: 0 }, 1),
+    member(MEMBERS[0]!, awa, { invitations: 2, tests_valides: 1, tests_a_refaire: 1 }, 0.2),
+    member(
+      MEMBERS[2]!,
+      empty,
+      { invitations: Math.min(days, 6), tests_valides: 3, tests_a_refaire: 1 },
+      30,
+    ),
+  ];
+  return {
+    jours: days,
+    depuis: day(-days + 1).slice(0, 10),
+    equipe: {
+      decisions: bachir.premieres + awa.premieres + awa.arbitrages,
+      a_verifier: 1210,
+      doutes: 14,
+    },
+    membres,
+  };
 }

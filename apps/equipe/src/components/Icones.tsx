@@ -54,6 +54,12 @@ export const IconeGraphique = () => (
   </Icone>
 );
 
+export const IconeActivite = () => (
+  <Icone>
+    <path d="M3 12h4l3-8 4 16 3-8h4" />
+  </Icone>
+);
+
 export const IconeExports = () => (
   <Icone>
     <path d="M12 3v12M7 10l5 5 5-5M4 21h16" />
