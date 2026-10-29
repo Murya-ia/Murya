@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { Logo } from '@murya/commun/logo';
 import { Demarrage } from './components/Demarrage';
+import { oublierTout } from './lib/memoire';
 import { LoginPage } from './LoginPage';
 import { TeamShell } from './TeamShell';
 
@@ -17,7 +18,11 @@ function AuthGate({ client }: { client: SupabaseClient }) {
 
   useEffect(() => {
     void client.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data } = client.auth.onAuthStateChange((_event, newSession) => setSession(newSession));
+    const { data } = client.auth.onAuthStateChange((_event, newSession) => {
+      // Session finie (déconnexion, ou expirée) : on oublie les chiffres gardés en mémoire.
+      if (!newSession) oublierTout();
+      setSession(newSession);
+    });
     return () => data.subscription.unsubscribe();
   }, [client]);
 

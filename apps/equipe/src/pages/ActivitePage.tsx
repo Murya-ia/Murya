@@ -4,6 +4,8 @@
 // voir qui fait quoi, pas à répartir.
 
 import { useCallback, useEffect, useState } from 'react';
+import { Squelette } from '../components/Squelette';
+import { useMemoire } from '../lib/memoire';
 import { errorText, LANGUAGE, useTeam } from '../lib/team';
 import { ROLE_LABELS, type Role } from '../supabase';
 
@@ -75,7 +77,8 @@ function duration(seconds: number): string {
 export function ActivitePage() {
   const { client } = useTeam();
   const [days, setDays] = useState(7);
-  const [data, setData] = useState<Activity | null>(null);
+  // Chaque période déjà vue s'affiche tout de suite, puis se met à jour.
+  const [data, setData] = useMemoire<Activity>(`activite:${days}`);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -86,7 +89,7 @@ export function ActivitePage() {
     });
     if (rpcError) setError(errorText(rpcError));
     else setData(result as Activity);
-  }, [client, days]);
+  }, [client, days, setData]);
 
   useEffect(() => {
     void load();
@@ -112,7 +115,26 @@ export function ActivitePage() {
       </div>
       {error && <p className="message erreur">{error}</p>}
       {!data ? (
-        !error && <p className="gris">Chargement…</p>
+        !error && (
+          <div aria-busy="true" aria-label="Chargement de l’activité">
+            <div className="chiffres-equipe">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="chiffre">
+                  <strong>
+                    <Squelette largeur="3ch" />
+                  </strong>
+                  <span>
+                    <Squelette largeur="8ch" />
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="cartes-activite">
+              <div className="carte-attente" />
+              <div className="carte-attente" />
+            </div>
+          </div>
+        )
       ) : (
         <>
           <div className="chiffres-equipe">

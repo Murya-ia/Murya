@@ -5,7 +5,9 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Feuille } from '../components/Feuille';
 import { Chevron } from '../components/Icones';
+import { Squelette } from '../components/Squelette';
 import { createMember, resetPassword } from '../lib/api';
+import { useMemoire } from '../lib/memoire';
 import { errorText, useTeam } from '../lib/team';
 import { ROLE_LABELS, type Role } from '../supabase';
 
@@ -53,7 +55,7 @@ const rolesText = (roles: Role[]) =>
 
 export function MembresPage() {
   const { client, member: me } = useTeam();
-  const [members, setMembers] = useState<Member[] | null>(null);
+  const [members, setMembers] = useMemoire<Member[]>('membres');
   const [error, setError] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -62,7 +64,7 @@ export function MembresPage() {
     const { data, error: rpcError } = await client.rpc('team_directory');
     if (rpcError) setError(errorText(rpcError));
     else setMembers(data as Member[]);
-  }, [client]);
+  }, [client, setMembers]);
 
   useEffect(() => {
     void load();
@@ -107,8 +109,18 @@ export function MembresPage() {
       </p>
       {error && <p className="message erreur">{error}</p>}
       {adding && <NewMember onCreated={load} />}
-      {members === null ? (
-        <p className="gris">Chargement…</p>
+      {!members ? (
+        <section className="liste-lignes" aria-busy="true" aria-label="Chargement de l’équipe">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="ligne">
+              <span className="rond-initiale clair" aria-hidden="true" />
+              <span className="ligne-texte">
+                <Squelette largeur="7ch" />
+                <Squelette largeur="14ch" />
+              </span>
+            </div>
+          ))}
+        </section>
       ) : (
         <>
           <section className="liste-lignes">{active.map(row)}</section>

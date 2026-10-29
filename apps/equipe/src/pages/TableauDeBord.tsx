@@ -2,6 +2,8 @@
 // fait par la base toutes les 10 minutes : afficher l'accueil reste léger.
 
 import { useCallback, useEffect, useState } from 'react';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { Squelette } from '../components/Squelette';
 import { WeeklyChart } from '../components/WeeklyChart';
 import {
   fillWeeks,
@@ -12,6 +14,7 @@ import {
   since,
   type Dashboard,
 } from '../lib/dashboard';
+import { dejaConnu, garder, useMemoire } from '../lib/memoire';
 import { navigate } from '../lib/router';
 import { errorText, LANGUAGE, useTeam } from '../lib/team';
 
@@ -28,9 +31,25 @@ const STATUSES: [keyof Dashboard['voix_par_statut'], string][] = [
   ['retiree', 'Retirées'],
 ];
 
+type Snapshot = { data: Dashboard; computed_at: string };
+
+const DASHBOARD_KEY = 'tableau-de-bord';
+
+/** Charge le tableau de bord à l'avance (depuis l'accueil), s'il n'est pas déjà connu. */
+export async function prefetchDashboard(client: SupabaseClient): Promise<void> {
+  if (dejaConnu(DASHBOARD_KEY)) return;
+  const { data } = await client
+    .from('dashboard_snapshots')
+    .select('data, computed_at')
+    .eq('language_code', LANGUAGE)
+    .maybeSingle();
+  if (data) garder(DASHBOARD_KEY, data);
+}
+
 export function TableauDeBord() {
   const { client, has } = useTeam();
-  const [snapshot, setSnapshot] = useState<{ data: Dashboard; computed_at: string } | null>();
+  // Le dernier tableau connu (ou chargé à l'avance depuis l'accueil) s'affiche tout de suite.
+  const [snapshot, setSnapshot] = useMemoire<Snapshot | null>(DASHBOARD_KEY);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
@@ -42,10 +61,10 @@ export function TableauDeBord() {
       .eq('language_code', LANGUAGE)
       .maybeSingle();
     if (dbError) setError(errorText(dbError));
-    setSnapshot(data as { data: Dashboard; computed_at: string } | null);
+    setSnapshot(data as Snapshot | null);
     setNow(new Date());
     return data;
-  }, [client]);
+  }, [client, setSnapshot]);
 
   const refresh = useCallback(async () => {
     setBusy(true);
@@ -63,7 +82,25 @@ export function TableauDeBord() {
     });
   }, [load, refresh]);
 
-  if (snapshot === undefined) return <p>Chargement du tableau de bord…</p>;
+  if (snapshot === undefined) {
+    return (
+      <div className="grille-tdb" aria-busy="true" aria-label="Chargement du tableau de bord">
+        <div className="tuiles pleine">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="tuile">
+              <strong>
+                <Squelette largeur="4ch" />
+              </strong>
+              <span>
+                <Squelette largeur="9ch" />
+              </span>
+            </div>
+          ))}
+        </div>
+        <div className="carte-attente pleine" />
+      </div>
+    );
+  }
 
   return (
     <>

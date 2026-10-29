@@ -109,9 +109,11 @@ label {
   transform: scale(0.98);
 }
 
-:is(.mise-en-page, .feuille) button:not(:disabled):hover,
-.centre-page button:not(:disabled):hover {
-  background-color: var(--vert-clair);
+@media (hover: hover) {
+  :is(.mise-en-page, .feuille) button:not(:disabled):hover,
+  .centre-page button:not(:disabled):hover {
+    background-color: var(--vert-clair);
+  }
 }
 
 /* Bouton discret : fond sable, sans bordure. */
@@ -122,9 +124,11 @@ label {
   border: none;
 }
 
-:is(.mise-en-page, .feuille) button.secondaire:not(:disabled):hover,
-.centre-page button.secondaire:not(:disabled):hover {
-  background: var(--sable-fonce);
+@media (hover: hover) {
+  :is(.mise-en-page, .feuille) button.secondaire:not(:disabled):hover,
+  .centre-page button.secondaire:not(:disabled):hover {
+    background: var(--sable-fonce);
+  }
 }
 
 :is(.mise-en-page, .feuille) button.petit {
@@ -158,8 +162,10 @@ a.bouton.avec-fleche {
   transition: transform 0.2s;
 }
 
-.avec-fleche:not(:disabled):hover .rond {
-  transform: translateX(3px);
+@media (hover: hover) {
+  .avec-fleche:not(:disabled):hover .rond {
+    transform: translateX(3px);
+  }
 }
 
 :is(.mise-en-page, .feuille) button.danger,
@@ -167,8 +173,10 @@ button.danger {
   background: var(--erreur);
 }
 
-:is(.mise-en-page, .feuille) button.danger:not(:disabled):hover {
-  background: #8f1e18;
+@media (hover: hover) {
+  :is(.mise-en-page, .feuille) button.danger:not(:disabled):hover {
+    background: #8f1e18;
+  }
 }
 
 .danger-texte {
@@ -185,10 +193,12 @@ button.danger {
   min-height: 36px;
 }
 
-:is(.mise-en-page, .feuille) button.lien:not(:disabled):hover {
-  filter: none;
-  background: none;
-  color: var(--vert-clair);
+@media (hover: hover) {
+  :is(.mise-en-page, .feuille) button.lien:not(:disabled):hover {
+    filter: none;
+    background: none;
+    color: var(--vert-clair);
+  }
 }
 
 .boutons {
@@ -210,8 +220,10 @@ a.bouton {
   transition: background-color 0.15s;
 }
 
-a.bouton:hover {
-  background: var(--vert-clair);
+@media (hover: hover) {
+  a.bouton:hover {
+    background: var(--vert-clair);
+  }
 }
 
 kbd {
@@ -352,9 +364,11 @@ kbd {
     color 0.15s;
 }
 
-.navigation a:hover {
-  color: var(--noir);
-  background: var(--ivoire);
+@media (hover: hover) {
+  .navigation a:hover {
+    color: var(--noir);
+    background: var(--ivoire);
+  }
 }
 
 .navigation a.actif {
@@ -384,8 +398,10 @@ kbd {
   border: 1px solid rgba(17, 17, 17, 0.18);
 }
 
-.barre button.secondaire:not(:disabled):hover {
-  background: var(--blanc);
+@media (hover: hover) {
+  .barre button.secondaire:not(:disabled):hover {
+    background: var(--blanc);
+  }
 }
 
 /* Écran moyen : le menu passe sous le logo. Téléphone : il défile de côté. */
@@ -581,8 +597,10 @@ textarea {
   border-bottom: none;
 }
 
-.tableau tbody tr:hover td {
-  background: #fbfaf5;
+@media (hover: hover) {
+  .tableau tbody tr:hover td {
+    background: #fbfaf5;
+  }
 }
 
 .tableau tr.inactive td {
@@ -614,8 +632,10 @@ textarea {
     margin-bottom: 10px;
   }
 
-  .tableau.empile tbody tr:hover td {
-    background: none;
+  @media (hover: hover) {
+    .tableau.empile tbody tr:hover td {
+      background: none;
+    }
   }
 
   .tableau.empile td {
@@ -1111,9 +1131,11 @@ progress {
   color: var(--gris);
 }
 
-.mise-en-page .onglets button.secondaire:not(:disabled):hover {
-  background: var(--ivoire);
-  color: var(--noir);
+@media (hover: hover) {
+  .mise-en-page .onglets button.secondaire:not(:disabled):hover {
+    background: var(--ivoire);
+    color: var(--noir);
+  }
 }
 
 .entete-audio {
@@ -1382,8 +1404,10 @@ progress {
   cursor: pointer;
 }
 
-.bouton-fichier:hover {
-  background: var(--vert-clair);
+@media (hover: hover) {
+  .bouton-fichier:hover {
+    background: var(--vert-clair);
+  }
 }
 
 .bouton-fichier input {
@@ -1412,9 +1436,11 @@ progress {
   font-weight: 700;
 }
 
-.barre-droite button.compte:not(:disabled):hover {
-  background: var(--blanc);
-  border-color: rgba(17, 17, 17, 0.2);
+@media (hover: hover) {
+  .barre-droite button.compte:not(:disabled):hover {
+    background: var(--blanc);
+    border-color: rgba(17, 17, 17, 0.2);
+  }
 }
 
 .compte-nom {
@@ -1519,8 +1545,10 @@ progress {
     text-decoration: none;
   }
 
-  .mise-en-page .menu-bas button:not(:disabled):hover {
-    background: transparent;
+  @media (hover: hover) {
+    .mise-en-page .menu-bas button:not(:disabled):hover {
+      background: transparent;
+    }
   }
 
   .menu-bas-icone {
@@ -1766,9 +1794,11 @@ progress {
   border-top: 1px solid rgba(17, 17, 17, 0.06);
 }
 
-.ligne:hover,
-:is(.mise-en-page, .feuille) button.ligne:not(:disabled):hover {
-  background: rgba(239, 234, 219, 0.45);
+@media (hover: hover) {
+  .ligne:hover,
+  :is(.mise-en-page, .feuille) button.ligne:not(:disabled):hover {
+    background: rgba(239, 234, 219, 0.45);
+  }
 }
 
 .ligne:focus-visible {
@@ -1928,8 +1958,10 @@ progress {
   font-weight: 700;
 }
 
-:is(.mise-en-page, .feuille) button.avec-fleche.bouton-clair:not(:disabled):hover {
-  background: var(--ivoire);
+@media (hover: hover) {
+  :is(.mise-en-page, .feuille) button.avec-fleche.bouton-clair:not(:disabled):hover {
+    background: var(--ivoire);
+  }
 }
 
 .bouton-clair .rond {
@@ -1993,9 +2025,11 @@ progress {
   gap: 6px;
 }
 
-:is(.mise-en-page, .feuille) .segments button:not(:disabled):hover {
-  background: rgba(255, 255, 255, 0.55);
-  color: var(--noir);
+@media (hover: hover) {
+  :is(.mise-en-page, .feuille) .segments button:not(:disabled):hover {
+    background: rgba(255, 255, 255, 0.55);
+    color: var(--noir);
+  }
 }
 
 :is(.mise-en-page, .feuille) .segments button.actif,
@@ -2042,9 +2076,11 @@ progress {
   white-space: nowrap;
 }
 
-:is(.mise-en-page, .feuille) .filtres button:not(:disabled):hover {
-  background: var(--blanc);
-  border-color: rgba(17, 17, 17, 0.2);
+@media (hover: hover) {
+  :is(.mise-en-page, .feuille) .filtres button:not(:disabled):hover {
+    background: var(--blanc);
+    border-color: rgba(17, 17, 17, 0.2);
+  }
 }
 
 :is(.mise-en-page, .feuille) .filtres button.actif,
@@ -2134,8 +2170,10 @@ progress {
   font-size: 0.9rem;
 }
 
-:is(.mise-en-page, .feuille) .choix-roles button:not(:disabled):hover {
-  background: var(--ivoire);
+@media (hover: hover) {
+  :is(.mise-en-page, .feuille) .choix-roles button:not(:disabled):hover {
+    background: var(--ivoire);
+  }
 }
 
 :is(.mise-en-page, .feuille) .choix-roles button.actif,
@@ -2369,8 +2407,10 @@ progress {
   background: var(--vert);
 }
 
-.barre-jour:hover span {
-  background: var(--vert-clair);
+@media (hover: hover) {
+  .barre-jour:hover span {
+    background: var(--vert-clair);
+  }
 }
 
 .barres-jours figcaption {
@@ -2410,4 +2450,42 @@ progress {
   padding-top: 12px;
   border-top: 1px solid var(--trait);
   font-size: 0.92rem;
+}
+
+/* ------------------------------------------------------------------ Chargement (formes grises) */
+
+.squelette {
+  display: inline-block;
+  height: 0.9em;
+  vertical-align: -0.08em;
+  border-radius: 8px;
+  background: rgba(17, 17, 17, 0.08);
+  animation: respire 1.2s ease-in-out infinite alternate;
+}
+
+.bloc-principal .squelette {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.carte-attente {
+  height: 220px;
+  border-radius: var(--rayon-carte);
+  background: rgba(17, 17, 17, 0.05);
+  animation: respire 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes respire {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .squelette,
+  .carte-attente {
+    animation: none;
+  }
 }

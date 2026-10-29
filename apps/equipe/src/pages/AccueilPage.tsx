@@ -1,10 +1,13 @@
 // Accueil : ce qui attend la personne connectée, en un écran : le travail principal (souvent
 // l'écoute) en grand, la liste « À faire », et un lien vers le tableau de bord.
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { Squelette } from '../components/Squelette';
+import { useMemoire } from '../lib/memoire';
 import { navigate } from '../lib/router';
 import { LANGUAGE, useTeam } from '../lib/team';
 import { Chevron, IconeGraphique } from '../components/Icones';
+import { prefetchDashboard } from './TableauDeBord';
 
 /** Compteurs de l'écoute : mêmes règles que la file (voir `review_counts` en base). */
 export interface ReviewCounts {
@@ -14,12 +17,17 @@ export interface ReviewCounts {
   doutes_vos_recrues: number;
 }
 
+interface Counts {
+  tests: number | null;
+  review: ReviewCounts | null;
+  flags: number | null;
+  withdrawals: number | null;
+}
+
 export function AccueilPage() {
   const { client, member, has } = useTeam();
-  const [tests, setTests] = useState<number | null>(null);
-  const [review, setReview] = useState<ReviewCounts | null>(null);
-  const [flags, setFlags] = useState<number | null>(null);
-  const [withdrawals, setWithdrawals] = useState<number | null>(null);
+  // Les derniers chiffres connus s'affichent tout de suite ; la base les met à jour ensuite.
+  const [counts, setCounts] = useMemoire<Counts>(`accueil:${member.user_id}`);
 
   useEffect(() => {
     void (async () => {
@@ -28,21 +36,28 @@ export function AccueilPage() {
         .select('id', { count: 'exact', head: true })
         .eq('status', 'test_en_attente');
       if (!has('admin')) testsQuery = testsQuery.eq('recruiter_id', member.user_id);
-      setTests((await testsQuery).count);
-      const { data } = await client.rpc('review_counts', { p_language: LANGUAGE });
-      setReview(data as ReviewCounts);
-      setFlags(
-        (await client.from('sentence_flags').select('id', { count: 'exact', head: true })).count,
-      );
-      setWithdrawals(
-        (
-          await client
-            .from('withdrawal_requests')
-            .select('speaker_id', { count: 'exact', head: true })
-        ).count,
-      );
+      // Les quatre questions partent ensemble (et non l'une après l'autre).
+      const [tests, review, flags, withdrawals] = await Promise.all([
+        testsQuery,
+        client.rpc('review_counts', { p_language: LANGUAGE }),
+        client.from('sentence_flags').select('id', { count: 'exact', head: true }),
+        client.from('withdrawal_requests').select('speaker_id', { count: 'exact', head: true }),
+      ]);
+      setCounts({
+        tests: tests.count,
+        review: review.data as ReviewCounts,
+        flags: flags.count,
+        withdrawals: withdrawals.count,
+      });
+      // Le tableau de bord se charge pendant qu'on lit l'accueil : il s'ouvrira sans attente.
+      void prefetchDashboard(client);
     })();
-  }, [client, member.user_id, has]);
+  }, [client, member.user_id, has, setCounts]);
+
+  const tests = counts?.tests ?? null;
+  const review = counts?.review ?? null;
+  const flags = counts?.flags ?? null;
+  const withdrawals = counts?.withdrawals ?? null;
 
   const listens = has('verificateur') || has('qualite') || has('admin');
   const recruits = has('recruteur') || has('admin');
@@ -112,7 +127,9 @@ export function AccueilPage() {
         <section className="bloc-principal">
           <div>
             <p className="bloc-sur-titre">{main.kicker}</p>
-            <p className="bloc-chiffre">{main.n?.toLocaleString('fr-FR') ?? '…'}</p>
+            <p className="bloc-chiffre">
+              {main.n?.toLocaleString('fr-FR') ?? <Squelette largeur="2.6ch" />}
+            </p>
             <p className="bloc-libelle">{main.label}</p>
             {main.note && <p className="bloc-note">{main.note}</p>}
           </div>
@@ -130,7 +147,7 @@ export function AccueilPage() {
               <button key={item.label} className="ligne" onClick={() => navigate(item.path)}>
                 <span className="ligne-texte">{item.label}</span>
                 <span className={`nombre ${item.tone}`}>
-                  {item.n?.toLocaleString('fr-FR') ?? '…'}
+                  {item.n?.toLocaleString('fr-FR') ?? <Squelette largeur="1.4ch" />}
                 </span>
                 <Chevron />
               </button>

@@ -7,7 +7,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AudioPlayer } from '../components/AudioPlayer';
+import { Squelette } from '../components/Squelette';
 import { sendOralConsent } from '../lib/api';
+import { useMemoire } from '../lib/memoire';
 import { errorText, useTeam } from '../lib/team';
 import { InviteForm } from './InviteForm';
 import { AccordAudios } from './AccordAudios';
@@ -57,6 +59,13 @@ const STAGES: Record<string, { label: string; className: string }> = {
   terminee: { label: 'Terminée', className: 'succes' },
 };
 
+interface VoixData {
+  invites: InviteRow[];
+  progress: Progress[];
+  names: { user_id: string; display_name: string }[];
+  requests: WithdrawalRequest[];
+}
+
 type Tab = 'suivi' | 'principale' | 'retraits' | 'accord';
 type Filter = 'toutes' | 'a_ecouter' | 'actives';
 
@@ -68,11 +77,13 @@ const FILTERS: [Filter, string][] = [
 
 export function VoixPage() {
   const { client, member, has } = useTeam();
-  const [invites, setInvites] = useState<InviteRow[] | null>(null);
-  const [progress, setProgress] = useState<Map<string, Progress>>(new Map());
-  const [names, setNames] = useState<Map<string, string>>(new Map());
+  // La dernière liste connue s'affiche tout de suite ; la base la met à jour ensuite.
+  const [voix, setVoix] = useMemoire<VoixData>(`voix:${member.user_id}`);
+  const invites = voix?.invites ?? null;
+  const progress = useMemo(() => new Map(voix?.progress.map((p) => [p.speaker_id, p])), [voix]);
+  const names = useMemo(() => new Map(voix?.names.map((m) => [m.user_id, m.display_name])), [voix]);
+  const requests = useMemo(() => voix?.requests ?? [], [voix]);
   const [open, setOpen] = useState<{ kind: 'test' | 'oral'; invite: InviteRow } | null>(null);
-  const [requests, setRequests] = useState<WithdrawalRequest[]>([]);
   const [withdrawTarget, setWithdrawTarget] = useState<WithdrawTarget | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('suivi');
@@ -96,13 +107,13 @@ export function VoixPage() {
         .order('requested_at'),
     ]);
     if (invitesResult.error) return setError(errorText(invitesResult.error));
-    setInvites(invitesResult.data as InviteRow[]);
-    setProgress(new Map((progressResult.data as Progress[] | null)?.map((p) => [p.speaker_id, p])));
-    setNames(
-      new Map(membersResult.data?.map((m) => [m.user_id as string, m.display_name as string])),
-    );
-    setRequests((requestsResult.data as WithdrawalRequest[] | null) ?? []);
-  }, [client]);
+    setVoix({
+      invites: invitesResult.data as InviteRow[],
+      progress: (progressResult.data as Progress[] | null) ?? [],
+      names: (membersResult.data as { user_id: string; display_name: string }[] | null) ?? [],
+      requests: (requestsResult.data as WithdrawalRequest[] | null) ?? [],
+    });
+  }, [client, setVoix]);
 
   useEffect(() => {
     void load();
@@ -246,7 +257,11 @@ export function VoixPage() {
       {tab === 'suivi' && (
         <section className="carte">
           {!invites ? (
-            <p>Chargement…</p>
+            <div aria-busy="true" aria-label="Chargement des voix">
+              <Squelette largeur="60%" />
+              <br />
+              <Squelette largeur="40%" />
+            </div>
           ) : invites.length === 0 ? (
             <p className="aide">Aucune invitation pour le moment.</p>
           ) : shown.length === 0 ? (

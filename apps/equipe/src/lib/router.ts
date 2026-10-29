@@ -9,6 +9,13 @@ export function navigate(path: string): void {
   window.dispatchEvent(new PopStateEvent('popstate'));
 }
 
+/** Comme navigate, sans ajouter d'étape à « retour » (ex. page interdite → accueil). */
+export function replace(path: string): void {
+  if (path === location.pathname) return;
+  history.replaceState(null, '', path);
+  window.dispatchEvent(new PopStateEvent('popstate'));
+}
+
 export function usePath(): string {
   const [path, setPath] = useState(location.pathname);
   useEffect(() => {

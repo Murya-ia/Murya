@@ -4,7 +4,8 @@
 import { useEffect, useState } from 'react';
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { Logo } from '@murya/commun/logo';
-import { navigate, usePath } from './lib/router';
+import { oublierTout } from './lib/memoire';
+import { navigate, replace, usePath } from './lib/router';
 import { TeamProvider, useTeam } from './lib/team';
 import { AccueilPage } from './pages/AccueilPage';
 import { ActivitePage } from './pages/ActivitePage';
@@ -56,7 +57,13 @@ export function TeamShell({ client, session }: { client: SupabaseClient; session
       });
   }, [client, session.user.id]);
 
-  const signOut = () => void client.auth.signOut();
+  const signOut = () => {
+    // Le membre suivant sur ce téléphone ne doit rien voir du précédent : ni ses chiffres, ni
+    // la page où il était (il repartira de l'accueil).
+    oublierTout();
+    replace('/');
+    void client.auth.signOut();
+  };
 
   if (state.status === 'chargement') return <Demarrage />;
   if (state.status !== 'pret') {
@@ -222,17 +229,31 @@ function MenuBas() {
   );
 }
 
+const VIEWS: Record<string, () => React.ReactElement> = {
+  '/voix': VoixPage,
+  '/ecoute': EcoutePage,
+  '/phrases': PhrasesPage,
+  '/tableau-de-bord': TableauDeBordPage,
+  '/activite': ActivitePage,
+  '/exports': ExportsPage,
+  '/membres': MembresPage,
+  '/journal': JournalPage,
+};
+
+/**
+ * La page demandée, seulement si les rôles du membre l'autorisent. Sinon (adresse tapée, ou
+ * page restée ouverte quand un autre membre se connecte), c'est l'accueil, et l'adresse aussi.
+ */
 function Page() {
   const path = usePath();
-  if (path === '/voix') return <VoixPage />;
-  if (path === '/ecoute') return <EcoutePage />;
-  if (path === '/phrases') return <PhrasesPage />;
-  if (path === '/tableau-de-bord') return <TableauDeBordPage />;
-  if (path === '/activite') return <ActivitePage />;
-  if (path === '/exports') return <ExportsPage />;
-  if (path === '/membres') return <MembresPage />;
-  if (path === '/journal') return <JournalPage />;
-  return <AccueilPage />;
+  const allowed = usePages().some((p) => p.path === path);
+  const View = allowed ? VIEWS[path] : undefined;
+
+  useEffect(() => {
+    if (!View && path !== '/') replace('/');
+  }, [View, path]);
+
+  return View ? <View /> : <AccueilPage />;
 }
 
 /**
