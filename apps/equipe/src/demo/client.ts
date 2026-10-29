@@ -74,9 +74,13 @@ class DemoQuery implements PromiseLike<Result> {
 export function createDemoClient(): SupabaseClient {
   const client = {
     from: (table: string) => new DemoQuery(table),
-    rpc: async (name: string, args: Record<string, unknown> = {}) => {
-      await new Promise((r) => setTimeout(r, 150));
-      return { data: rpcResult(name, args), error: null };
+    // Comme supabase-js : une promesse, qui accepte aussi `.single()` (même résultat ici).
+    rpc: (name: string, args: Record<string, unknown> = {}) => {
+      const result = new Promise((r) => setTimeout(r, 150)).then(() => ({
+        data: rpcResult(name, args),
+        error: null,
+      }));
+      return Object.assign(result, { single: () => result });
     },
     auth: {
       getSession: async () => ({ data: { session: DEMO_SESSION } }),

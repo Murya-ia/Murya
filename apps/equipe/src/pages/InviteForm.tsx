@@ -46,7 +46,8 @@ export function InviteForm({ onCreated }: { onCreated?: () => void }) {
   }
 
   const whatsappText = created
-    ? `Bonjour ! Merci d'accepter de prêter votre voix à Murya, l'IA qui parle zarma. ` +
+    ? `Bonjour ! Merci d'accepter de prêter votre voix à Murya, l'IA qui parle les langues ` +
+      `locales africaines. ` +
       `Voici votre lien personnel (ne le partagez avec personne) : ${created.link}`
     : '';
 
