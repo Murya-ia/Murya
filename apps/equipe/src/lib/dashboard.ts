@@ -109,6 +109,9 @@ export const PROFILE_LABELS: Record<string, string> = {
   gourmantche: 'Gourmantché',
   toubou: 'Toubou',
   arabe: 'Arabe',
+  tagdal: 'Tagdal',
+  tasawaq: 'Tasawaq',
+  boudouma: 'Boudouma',
   francais: 'Français',
   autre: 'Autre',
 };

@@ -1,12 +1,14 @@
-// Cadre de l'espace équipe : charge le membre connecté (et ses rôles), affiche les menus
-// selon ses rôles (en haut sur ordinateur, en bas sur téléphone), puis la page demandée.
+// Cadre de l'espace équipe : charge le membre connecté (ses rôles, ses langues), affiche les
+// menus selon ses rôles (en haut sur ordinateur, en bas sur téléphone), la langue de travail,
+// puis la page demandée.
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { Logo } from '@murya/commun/logo';
 import { oublierTout } from './lib/memoire';
 import { navigate, replace, usePath } from './lib/router';
-import { TeamProvider, useTeam } from './lib/team';
+import { errorText, languageName, TeamProvider, useTeam, workLanguages } from './lib/team';
+import { ChoixLangue } from './components/ChoixLangue';
 import { AccueilPage } from './pages/AccueilPage';
 import { ActivitePage } from './pages/ActivitePage';
 import { EcoutePage } from './pages/EcoutePage';
@@ -32,30 +34,86 @@ import {
   IconePlus,
   IconeVoix,
 } from './components/Icones';
-import { ROLE_LABELS, type Role, type TeamMember } from './supabase';
+import { ROLE_LABELS, type Language, type Role, type TeamMember } from './supabase';
 
 type State =
   | { status: 'chargement' }
   | { status: 'hors_equipe' }
   | { status: 'erreur' }
-  | { status: 'pret'; member: TeamMember };
+  | { status: 'pret'; member: TeamMember; languages: Language[] };
+
+const LANGUAGE_COLUMNS = 'code, name_fr, name_native, variety, active, mother_tongue_code';
+
+/** Langues actives d'abord, puis par ordre alphabétique. */
+function sortLanguages(languages: Language[]): Language[] {
+  return [...languages].sort(
+    (a, b) => Number(b.active) - Number(a.active) || a.name_fr.localeCompare(b.name_fr, 'fr'),
+  );
+}
+
+// Langue de travail retenue sur ce téléphone (simple confort : sans elle, on prend la première).
+const LANGUAGE_KEY = 'murya-equipe-langue';
+
+function savedLanguage(): string | null {
+  try {
+    return localStorage.getItem(LANGUAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function saveLanguage(code: string): void {
+  try {
+    localStorage.setItem(LANGUAGE_KEY, code);
+  } catch {
+    // Navigation privée : tant pis, on reprendra la première langue.
+  }
+}
 
 export function TeamShell({ client, session }: { client: SupabaseClient; session: Session }) {
   const [state, setState] = useState<State>({ status: 'chargement' });
 
   useEffect(() => {
-    void client
-      .from('team_members')
-      .select('user_id, display_name, roles')
-      .eq('user_id', session.user.id)
-      .maybeSingle<TeamMember>()
-      .then(({ data, error }) => {
-        // Grâce à la RLS, un compte qui n'est pas membre de l'équipe ne voit aucune ligne.
-        if (error) setState({ status: 'erreur' });
-        else if (!data) setState({ status: 'hors_equipe' });
-        else setState({ status: 'pret', member: data });
-      });
+    void Promise.all([
+      client
+        .from('team_members')
+        .select('user_id, display_name, roles, languages')
+        .eq('user_id', session.user.id)
+        .maybeSingle<TeamMember>(),
+      client.from('languages').select(LANGUAGE_COLUMNS).returns<Language[]>(),
+    ]).then(([member, languages]) => {
+      // Grâce à la RLS, un compte qui n'est pas membre de l'équipe ne voit aucune ligne.
+      if (member.error || languages.error) setState({ status: 'erreur' });
+      else if (!member.data) setState({ status: 'hors_equipe' });
+      else {
+        setState({
+          status: 'pret',
+          member: member.data,
+          languages: sortLanguages(languages.data ?? []),
+        });
+      }
+    });
   }, [client, session.user.id]);
+
+  /** Active une langue (admins). Renvoie un message d'erreur, ou null si c'est fait. */
+  const activateLanguage = useCallback(
+    async (code: string): Promise<string | null> => {
+      const { error } = await client.from('languages').update({ active: true }).eq('code', code);
+      if (error) return errorText(error);
+      setState((s) =>
+        s.status === 'pret'
+          ? {
+              ...s,
+              languages: sortLanguages(
+                s.languages.map((l) => (l.code === code ? { ...l, active: true } : l)),
+              ),
+            }
+          : s,
+      );
+      return null;
+    },
+    [client],
+  );
 
   const signOut = () => {
     // Le membre suivant sur ce téléphone ne doit rien voir du précédent : ni ses chiffres, ni
@@ -89,13 +147,79 @@ export function TeamShell({ client, session }: { client: SupabaseClient; session
   }
 
   return (
-    <TeamProvider value={{ client, session, member: state.member }}>
+    <Espace
+      client={client}
+      session={session}
+      member={state.member}
+      languages={state.languages}
+      onActivate={activateLanguage}
+      onSignOut={signOut}
+    />
+  );
+}
+
+/** L'espace d'un membre, dans sa langue de travail. */
+function Espace({
+  client,
+  session,
+  member,
+  languages,
+  onActivate,
+  onSignOut,
+}: {
+  client: SupabaseClient;
+  session: Session;
+  member: TeamMember;
+  languages: Language[];
+  onActivate: (code: string) => Promise<string | null>;
+  onSignOut: () => void;
+}) {
+  const mine = workLanguages(member, languages);
+  const [code, setCode] = useState<string | null>(savedLanguage);
+  // Sans choix retenu : la première langue du membre (un admin les a toutes, mais il a la sienne).
+  const langue =
+    mine.find((l) => l.code === code) ??
+    mine.find((l) => member.languages.includes(l.code)) ??
+    mine[0];
+
+  const choose = (next: string) => {
+    saveLanguage(next);
+    setCode(next);
+  };
+
+  if (!langue) {
+    return (
+      <div className="mise-en-page">
+        <TopBar />
+        <main className="contenu">
+          <p className="message alerte">
+            Aucune langue ne vous est encore attribuée. Demandez à un admin de cocher votre langue
+            dans la page « Membres ».
+          </p>
+          <button className="secondaire" onClick={onSignOut}>
+            Se déconnecter
+          </button>
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <TeamProvider value={{ client, session, member, langue }}>
       <div className="mise-en-page avec-menu-bas">
-        <TopBar account={<Compte onSignOut={signOut} />}>
+        <TopBar
+          account={
+            <>
+              <ChoixLangue languages={languages} onChoose={choose} onActivate={onActivate} />
+              <Compte onSignOut={onSignOut} languages={languages} />
+            </>
+          }
+        >
           <Navigation />
         </TopBar>
         <main className="contenu">
-          <Page />
+          {/* Nouvelle langue : chaque page repart de zéro (ses chiffres, sa file d'écoute…). */}
+          <Page key={langue.code} />
         </main>
         <Footer />
         <MenuBas />
@@ -261,8 +385,11 @@ function Page() {
  * ouvre une fenêtre avec le nom, les rôles et « Se déconnecter », qui demande confirmation.
  * Pas de changement de mot de passe ici : ce sont les admins qui les donnent (page Membres).
  */
-function Compte({ onSignOut }: { onSignOut: () => void }) {
-  const { member, session } = useTeam();
+function Compte({ onSignOut, languages }: { onSignOut: () => void; languages: Language[] }) {
+  const { member, session, has } = useTeam();
+  const mine = has('admin')
+    ? 'Toutes les langues (admin)'
+    : workLanguages(member, languages).map(languageName).join(', ') || 'Aucune';
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const initial = member.display_name.trim().charAt(0).toUpperCase() || '?';
@@ -304,6 +431,7 @@ function Compte({ onSignOut }: { onSignOut: () => void }) {
               ))
             )}
           </div>
+          <p className="aide">Langues : {mine}</p>
           <p className="aide">Pour changer de mot de passe, demandez à un admin.</p>
           <div className="boutons-pleins">
             <button className="secondaire" onClick={() => setConfirming(true)}>

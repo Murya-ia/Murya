@@ -75,6 +75,7 @@ export function RecordingFlow({
     queue,
     settings,
     principal,
+    voiceLanguage: session.langue,
     repetition: session.voix?.repetition ?? false,
     queuePending: queueState.pending,
     onFinished: finished,

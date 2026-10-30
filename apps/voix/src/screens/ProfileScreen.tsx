@@ -28,6 +28,9 @@ const LANGUAGES = [
   'gourmantche',
   'toubou',
   'arabe',
+  'tagdal',
+  'tasawaq',
+  'boudouma',
   'francais',
   'autre',
 ] as const;

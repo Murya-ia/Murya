@@ -17,7 +17,8 @@ export interface Session {
     version: number;
     points: string[];
     textes: Partial<Record<UiLanguage, ConsentText>>;
-    audios: Partial<Record<UiLanguage, string | { complet?: string; rappel?: string }>>;
+    /** Par langue : une langue d'interface, ou la langue de la voix (ex. « kby »). */
+    audios: Partial<Record<string, string | { complet?: string; rappel?: string }>>;
   } | null;
   reglages: {
     verifications: ClientCheckThresholds | null;

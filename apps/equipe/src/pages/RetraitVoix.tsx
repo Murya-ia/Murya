@@ -5,7 +5,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { withdrawSpeaker } from '../lib/api';
-import { errorText, LANGUAGE, useTeam } from '../lib/team';
+import { errorText, useTeam } from '../lib/team';
 
 export interface WithdrawalRequest {
   speaker_id: string;
@@ -87,7 +87,7 @@ export function WithdrawalRequests({
 
 /** Recherche d'une voix par nom ou numéro (admins) : montre l'identité, journalisé. */
 export function SpeakerSearch({ onWithdraw }: { onWithdraw: (target: WithdrawTarget) => void }) {
-  const { client } = useTeam();
+  const { client, langue } = useTeam();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<FoundSpeaker[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -96,7 +96,7 @@ export function SpeakerSearch({ onWithdraw }: { onWithdraw: (target: WithdrawTar
     event.preventDefault();
     setError(null);
     const { data, error: rpcError } = await client.rpc('find_speakers', {
-      p_language: LANGUAGE,
+      p_language: langue.code,
       p_query: query,
     });
     if (rpcError) return setError(errorText(rpcError));

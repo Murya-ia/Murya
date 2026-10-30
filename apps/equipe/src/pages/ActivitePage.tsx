@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Squelette } from '../components/Squelette';
 import { useMemoire } from '../lib/memoire';
-import { errorText, LANGUAGE, useTeam } from '../lib/team';
+import { errorText, useTeam } from '../lib/team';
 import { ROLE_LABELS, type Role } from '../supabase';
 
 interface Activity {
@@ -75,21 +75,21 @@ function duration(seconds: number): string {
 }
 
 export function ActivitePage() {
-  const { client } = useTeam();
+  const { client, langue } = useTeam();
   const [days, setDays] = useState(7);
   // Chaque période déjà vue s'affiche tout de suite, puis se met à jour.
-  const [data, setData] = useMemoire<Activity>(`activite:${days}`);
+  const [data, setData] = useMemoire<Activity>(`activite:${langue.code}:${days}`);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
     const { data: result, error: rpcError } = await client.rpc('team_activity', {
-      p_language: LANGUAGE,
+      p_language: langue.code,
       p_days: days,
     });
     if (rpcError) setError(errorText(rpcError));
     else setData(result as Activity);
-  }, [client, days, setData]);
+  }, [client, langue.code, days, setData]);
 
   useEffect(() => {
     void load();

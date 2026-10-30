@@ -7,7 +7,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { AudioPlayer } from '../components/AudioPlayer';
-import { errorText, LANGUAGE, useTeam } from '../lib/team';
+import { errorText, useTeam } from '../lib/team';
 
 interface Session {
   numero: number;
@@ -59,17 +59,17 @@ const day = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) : '—';
 
 export function VoixPrincipale() {
-  const { client, has } = useTeam();
+  const { client, has, langue } = useTeam();
   const [overview, setOverview] = useState<Overview | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const { data, error: rpcError } = await client.rpc('principal_overview', {
-      p_language: LANGUAGE,
+      p_language: langue.code,
     });
     if (rpcError) setError(errorText(rpcError));
     else setOverview(data as Overview);
-  }, [client]);
+  }, [client, langue.code]);
 
   useEffect(() => {
     void load();
@@ -244,6 +244,7 @@ function Reference({
   canChoose: boolean;
   onChoose: (id: string) => void;
 }) {
+  const { langue } = useTeam();
   const [open, setOpen] = useState(false);
   return (
     <div className="reference-principale">
@@ -253,7 +254,7 @@ function Reference({
       </p>
       {current ? (
         <div className="prise-test">
-          <p lang="dje">
+          <p lang={langue.code}>
             <strong>{current.code}</strong> — {current.texte}
           </p>
           <AudioPlayer recordingId={current.id} compact />
@@ -273,7 +274,7 @@ function Reference({
       {open &&
         candidates.map((take) => (
           <div key={take.id} className="prise-test">
-            <p lang="dje">
+            <p lang={langue.code}>
               <strong>{take.code}</strong> — {take.texte}
             </p>
             <AudioPlayer recordingId={take.id} compact />

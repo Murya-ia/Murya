@@ -158,6 +158,7 @@ Tous les textes de phrases sont normalisés en Unicode **NFC** (contrôlé par l
 | 28/10/2026 | Exports rangés dans un bucket R2 privé (`murya-exports-…`, téléchargement par lien signé de 15 min, admins seulement) **et** poussés sur un dépôt **privé** Hugging Face (une étiquette par version). Audios en **WAV 16 kHz** tels quels. |
 | 28/10/2026 | Voix examen : Murya **propose 10 %** (tirage stratifié sexe × âge × région, stable), l'admin ajuste. Dès qu'une voix est exportée, sa partie (`train`/`test`) est **figée**. |
 | 28/10/2026 | Voix principale : **une par langue**, désignée par un admin ; elle passe le test comme les autres ; séances de 150 phrases (réglage) qui **s'ouvrent seules** quand la précédente est entièrement vérifiée ; **audio de référence choisi par un admin** parmi ses audios validés. Ses lectures validées comptent comme les autres. |
+| 30/10/2026 | **Toutes les langues parlées au Niger** (Charte de la refondation 2025, art. 12) sont enregistrées : zarma (`dje`), kanouri manga (`kby`) et tamasheq tawellemmet (`ttq`) actives ; haoussa, peul, gourmantché, tagdal, tasawaq, boudouma, toubou et arabe inactives (variété à confirmer avant de les activer). Chaque membre a **ses langues** et n'agit que dans elles (contrôle en base) ; les admins ont toutes les langues. L'accord des nouvelles langues reprend le texte français de l'accord zarma, avec les audios de l'accord enregistrés dans chaque langue. |
 
 ### Questions encore ouvertes
 

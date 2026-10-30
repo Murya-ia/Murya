@@ -1422,6 +1422,67 @@ progress {
   outline-offset: 2px;
 }
 
+/* ------------------------------------------------- Langue de travail (en haut, avant le compte) */
+
+.choix-langue,
+.barre-droite button.choix-langue {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px 0 12px;
+  border-radius: 999px;
+  background: var(--vert-pale);
+  color: var(--vert);
+  border: 1px solid transparent;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+@media (hover: hover) {
+  .barre-droite button.choix-langue:not(:disabled):hover {
+    background: var(--vert-pale);
+    border-color: rgba(15, 61, 46, 0.25);
+  }
+}
+
+.choix-langue-nom {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Téléphone : l'icône seule suffit si la place manque. */
+@media (max-width: 400px) {
+  .choix-langue,
+  .barre-droite button.choix-langue {
+    padding: 0 12px;
+  }
+}
+
+.feuille-titre {
+  margin: 0;
+  font-family: var(--titres);
+  font-size: 1.35rem;
+}
+
+.feuille-sous-titre {
+  margin: 6px 0 0;
+  font-family: var(--titres);
+  font-size: 1.05rem;
+}
+
+.coche {
+  color: var(--vert);
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.liste-lignes.inactifs .ligne {
+  min-height: 56px;
+}
+
 /* ------------------------------------------------------------------ Compte (en haut à droite) */
 
 .barre-droite button.compte {

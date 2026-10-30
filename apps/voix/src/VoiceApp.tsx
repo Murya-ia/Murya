@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createApi } from './data/api';
 import { cache, isOffline, readLanguage, saveLanguage, type Session } from './data/session';
 import { useUploadQueue } from './data/useUploadQueue';
-import { LanguageProvider, translate, type UiLanguage } from './i18n/i18n';
+import { LanguageProvider, translate, uiLanguagesFor, type UiLanguage } from './i18n/i18n';
 import { ConsentScreen } from './screens/ConsentScreen';
 import { LanguageScreen } from './screens/LanguageScreen';
 import { MessageScreen } from './screens/MessageScreen';
@@ -19,7 +19,7 @@ import { ErrorMessage } from './ui/ErrorMessage';
 import { useScrollToTop } from './ui/useScrollToTop';
 
 export function VoiceApp({ token }: { token: string }) {
-  const [language, setLanguage] = useState<UiLanguage | null>(readLanguage);
+  const [chosen, setChosen] = useState<UiLanguage | null>(readLanguage);
   const api = useMemo(() => createApi(token), [token]);
   const [session, setSession] = useState<Session | null>(() => cache.session());
   const [error, setError] = useState<unknown>(null);
@@ -52,28 +52,42 @@ export function VoiceApp({ token }: { token: string }) {
     void load();
   }, [load]);
 
+  // Langues d'interface proposées à cette voix (sa langue si elle est traduite, et le
+  // français). Un choix fait pour une autre voix sur ce téléphone ne compte pas ; une seule
+  // langue possible : pas de question.
+  const options = session ? uiLanguagesFor(session.langue) : null;
+  const language: UiLanguage | null = !options
+    ? null
+    : chosen && options.includes(chosen)
+      ? chosen
+      : options.length === 1
+        ? options[0]!
+        : null;
+
   useScrollToTop(currentStep(language, session, error, reminderSeen));
 
-  if (!language) {
+  if (options && !language) {
     return (
       <LanguageScreen
+        options={options}
         onChoose={(l) => {
           saveLanguage(l);
-          setLanguage(l);
+          setChosen(l);
         }}
       />
     );
   }
 
+  // Avant la première réponse du serveur (chargement, erreur) : en français.
   return (
-    <LanguageProvider language={language}>
+    <LanguageProvider language={language ?? 'fr'}>
       <Banner queue={queueState} />
       {renderStep()}
     </LanguageProvider>
   );
 
   function renderStep() {
-    const t = (key: Parameters<typeof translate>[1]) => translate(language!, key);
+    const t = (key: Parameters<typeof translate>[1]) => translate(language ?? 'fr', key);
     if (error && !session) {
       return (
         <MessageScreen
@@ -120,8 +134,8 @@ function currentStep(
   error: unknown,
   reminderSeen: boolean,
 ): string {
-  if (!language) return 'langue';
   if (!session) return error ? 'erreur' : 'chargement';
+  if (!language) return 'langue';
   const voice = session.voix;
   if (!session.consentement) return 'indisponible';
   if (!voice || !voice.consentement_a_jour) return 'consentement';

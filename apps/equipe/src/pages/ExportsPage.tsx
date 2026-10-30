@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { exportLink, type ExportFile } from '../lib/api';
 import { formatHours } from '../lib/dashboard';
-import { errorText, LANGUAGE, useTeam } from '../lib/team';
+import { errorText, useTeam } from '../lib/team';
 
 interface ExamVoice {
   id: string;
@@ -75,22 +75,22 @@ function size(bytes: number | undefined): string {
 export function ExportsPage() {
   const [overview, setOverview] = useState<ExamOverview | null>(null);
   const [exports, setExports] = useState<ExportRow[] | null>(null);
-  const { client } = useTeam();
+  const { client, langue } = useTeam();
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const [exam, list] = await Promise.all([
-      client.rpc('exam_overview', { p_language: LANGUAGE }),
+      client.rpc('exam_overview', { p_language: langue.code }),
       client
         .from('exports')
         .select('id, kind, version, status, requested_at, finished_at, stats, hf_repo, error')
-        .eq('language_code', LANGUAGE)
+        .eq('language_code', langue.code)
         .order('id', { ascending: false }),
     ]);
     if (exam.error || list.error) setError(errorText(exam.error ?? list.error));
     setOverview(exam.data as ExamOverview);
     setExports((list.data as ExportRow[]) ?? []);
-  }, [client]);
+  }, [client, langue.code]);
 
   useEffect(() => {
     void load();
@@ -130,7 +130,7 @@ export function ExportsPage() {
 }
 
 function ExamPartition({ overview, onSaved }: { overview: ExamOverview; onSaved: () => void }) {
-  const { client } = useTeam();
+  const { client, langue } = useTeam();
   // Cases cochées : voix examen actuelles + proposition (le composant est recréé à chaque
   // nouvelle vue d'ensemble, voir `key` plus haut).
   const [checked, setChecked] = useState(
@@ -155,7 +155,7 @@ function ExamPartition({ overview, onSaved }: { overview: ExamOverview; onSaved:
     setSaving(true);
     setMessage(null);
     const { error } = await client.rpc('set_exam_speakers', {
-      p_language: LANGUAGE,
+      p_language: langue.code,
       p_add: add,
       p_remove: remove,
     });
@@ -235,7 +235,7 @@ function NewExport({
   busy: boolean;
   onStarted: () => void;
 }) {
-  const { client } = useTeam();
+  const { client, langue } = useTeam();
   const [kind, setKind] = useState<keyof typeof KINDS>('varie');
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
@@ -244,7 +244,7 @@ function NewExport({
     setSending(true);
     setMessage(null);
     const { data, error } = await client.rpc('request_export', {
-      p_language: LANGUAGE,
+      p_language: langue.code,
       p_kind: kind,
     });
     setSending(false);

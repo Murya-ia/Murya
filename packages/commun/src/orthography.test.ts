@@ -25,3 +25,38 @@ describe('orthographyAlerts', () => {
     expect(orthographyAlerts('Ay ga koy @')).toContain('caractere_inattendu');
   });
 });
+
+describe('orthographyAlerts, kanouri', () => {
+  it("accepte les lettres de l'arrêté 0213 (ǝ, ɍ, ny, sh)", () => {
+    expect(orthographyAlerts('Nyǝ shiro ɍa Ǝ Ɍ.', 'kby')).toEqual([]);
+  });
+
+  it('ne signale pas « ny » ni « ng », mais signale ɲ', () => {
+    expect(orthographyAlerts('nya bang', 'kby')).toEqual([]);
+    expect(orthographyAlerts('ɲa', 'kby')).toContain('ɲ_au_lieu_de_ny');
+  });
+
+  it('signale les lettres qui se ressemblent mais ne sont pas les bonnes', () => {
+    expect(orthographyAlerts('kə', 'kby')).toContain('schwa_mal_code');
+    expect(orthographyAlerts('kar\u0335a', 'kby')).toContain('r_barre_en_deux');
+    expect(orthographyAlerts('été', 'kby')).toContain('caractere_inattendu');
+  });
+});
+
+describe('orthographyAlerts, tamasheq', () => {
+  it("accepte les lettres de l'arrêté 0214", () => {
+    expect(orthographyAlerts('âăǝḍêǧîǰɣḷŋôṣšṭûẓ ÂĂƎḌÊǦÎJ̌ƔḶŊÔṢŠṬÛẒ qx.', 'ttq')).toEqual([]);
+  });
+
+  it('signale le gamma grec et le schwa mal codé', () => {
+    expect(orthographyAlerts('aγa', 'ttq')).toContain('gamma_grec');
+    expect(orthographyAlerts('ə', 'ttq')).toContain('schwa_mal_code');
+  });
+});
+
+describe('orthographyAlerts, autres langues', () => {
+  it('garde seulement les alertes communes', () => {
+    expect(orthographyAlerts('nya bang é', 'hau')).toEqual([]);
+    expect(orthographyAlerts('a  b', 'hau')).toContain('espaces_en_trop');
+  });
+});

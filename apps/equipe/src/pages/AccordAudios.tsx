@@ -1,17 +1,22 @@
-// Audios de l'accord (spec §3.2), pour les admins : l'accord lu à voix haute par l'équipe, en
-// zarma et en français, que les personnes qui lisent peu écoutent dans l'appli. On peut les
+// Audios de l'accord (spec §3.2), pour les admins : l'accord lu à voix haute par l'équipe, dans
+// la langue de travail et en français, que les personnes qui lisent peu écoutent dans l'appli. On peut les
 // ajouter ou les remplacer à tout moment, sans changer le texte publié de l'accord.
 
 import { useCallback, useEffect, useState } from 'react';
 import { consentAudioUrl, sendConsentAudio } from '../lib/api';
-import { errorText, LANGUAGE, useTeam } from '../lib/team';
+import { errorText, useTeam } from '../lib/team';
+import type { Language } from '../supabase';
 
-const SLOTS = [
-  { language: 'dje', kind: 'complet', label: 'Accord complet, en zarma' },
-  { language: 'fr', kind: 'complet', label: 'Accord complet, en français' },
-  { language: 'dje', kind: 'rappel', label: 'Rappel court, en zarma' },
-  { language: 'fr', kind: 'rappel', label: 'Rappel court, en français' },
-] as const;
+/** Les quatre audios : accord complet et rappel court, dans la langue et en français. */
+function slots(langue: Language) {
+  const name = langue.name_fr.toLowerCase();
+  return [
+    { language: langue.code, kind: 'complet', label: `Accord complet, en ${name}` },
+    { language: 'fr', kind: 'complet', label: 'Accord complet, en français' },
+    { language: langue.code, kind: 'rappel', label: `Rappel court, en ${name}` },
+    { language: 'fr', kind: 'rappel', label: 'Rappel court, en français' },
+  ];
+}
 
 interface Stored {
   ui_language: string;
@@ -20,7 +25,7 @@ interface Stored {
 }
 
 export function AccordAudios() {
-  const { client, session } = useTeam();
+  const { client, session, langue } = useTeam();
   const [version, setVersion] = useState<{ id: number; version: number } | null>(null);
   const [stored, setStored] = useState<Stored[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -31,7 +36,7 @@ export function AccordAudios() {
     const { data } = await client
       .from('consent_versions')
       .select('id, version')
-      .eq('language_code', LANGUAGE)
+      .eq('language_code', langue.code)
       .not('published_at', 'is', null)
       .order('version', { ascending: false })
       .limit(1)
@@ -44,7 +49,7 @@ export function AccordAudios() {
         .eq('consent_version_id', data.id);
       setStored((audios.data as Stored[]) ?? []);
     }
-  }, [client]);
+  }, [client, langue.code]);
 
   useEffect(() => {
     void load();
@@ -95,7 +100,7 @@ export function AccordAudios() {
       </p>
       {message && <p className={`message ${message.ok ? 'succes' : 'erreur'}`}>{message.text}</p>}
       <ul className="liste-audios-accord">
-        {SLOTS.map(({ language, kind, label }) => {
+        {slots(langue).map(({ language, kind, label }) => {
           const slot = `${language}-${kind}`;
           const current = stored.find((s) => s.ui_language === language && s.kind === kind);
           return (

@@ -76,9 +76,9 @@ const FILTERS: [Filter, string][] = [
 ];
 
 export function VoixPage() {
-  const { client, member, has } = useTeam();
+  const { client, member, has, langue } = useTeam();
   // La dernière liste connue s'affiche tout de suite ; la base la met à jour ensuite.
-  const [voix, setVoix] = useMemoire<VoixData>(`voix:${member.user_id}`);
+  const [voix, setVoix] = useMemoire<VoixData>(`voix:${member.user_id}:${langue.code}`);
   const invites = voix?.invites ?? null;
   const progress = useMemo(() => new Map(voix?.progress.map((p) => [p.speaker_id, p])), [voix]);
   const names = useMemo(() => new Map(voix?.names.map((m) => [m.user_id, m.display_name])), [voix]);
@@ -91,13 +91,15 @@ export function VoixPage() {
   const [inviting, setInviting] = useState(false);
 
   const load = useCallback(async () => {
-    // La RLS ne renvoie que les invitations du recruteur (toutes pour un admin).
+    // La RLS ne renvoie que les invitations du recruteur (toutes pour un admin), ici celles de
+    // la langue de travail.
     const [invitesResult, progressResult, membersResult, requestsResult] = await Promise.all([
       client
         .from('invites')
         .select(
           'id, label, created_at, expires_at, revoked_at, recruiter_id, speakers(id, number, status, test_feedback, assisted_reading)',
         )
+        .eq('language_code', langue.code)
         .order('created_at', { ascending: false }),
       client.from('speaker_progress').select('*'),
       client.from('team_members').select('user_id, display_name'),
@@ -113,7 +115,7 @@ export function VoixPage() {
       names: (membersResult.data as { user_id: string; display_name: string }[] | null) ?? [],
       requests: (requestsResult.data as WithdrawalRequest[] | null) ?? [],
     });
-  }, [client, setVoix]);
+  }, [client, langue.code, setVoix]);
 
   useEffect(() => {
     void load();
@@ -446,7 +448,7 @@ function TestReview({
   label: string;
   onClose: (changed: boolean) => void;
 }) {
-  const { client } = useTeam();
+  const { client, langue } = useTeam();
   const [takes, setTakes] = useState<{ id: string; code: string; text: string }[] | null>(null);
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
@@ -508,7 +510,7 @@ function TestReview({
       ) : (
         takes.map((take) => (
           <div key={take.id} className="prise-test">
-            <p lang="dje">
+            <p lang={langue.code}>
               <strong>{take.code}</strong> — {take.text}
             </p>
             <AudioPlayer recordingId={take.id} compact />

@@ -1,18 +1,17 @@
-// Ce que toutes les pages de l'espace équipe partagent : la connexion à Supabase, la session
-// et le membre connecté (avec ses rôles).
+// Ce que toutes les pages de l'espace équipe partagent : la connexion à Supabase, la session,
+// le membre connecté (avec ses rôles) et la langue de travail choisie.
 
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
-import type { Role, TeamMember } from '../supabase';
-
-/** Langue de collecte gérée par cet espace. D'autres langues viendront (spec §8.4). */
-export const LANGUAGE = 'dje';
+import type { Language, Role, TeamMember } from '../supabase';
 
 export interface Team {
   client: SupabaseClient;
   session: Session;
   member: TeamMember;
   has: (role: Role) => boolean;
+  /** Langue de travail : toutes les pages montrent et modifient cette langue. */
+  langue: Language;
 }
 
 const TeamContext = createContext<Team | null>(null);
@@ -24,13 +23,28 @@ export function TeamProvider({
   value: Omit<Team, 'has'>;
   children: ReactNode;
 }) {
-  const { client, session, member } = value;
-  // Même objet tant que la session et le membre ne changent pas (évite des rechargements).
+  const { client, session, member, langue } = value;
+  // Même objet tant que la session, le membre et la langue ne changent pas (évite des
+  // rechargements).
   const team = useMemo<Team>(
-    () => ({ client, session, member, has: (role: Role) => member.roles.includes(role) }),
-    [client, session, member],
+    () => ({ client, session, member, langue, has: (role: Role) => member.roles.includes(role) }),
+    [client, session, member, langue],
   );
   return <TeamContext.Provider value={team}>{children}</TeamContext.Provider>;
+}
+
+/**
+ * Langues où le membre peut travailler : toutes les langues actives pour un admin, sinon ses
+ * langues parmi les actives (la base applique la même règle).
+ */
+export function workLanguages(member: TeamMember, languages: Language[]): Language[] {
+  const admin = member.roles.includes('admin');
+  return languages.filter((l) => l.active && (admin || member.languages.includes(l.code)));
+}
+
+/** Nom affiché d'une langue, avec sa variété : « Kanouri (manga) ». */
+export function languageName(language: Language): string {
+  return language.variety ? `${language.name_fr} (${language.variety})` : language.name_fr;
 }
 
 export function useTeam(): Team {
@@ -73,6 +87,9 @@ export function errorText(error: { message?: string } | null | undefined): strin
     weak_password: 'Mot de passe trop faible : 10 caractères au moins.',
     same_password: 'Le nouveau mot de passe doit être différent de l’ancien.',
     membre_inconnu: 'Ce membre n’existe plus.',
+    langue_non_attribuee:
+      'Cette langue ne vous est pas attribuée (ou n’est pas active). Demandez à un admin.',
+    langue_inconnue: 'Langue inconnue.',
   };
   return known[code] ?? 'Une erreur est survenue. Réessayez.';
 }

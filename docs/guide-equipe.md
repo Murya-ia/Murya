@@ -20,8 +20,24 @@ change pas son mot de passe lui-même : pour un nouveau (oublié, ou à changer)
 un admin.
 
 Sur téléphone, le menu est en bas de l'écran (les pages moins fréquentes sont dans
-**« Plus »**). Le rond avec votre initiale, en haut à droite, montre votre nom, vos rôles et
-**« Se déconnecter »** (qui demande confirmation).
+**« Plus »**). Le rond avec votre initiale, en haut à droite, montre votre nom, vos rôles, vos
+langues et **« Se déconnecter »** (qui demande confirmation).
+
+## Langue de travail
+
+Murya enregistre plusieurs langues du Niger : zarma, kanouri (manga) et tamasheq
+(tawellemmet) pour l'instant, et les huit autres langues parlées au Niger quand leur équipe
+sera prête. Chaque membre a **ses langues**, cochées par un admin : il ne travaille que dans
+elles (écoute, liens des voix, phrases…). Les admins ont toutes les langues.
+
+La langue de travail est affichée en haut à droite, à côté de votre initiale (ex.
+**« Zarma »**). Toutes les pages montrent cette langue. Si vous en avez plusieurs, touchez-la
+pour changer : votre choix est retenu sur ce téléphone.
+
+Un admin y voit aussi les **« Autres langues du Niger »**, pas encore actives, avec un bouton
+**« Activer »**. On n'active une langue que quand tout est prêt : traducteurs, phrases, accord
+et audios de l'accord dans cette langue. On coche ensuite la langue pour les membres concernés
+(page **Membres**).
 
 ## Accueil
 
@@ -126,12 +142,15 @@ Page **Membres** du menu (dans **« Plus »** sur téléphone). Tout se fait ici
 dans Supabase.
 
 1. **Ajouter un membre** : bouton **« + Ajouter »**, puis son prénom, son e-mail et un mot de
-   passe (déjà proposé, facile à recopier). Choisissez ses rôles, puis **« Créer le compte »**.
+   passe (déjà proposé, facile à recopier). Choisissez ses rôles et ses langues (votre langue
+   de travail est cochée d'office), puis **« Créer le compte »**.
    Un message affiche l'adresse de l'espace équipe, l'e-mail et le mot de passe :
    envoyez-les-lui sur WhatsApp.
 2. **Touchez un nom** pour ouvrir sa fiche :
    - **Rôles** : touchez un rôle pour le donner ou le retirer, puis **« Enregistrer les
      rôles »** ;
+   - **Langues** : même chose, puis **« Enregistrer les langues »**. Un membre sans langue
+     ne peut rien faire tant qu'on ne lui en donne pas une ;
    - **« Donner un nouveau mot de passe »** : un nouveau mot de passe s'affiche (bouton
      **« Copier »**) ; l'ancien ne marche plus. Envoyez-le au membre. C'est noté au journal ;
    - **« Désactiver ce compte »** pour un membre qui quitte l'équipe : il ne peut plus rien

@@ -18,16 +18,19 @@ const MEMBERS = [
     user_id: DEMO_USER,
     display_name: 'Awa',
     roles: ['admin', 'recruteur', 'verificateur', 'qualite'],
+    languages: ['dje'],
   },
   {
     user_id: '00000000-0000-4000-8000-000000000002',
     display_name: 'Bachir',
     roles: ['verificateur'],
+    languages: ['dje', 'kby'],
   },
   {
     user_id: '00000000-0000-4000-8000-000000000003',
     display_name: 'Mariama',
     roles: ['recruteur'],
+    languages: ['ttq'],
   },
 ];
 
@@ -208,8 +211,31 @@ const PRINCIPAL = {
   candidats: [],
 };
 
+/** Les langues du Niger, comme dans la base (trois actives). */
+const LANGUAGES = [
+  ['dje', 'Zarma', 'Zarma ciine', null, true, 'zarma'],
+  ['kby', 'Kanouri', 'Kanuri', 'manga', true, 'kanouri'],
+  ['ttq', 'Tamasheq', 'Tamajaq', 'tawellemmet', true, 'tamasheq'],
+  ['hau', 'Haoussa', 'Hausa', null, false, 'haoussa'],
+  ['fuh', 'Peul', 'Fulfulde', null, false, 'peul'],
+  ['gux', 'Gourmantché', 'Gulmancema', null, false, 'gourmantche'],
+  ['tda', 'Tagdal', 'Tagdal', null, false, 'tagdal'],
+  ['twq', 'Tasawaq', 'Tasawaq', null, false, 'tasawaq'],
+  ['bdm', 'Boudouma', 'Yedina', null, false, 'boudouma'],
+  ['tuq', 'Toubou', 'Tedaga', null, false, 'toubou'],
+  ['ara', 'Arabe', null, null, false, 'arabe'],
+].map(([code, name_fr, name_native, variety, active, mother_tongue_code]) => ({
+  code,
+  name_fr,
+  name_native,
+  variety,
+  active,
+  mother_tongue_code,
+}));
+
 const TABLES: Record<string, unknown[]> = {
   team_members: MEMBERS,
+  languages: LANGUAGES,
   exports: EXPORTS,
   consent_versions: [{ id: 1, version: 1 }],
   consent_audios: [{ ui_language: 'dje', kind: 'complet', uploaded_at: day(-2) }],
@@ -423,6 +449,7 @@ export function rpcResult(name: string, args: Record<string, unknown>): unknown 
         nom: m.display_name,
         email: `${m.display_name.toLowerCase()}@murya.org`,
         roles: m.roles,
+        langues: m.languages,
         actif: true,
         derniere_connexion: i === 3 ? null : day(-i),
       }));

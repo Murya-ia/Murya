@@ -1,12 +1,26 @@
 // Textes de l'interface en zarma et en français (spec §3.1).
 // Les traductions sont dans dje.json et fr.json. Une clé absente en zarma est affichée en
-// français : on peut traduire petit à petit sans rien casser.
+// français : on peut traduire petit à petit sans rien casser. Les voix des autres langues
+// (kanouri, tamasheq…) ont l'interface en français et l'accord à écouter dans leur langue,
+// jusqu'à ce que l'interface soit traduite (ajouter alors kby.json, ttq.json…).
 
 import { createContext, useContext, useEffect, type ReactNode } from 'react';
 import dje from './dje.json';
 import fr from './fr.json';
 
 export type UiLanguage = 'dje' | 'fr';
+
+export function isUiLanguage(code: string): code is UiLanguage {
+  return code === 'dje' || code === 'fr';
+}
+
+/**
+ * Langues d'interface proposées à une voix : sa langue si l'interface y est traduite, puis le
+ * français. Une seule (le français) : pas besoin de choisir.
+ */
+export function uiLanguagesFor(voiceLanguage: string): UiLanguage[] {
+  return isUiLanguage(voiceLanguage) && voiceLanguage !== 'fr' ? [voiceLanguage, 'fr'] : ['fr'];
+}
 export type TextKey = keyof typeof fr;
 
 const DICTIONARIES: Record<UiLanguage, Partial<Record<TextKey, string>>> = { dje, fr };

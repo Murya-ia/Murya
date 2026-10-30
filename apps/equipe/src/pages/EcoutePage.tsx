@@ -5,7 +5,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AudioPlayer, type PlayerControl } from '../components/AudioPlayer';
-import { errorText, LANGUAGE, useTeam } from '../lib/team';
+import { errorText, useTeam } from '../lib/team';
 import { ownRecruits, type ReviewCounts } from './AccueilPage';
 import { VoixPrincipale } from './VoixPrincipale';
 
@@ -74,7 +74,7 @@ const REASONS: Record<string, string> = {
 };
 
 export function EcoutePage() {
-  const { client, has } = useTeam();
+  const { client, has, langue } = useTeam();
   const canArbitrate = has('qualite') || has('admin');
   // `/ecoute?file=doutes` ou `?file=double` ouvre directement cette file (liens de l'accueil).
   const [mode, setMode] = useState<Mode>(() => {
@@ -106,10 +106,14 @@ export function EcoutePage() {
     const p_skip = skipped.current[mode];
     const { data, error: rpcError } =
       mode === 'double'
-        ? await client.rpc('double_review_claim', { p_language: LANGUAGE, p_skip })
-        : await client.rpc('review_claim', { p_language: LANGUAGE, p_mode: mode, p_skip });
+        ? await client.rpc('double_review_claim', { p_language: langue.code, p_skip })
+        : await client.rpc('review_claim', {
+            p_language: langue.code,
+            p_mode: mode,
+            p_skip,
+          });
     void client
-      .rpc('review_counts', { p_language: LANGUAGE })
+      .rpc('review_counts', { p_language: langue.code })
       .then(({ data: c }) => setCounts(c as ReviewCounts));
     if (rpcError) {
       setError(errorText(rpcError));
@@ -118,7 +122,7 @@ export function EcoutePage() {
       setItem(data as Item | null);
       setCorrected((data as Item | null)?.phrase.texte ?? '');
     }
-  }, [client, mode]);
+  }, [client, langue.code, mode]);
 
   useEffect(() => {
     void claim();
@@ -274,7 +278,7 @@ export function EcoutePage() {
             </span>
           </div>
 
-          <p className="texte-attendu" lang="dje">
+          <p className="texte-attendu" lang={langue.code}>
             {item.phrase.texte}
           </p>
           {item.phrase.traduction && <p className="aide">{item.phrase.traduction}</p>}
@@ -327,7 +331,7 @@ export function EcoutePage() {
                 value={corrected}
                 onChange={(e) => setCorrected(e.target.value)}
                 rows={2}
-                lang="dje"
+                lang={langue.code}
               />
               <button onClick={() => void submit('corrige')} disabled={busy || !corrected.trim()}>
                 Enregistrer la correction

@@ -16,7 +16,7 @@ import {
 } from '../lib/dashboard';
 import { dejaConnu, garder, useMemoire } from '../lib/memoire';
 import { navigate } from '../lib/router';
-import { errorText, LANGUAGE, useTeam } from '../lib/team';
+import { errorText, useTeam } from '../lib/team';
 
 /** « 9 480 » plutôt que « 9480 ». */
 const nb = (n: number) => n.toLocaleString('fr-FR');
@@ -33,23 +33,24 @@ const STATUSES: [keyof Dashboard['voix_par_statut'], string][] = [
 
 type Snapshot = { data: Dashboard; computed_at: string };
 
-const DASHBOARD_KEY = 'tableau-de-bord';
+/** Un tableau de bord par langue. */
+const dashboardKey = (language: string) => `tableau-de-bord:${language}`;
 
 /** Charge le tableau de bord à l'avance (depuis l'accueil), s'il n'est pas déjà connu. */
-export async function prefetchDashboard(client: SupabaseClient): Promise<void> {
-  if (dejaConnu(DASHBOARD_KEY)) return;
+export async function prefetchDashboard(client: SupabaseClient, language: string): Promise<void> {
+  if (dejaConnu(dashboardKey(language))) return;
   const { data } = await client
     .from('dashboard_snapshots')
     .select('data, computed_at')
-    .eq('language_code', LANGUAGE)
+    .eq('language_code', language)
     .maybeSingle();
-  if (data) garder(DASHBOARD_KEY, data);
+  if (data) garder(dashboardKey(language), data);
 }
 
 export function TableauDeBord() {
-  const { client, has } = useTeam();
+  const { client, has, langue } = useTeam();
   // Le dernier tableau connu (ou chargé à l'avance depuis l'accueil) s'affiche tout de suite.
-  const [snapshot, setSnapshot] = useMemoire<Snapshot | null>(DASHBOARD_KEY);
+  const [snapshot, setSnapshot] = useMemoire<Snapshot | null>(dashboardKey(langue.code));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
@@ -58,22 +59,24 @@ export function TableauDeBord() {
     const { data, error: dbError } = await client
       .from('dashboard_snapshots')
       .select('data, computed_at')
-      .eq('language_code', LANGUAGE)
+      .eq('language_code', langue.code)
       .maybeSingle();
     if (dbError) setError(errorText(dbError));
     setSnapshot(data as Snapshot | null);
     setNow(new Date());
     return data;
-  }, [client, setSnapshot]);
+  }, [client, langue.code, setSnapshot]);
 
   const refresh = useCallback(async () => {
     setBusy(true);
     setError(null);
-    const { error: rpcError } = await client.rpc('refresh_dashboard_now', { p_language: LANGUAGE });
+    const { error: rpcError } = await client.rpc('refresh_dashboard_now', {
+      p_language: langue.code,
+    });
     if (rpcError) setError(errorText(rpcError));
     await load();
     setBusy(false);
-  }, [client, load]);
+  }, [client, langue.code, load]);
 
   useEffect(() => {
     // Jamais calculé (base toute neuve) : on le calcule tout de suite.
@@ -105,7 +108,7 @@ export function TableauDeBord() {
   return (
     <>
       <div className="titre-ligne">
-        <h2>Tableau de bord · zarma</h2>
+        <h2>Tableau de bord · {langue.name_fr.toLowerCase()}</h2>
         <span className="aide">
           {snapshot ? `Calculé ${since(snapshot.computed_at, now)}` : 'Pas encore calculé'}{' '}
           <button className="secondaire petit" onClick={() => void refresh()} disabled={busy}>

@@ -55,6 +55,9 @@ class DemoQuery implements PromiseLike<Result> {
   update() {
     return this;
   }
+  returns() {
+    return this;
+  }
 
   then<A = Result, B = never>(
     resolve?: ((value: Result) => A | PromiseLike<A>) | null,

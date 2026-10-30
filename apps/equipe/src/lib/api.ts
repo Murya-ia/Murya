@@ -50,7 +50,7 @@ export async function consentAudioUrl(
 /** Nouveau membre de l'équipe (admins) : compte de connexion + rôles. */
 export async function createMember(
   session: Session,
-  member: { email: string; mot_de_passe: string; nom: string; roles: string[] },
+  member: { email: string; mot_de_passe: string; nom: string; roles: string[]; langues: string[] },
 ): Promise<{ email: string }> {
   if (import.meta.env.DEV && session.access_token === 'demo') {
     return { email: member.email.trim().toLowerCase() };

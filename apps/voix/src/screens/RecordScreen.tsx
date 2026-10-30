@@ -49,6 +49,7 @@ export function RecordScreen({
   sentences,
   settings,
   principal,
+  voiceLanguage,
   repetition = false,
   queuePending,
   onFinished,
@@ -60,6 +61,8 @@ export function RecordScreen({
   sentences: Sentence[];
   settings: Session['reglages'];
   principal: boolean;
+  /** Langue des phrases (ex. « kby ») : pour la bonne prononciation des lecteurs d'écran. */
+  voiceLanguage: string;
   /** Mode « écouter puis répéter » : un bouton fait entendre la phrase avant de la dire. */
   repetition?: boolean;
   /** Nombre d'audios en attente : recalcule les phrases faites quand la file se recharge. */
@@ -267,7 +270,7 @@ export function RecordScreen({
       </div>
 
       <p className="aide">{t(repetition ? 'repetition.consigne' : 'enregistrement.lisez')}</p>
-      <p className="phrase" lang="dje">
+      <p className="phrase" lang={voiceLanguage}>
         {current.texte}
       </p>
       {repetition && <ModelButton api={api} sentenceId={current.id} />}

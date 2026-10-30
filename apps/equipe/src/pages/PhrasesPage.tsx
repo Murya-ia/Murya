@@ -10,7 +10,7 @@ import {
   parseCsv,
   type OrthographyAlert,
 } from '@murya/commun';
-import { errorText, LANGUAGE, useTeam } from '../lib/team';
+import { errorText, useTeam } from '../lib/team';
 
 interface SentenceRow {
   id: number;
@@ -28,7 +28,7 @@ interface SentenceRow {
 const PAGE_SIZE = 1000; // limite de Supabase par requête
 
 export function PhrasesPage() {
-  const { client, has } = useTeam();
+  const { client, has, langue } = useTeam();
   const [sentences, setSentences] = useState<SentenceRow[] | null>(null);
   const [flags, setFlags] = useState<Map<number, number>>(new Map());
   const [search, setSearch] = useState('');
@@ -43,7 +43,7 @@ export function PhrasesPage() {
         .select(
           'id, code, text, translation_fr, theme, active, is_test, version, validated_reads, pending_reads',
         )
-        .eq('language_code', LANGUAGE)
+        .eq('language_code', langue.code)
         .order('code')
         .range(from, from + PAGE_SIZE - 1);
       if (loadError) return setError(errorText(loadError));
@@ -51,13 +51,16 @@ export function PhrasesPage() {
       if (data.length < PAGE_SIZE) break;
     }
     setSentences(all);
-    const { data: flagRows } = await client.from('sentence_flags').select('sentence_id');
+    const { data: flagRows } = await client
+      .from('sentence_flags')
+      .select('sentence_id, sentences!inner(language_code)')
+      .eq('sentences.language_code', langue.code);
     const counts = new Map<number, number>();
     for (const row of flagRows ?? []) {
       counts.set(row.sentence_id as number, (counts.get(row.sentence_id as number) ?? 0) + 1);
     }
     setFlags(counts);
-  }, [client]);
+  }, [client, langue.code]);
 
   useEffect(() => {
     void load();
@@ -100,7 +103,7 @@ export function PhrasesPage() {
       {error && <p className="message erreur">{error}</p>}
 
       <section className="carte">
-        <h2>Phrases du zarma</h2>
+        <h2>Phrases · {langue.name_fr.toLowerCase()}</h2>
         {sentences && (
           <p className="aide">
             {stats.total} phrases actives · lectures validées : 0 → {stats.byReads[0]}, 1 →{' '}
@@ -109,7 +112,7 @@ export function PhrasesPage() {
         )}
         <div className="filtres">
           <input
-            placeholder="Chercher (code, zarma, français)…"
+            placeholder={`Chercher (code, ${langue.name_fr.toLowerCase()}, français)…`}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -130,7 +133,7 @@ export function PhrasesPage() {
               <thead>
                 <tr>
                   <th>Code</th>
-                  <th>Zarma</th>
+                  <th>{langue.name_fr}</th>
                   <th>Français</th>
                   <th>Lectures</th>
                   <th>Signalée</th>
@@ -145,7 +148,7 @@ export function PhrasesPage() {
                       {s.is_test && <span className="pastille-discrete">test</span>}
                       {s.version > 1 && <span className="pastille-discrete">v{s.version}</span>}
                     </td>
-                    <td lang="dje">{s.text}</td>
+                    <td lang={langue.code}>{s.text}</td>
                     <td className="aide">{s.translation_fr}</td>
                     <td>
                       {s.validated_reads}
@@ -183,7 +186,9 @@ export function PhrasesPage() {
 
 /** Import d'un CSV exporté de Google Sheets, avec aperçu et alertes d'orthographe. */
 function CsvImport({ onImported }: { onImported: () => void }) {
-  const { client } = useTeam();
+  const { client, langue } = useTeam();
+  // Le texte est dans la colonne qui porte le nom de la langue (« zarma », « kanouri »…).
+  const column = langue.mother_tongue_code;
   const [rows, setRows] = useState<Record<string, string>[] | null>(null);
   const [fileName, setFileName] = useState('');
   const [busy, setBusy] = useState(false);
@@ -204,7 +209,7 @@ function CsvImport({ onImported }: { onImported: () => void }) {
     setError(null);
     setFileName(file.name);
     const objects = csvToObjects(parseCsv(await file.text()));
-    const missing = ['id', 'zarma', 'statut'].filter(
+    const missing = ['id', column, 'statut'].filter(
       (k) => objects.length > 0 && !(k in objects[0]!),
     );
     if (missing.length > 0) {
@@ -216,7 +221,7 @@ function CsvImport({ onImported }: { onImported: () => void }) {
 
   const validated = rows?.filter(isValidated) ?? [];
   const alerts = validated
-    .map((row) => ({ row, alerts: orthographyAlerts(row.zarma ?? '') }))
+    .map((row) => ({ row, alerts: orthographyAlerts(row[column] ?? '', langue.code) }))
     .filter((a) => a.alerts.length > 0);
 
   async function runImport() {
@@ -224,7 +229,7 @@ function CsvImport({ onImported }: { onImported: () => void }) {
     setBusy(true);
     setError(null);
     const { data, error: rpcError } = await client.rpc('import_sentences', {
-      p_language: LANGUAGE,
+      p_language: langue.code,
       // Seules les lignes « Validée » comptent : les autres partent vides (elles gardent leur
       // place, pour que les numéros de ligne des erreurs restent justes). Un fichier de
       // milliers de phrases à écrire reste ainsi léger à envoyer.
@@ -241,10 +246,10 @@ function CsvImport({ onImported }: { onImported: () => void }) {
     <section className="carte">
       <h2>Importer des phrases</h2>
       <p className="aide">
-        Dans Google Sheets : Fichier → Télécharger → CSV. Colonnes attendues : id, zarma, francais,
-        theme, auteur, relu_par, statut (et « test » = oui pour les 5 phrases du test). Seules les
-        lignes au statut « Validée » sont importées ; une phrase existante est mise à jour par son
-        id, avec une nouvelle version si son texte change.
+        Dans Google Sheets : Fichier → Télécharger → CSV. Colonnes attendues : id, {column},
+        francais, theme, auteur, relu_par, statut (et « test » = oui pour les 5 phrases du test).
+        Seules les lignes au statut « Validée » sont importées ; une phrase existante est mise à
+        jour par son id, avec une nouvelle version si son texte change.
       </p>
       <input
         type="file"
@@ -268,7 +273,7 @@ function CsvImport({ onImported }: { onImported: () => void }) {
               <ul>
                 {alerts.slice(0, 30).map(({ row, alerts: list }) => (
                   <li key={row.id}>
-                    <strong>{row.id}</strong> <span lang="dje">« {row.zarma} »</span> —{' '}
+                    <strong>{row.id}</strong> <span lang={langue.code}>« {row[column]} »</span> —{' '}
                     {list.map((a: OrthographyAlert) => ORTHOGRAPHY_ALERT_TEXT[a]).join(' ')}
                   </li>
                 ))}
@@ -315,7 +320,7 @@ interface Decision {
 
 /** Liste des mots décidés (spec §5.2) : tenue par le responsable qualité. */
 function OrthographyDecisions() {
-  const { client, member, has } = useTeam();
+  const { client, member, has, langue } = useTeam();
   const canEdit = has('qualite') || has('admin');
   const [decisions, setDecisions] = useState<Decision[] | null>(null);
   const [word, setWord] = useState('');
@@ -328,10 +333,10 @@ function OrthographyDecisions() {
     const { data } = await client
       .from('orthography_decisions')
       .select('id, word, chosen_spelling, rejected_variants, note, decided_at')
-      .eq('language_code', LANGUAGE)
+      .eq('language_code', langue.code)
       .order('word');
     setDecisions((data as Decision[]) ?? []);
-  }, [client]);
+  }, [client, langue.code]);
 
   useEffect(() => {
     void load();
@@ -342,7 +347,7 @@ function OrthographyDecisions() {
     setError(null);
     const nfc = (s: string) => s.trim().normalize('NFC');
     const { error: insertError } = await client.from('orthography_decisions').insert({
-      language_code: LANGUAGE,
+      language_code: langue.code,
       word: nfc(word),
       chosen_spelling: nfc(spelling),
       rejected_variants: variants.split(',').map(nfc).filter(Boolean),
@@ -369,7 +374,7 @@ function OrthographyDecisions() {
               value={word}
               onChange={(e) => setWord(e.target.value)}
               required
-              lang="dje"
+              lang={langue.code}
             />
           </div>
           <div>
@@ -379,7 +384,7 @@ function OrthographyDecisions() {
               value={spelling}
               onChange={(e) => setSpelling(e.target.value)}
               required
-              lang="dje"
+              lang={langue.code}
             />
           </div>
           <div>
@@ -388,7 +393,7 @@ function OrthographyDecisions() {
               id="variantes"
               value={variants}
               onChange={(e) => setVariants(e.target.value)}
-              lang="dje"
+              lang={langue.code}
             />
           </div>
           <div>
@@ -417,11 +422,11 @@ function OrthographyDecisions() {
             <tbody>
               {decisions.map((d) => (
                 <tr key={d.id}>
-                  <td lang="dje">{d.word}</td>
-                  <td lang="dje">
+                  <td lang={langue.code}>{d.word}</td>
+                  <td lang={langue.code}>
                     <strong>{d.chosen_spelling}</strong>
                   </td>
-                  <td lang="dje">{d.rejected_variants.join(', ')}</td>
+                  <td lang={langue.code}>{d.rejected_variants.join(', ')}</td>
                   <td>{d.note}</td>
                   <td className="aide">{new Date(d.decided_at).toLocaleDateString('fr-FR')}</td>
                 </tr>

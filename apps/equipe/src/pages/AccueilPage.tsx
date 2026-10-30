@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import { Squelette } from '../components/Squelette';
 import { useMemoire } from '../lib/memoire';
 import { navigate } from '../lib/router';
-import { LANGUAGE, useTeam } from '../lib/team';
+import { useTeam } from '../lib/team';
 import { Chevron, IconeGraphique } from '../components/Icones';
 import { prefetchDashboard } from './TableauDeBord';
 
@@ -25,22 +25,27 @@ interface Counts {
 }
 
 export function AccueilPage() {
-  const { client, member, has } = useTeam();
+  const { client, member, has, langue } = useTeam();
   // Les derniers chiffres connus s'affichent tout de suite ; la base les met à jour ensuite.
-  const [counts, setCounts] = useMemoire<Counts>(`accueil:${member.user_id}`);
+  const [counts, setCounts] = useMemoire<Counts>(`accueil:${member.user_id}:${langue.code}`);
 
   useEffect(() => {
     void (async () => {
       let testsQuery = client
         .from('speakers')
         .select('id', { count: 'exact', head: true })
+        .eq('language_code', langue.code)
         .eq('status', 'test_en_attente');
       if (!has('admin')) testsQuery = testsQuery.eq('recruiter_id', member.user_id);
-      // Les quatre questions partent ensemble (et non l'une après l'autre).
+      // Les quatre questions partent ensemble (et non l'une après l'autre). Les demandes de
+      // retrait restent comptées pour toutes les langues : elles sont toujours urgentes.
       const [tests, review, flags, withdrawals] = await Promise.all([
         testsQuery,
-        client.rpc('review_counts', { p_language: LANGUAGE }),
-        client.from('sentence_flags').select('id', { count: 'exact', head: true }),
+        client.rpc('review_counts', { p_language: langue.code }),
+        client
+          .from('sentence_flags')
+          .select('id, sentences!inner(language_code)', { count: 'exact', head: true })
+          .eq('sentences.language_code', langue.code),
         client.from('withdrawal_requests').select('speaker_id', { count: 'exact', head: true }),
       ]);
       setCounts({
@@ -50,9 +55,9 @@ export function AccueilPage() {
         withdrawals: withdrawals.count,
       });
       // Le tableau de bord se charge pendant qu'on lit l'accueil : il s'ouvrira sans attente.
-      void prefetchDashboard(client);
+      void prefetchDashboard(client, langue.code);
     })();
-  }, [client, member.user_id, has, setCounts]);
+  }, [client, member.user_id, has, langue.code, setCounts]);
 
   const tests = counts?.tests ?? null;
   const review = counts?.review ?? null;

@@ -16,18 +16,25 @@ l'équipe : auteurs, relecteurs et admins.
 
 ## 2. Les colonnes
 
-| Colonne      | Ce qu'on écrit                                                 | Exemple            |
-| ------------ | -------------------------------------------------------------- | ------------------ |
-| **ID**       | Identifiant unique de la phrase (voir règles ci-dessous)       | `S0457`            |
-| **Zarma**    | La phrase en zarma, orthographe officielle                     | —                  |
-| **Français** | Sa traduction en français                                      | Je vais au marché. |
-| **Thème**    | Un mot pour le sujet (voir la liste)                           | `marché`           |
-| **Auteur**   | Prénom de la personne qui a écrit la phrase                    | Awa                |
-| **Relu par** | Prénom de la personne qui l'a relue (jamais l'auteur lui-même) | Bachir             |
-| **Statut**   | Où en est la phrase                                            | `À relire`         |
-| **Test**     | `oui` seulement pour les 5 phrases du test, `non` sinon        | `non`              |
+| Colonne      | Ce qu'on écrit                                                  | Exemple            |
+| ------------ | --------------------------------------------------------------- | ------------------ |
+| **ID**       | Identifiant unique de la phrase (voir règles ci-dessous)        | `S0457`            |
+| **Zarma**    | La phrase dans la langue, orthographe officielle (voir dessous) | —                  |
+| **Français** | Sa traduction en français                                       | Je vais au marché. |
+| **Thème**    | Un mot pour le sujet (voir la liste)                            | `marché`           |
+| **Auteur**   | Prénom de la personne qui a écrit la phrase                     | Awa                |
+| **Relu par** | Prénom de la personne qui l'a relue (jamais l'auteur lui-même)  | Bachir             |
+| **Statut**   | Où en est la phrase                                             | `À relire`         |
+| **Test**     | `oui` seulement pour les 5 phrases du test, `non` sinon         | `non`              |
 
 Les noms des colonnes doivent rester **exactement** comme dans le modèle.
+
+Pour une autre langue que le zarma, la deuxième colonne porte **le nom de la langue** :
+**Kanouri**, **Tamasheq**, **Haoussa**, **Peul**, **Gourmantché**, **Tagdal**, **Tasawaq**,
+**Boudouma**, **Toubou** ou **Arabe**. L'import lit cette colonne dans la langue de travail
+choisie en haut de l'espace équipe : choisissez d'abord la bonne langue. Les alertes
+d'orthographe suivent la règle de chaque langue (arrêtés 0215 pour le zarma, 0213 pour le
+kanouri, 0214 pour le tamasheq ; voir les fiches d'orthographe dans le Google Drive).
 
 ### Les identifiants (colonne ID)
 

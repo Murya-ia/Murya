@@ -3,7 +3,7 @@
 // on en crée un nouveau.
 
 import { useState, type FormEvent } from 'react';
-import { LANGUAGE, useTeam } from '../lib/team';
+import { useTeam } from '../lib/team';
 
 const VOICE_APP_URL = import.meta.env.VITE_VOICE_APP_URL ?? 'http://localhost:5173';
 
@@ -14,7 +14,7 @@ interface CreatedInvite {
 }
 
 export function InviteForm({ onCreated }: { onCreated?: () => void }) {
-  const { client } = useTeam();
+  const { client, langue } = useTeam();
   const [label, setLabel] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +29,7 @@ export function InviteForm({ onCreated }: { onCreated?: () => void }) {
     setError(null);
     setCopied(false);
     const { data, error: rpcError } = await client
-      .rpc('create_invite', { p_label: label.trim(), p_language: LANGUAGE })
+      .rpc('create_invite', { p_label: label.trim(), p_language: langue.code })
       .single<CreatedInvite>();
     setBusy(false);
     if (rpcError || !data) {

@@ -1,5 +1,5 @@
-// Gestion de l'équipe (admins) : créer un compte pour un nouveau membre, changer ses rôles,
-// lui donner un nouveau mot de passe (les membres ne changent pas le leur eux-mêmes), le
+// Gestion de l'équipe (admins) : créer un compte pour un nouveau membre, changer ses rôles et
+// ses langues, lui donner un nouveau mot de passe (les membres ne changent pas le leur eux-mêmes), le
 // désactiver. Tout est noté au journal. Deux admins au maximum ; il en reste toujours un.
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
@@ -9,13 +9,14 @@ import { Squelette } from '../components/Squelette';
 import { createMember, resetPassword } from '../lib/api';
 import { useMemoire } from '../lib/memoire';
 import { errorText, useTeam } from '../lib/team';
-import { ROLE_LABELS, type Role } from '../supabase';
+import { ROLE_LABELS, type Language, type Role } from '../supabase';
 
 interface Member {
   user_id: string;
   nom: string;
   email: string;
   roles: Role[];
+  langues: string[];
   actif: boolean;
   derniere_connexion: string | null;
 }
@@ -53,8 +54,32 @@ function lastSeen(date: string | null): string {
 const rolesText = (roles: Role[]) =>
   roles.length === 0 ? 'aucun rôle' : roles.map((r) => ROLE_LABELS[r]).join(' · ');
 
+/** « Zarma, Kanouri » (codes inconnus affichés tels quels). */
+const languagesText = (codes: string[], languages: Language[]) =>
+  codes.length === 0
+    ? 'aucune langue'
+    : codes.map((c) => languages.find((l) => l.code === c)?.name_fr ?? c).join(', ');
+
+/** Les langues actives, que l'admin peut cocher pour un membre. */
+function useActiveLanguages(): Language[] {
+  const { client } = useTeam();
+  const [languages, setLanguages] = useMemoire<Language[]>('langues-actives');
+  useEffect(() => {
+    void client
+      .from('languages')
+      .select('code, name_fr, name_native, variety, active, mother_tongue_code')
+      .eq('active', true)
+      .order('name_fr')
+      .then(({ data }) =>
+        setLanguages(((data as Language[] | null) ?? []).filter((l) => l.active)),
+      );
+  }, [client, setLanguages]);
+  return languages ?? [];
+}
+
 export function MembresPage() {
   const { client, member: me } = useTeam();
+  const languages = useActiveLanguages();
   const [members, setMembers] = useMemoire<Member[]>('membres');
   const [error, setError] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
@@ -88,7 +113,9 @@ export function MembresPage() {
           {m.user_id === me.user_id && <span className="aide"> (vous)</span>}
         </strong>
         <small>
-          {m.actif ? `${rolesText(m.roles)} · ${lastSeen(m.derniere_connexion)}` : 'Désactivé'}
+          {m.actif
+            ? `${rolesText(m.roles)} · ${languagesText(m.langues, languages)} · ${lastSeen(m.derniere_connexion)}`
+            : 'Désactivé'}
         </small>
       </span>
       <Chevron />
@@ -105,10 +132,10 @@ export function MembresPage() {
       </div>
       <p className="intro gris">
         {members ? `${active.length} membre(s) actif(s) · ` : ''}touchez un nom pour ses rôles et
-        son mot de passe.
+        ses langues et son mot de passe.
       </p>
       {error && <p className="message erreur">{error}</p>}
-      {adding && <NewMember onCreated={load} />}
+      {adding && <NewMember languages={languages} onCreated={load} />}
       {!members ? (
         <section className="liste-lignes" aria-busy="true" aria-label="Chargement de l’équipe">
           {[0, 1, 2].map((i) => (
@@ -136,6 +163,7 @@ export function MembresPage() {
         <MemberSheet
           key={opened.user_id}
           member={opened}
+          languages={languages}
           isMe={opened.user_id === me.user_id}
           onClose={() => setOpenId(null)}
           onSaved={load}
@@ -168,12 +196,45 @@ function RoleBoxes({ roles, onChange }: { roles: Role[]; onChange: (roles: Role[
   );
 }
 
-function NewMember({ onCreated }: { onCreated: () => void }) {
-  const { session } = useTeam();
+/** Cases des langues (une ou plusieurs). Les admins ont toutes les langues, cochées ou non. */
+function LanguageBoxes({
+  languages,
+  value,
+  onChange,
+}: {
+  languages: Language[];
+  value: string[];
+  onChange: (codes: string[]) => void;
+}) {
+  return (
+    <div className="choix-roles">
+      {languages.map((l) => {
+        const on = value.includes(l.code);
+        return (
+          <button
+            key={l.code}
+            type="button"
+            aria-pressed={on}
+            className={on ? 'actif' : ''}
+            onClick={() => onChange(on ? value.filter((c) => c !== l.code) : [...value, l.code])}
+          >
+            {on && <span aria-hidden="true">✓ </span>}
+            {l.name_fr}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function NewMember({ languages, onCreated }: { languages: Language[]; onCreated: () => void }) {
+  const { session, langue } = useTeam();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState(temporaryPassword);
   const [roles, setRoles] = useState<Role[]>(['verificateur']);
+  // Par défaut, la langue de travail de l'admin.
+  const [codes, setCodes] = useState<string[]>([langue.code]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<{ name: string; email: string; password: string } | null>(null);
@@ -188,12 +249,14 @@ function NewMember({ onCreated }: { onCreated: () => void }) {
         mot_de_passe: password,
         nom: name,
         roles,
+        langues: codes,
       });
       setDone({ name, email: saved, password });
       setName('');
       setEmail('');
       setPassword(temporaryPassword());
       setRoles(['verificateur']);
+      setCodes([langue.code]);
       onCreated();
     } catch (e) {
       setError(errorText(e as Error));
@@ -254,6 +317,10 @@ function NewMember({ onCreated }: { onCreated: () => void }) {
           <span className="etiquette-champ">Rôles</span>
           <RoleBoxes roles={roles} onChange={setRoles} />
         </div>
+        <div>
+          <span className="etiquette-champ">Langues (celles qu’il parle et où il travaille)</span>
+          <LanguageBoxes languages={languages} value={codes} onChange={setCodes} />
+        </div>
         {error && <p className="message erreur">{error}</p>}
         <div className="boutons">
           <button type="submit" className="avec-fleche" disabled={busy}>
@@ -268,14 +335,16 @@ function NewMember({ onCreated }: { onCreated: () => void }) {
   );
 }
 
-/** Fiche d'un membre : rôles, nouveau mot de passe, désactivation. */
+/** Fiche d'un membre : rôles, langues, nouveau mot de passe, désactivation. */
 function MemberSheet({
   member,
+  languages,
   isMe,
   onClose,
   onSaved,
 }: {
   member: Member;
+  languages: Language[];
   isMe: boolean;
   onClose: () => void;
   onSaved: () => void;
@@ -286,9 +355,12 @@ function MemberSheet({
   const [error, setError] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const changed = [...roles].sort().join() !== [...member.roles].sort().join();
+  const [codes, setCodes] = useState<string[]>(member.langues);
+  const same = (a: string[], b: string[]) => [...a].sort().join() === [...b].sort().join();
+  const changed = !same(roles, member.roles);
+  const languagesChanged = !same(codes, member.langues);
 
-  async function save(update: { roles?: Role[]; active?: boolean }) {
+  async function save(update: { roles?: Role[]; languages?: string[]; active?: boolean }) {
     setBusy(true);
     setError(null);
     const { error: updateError } = await client
@@ -350,6 +422,28 @@ function MemberSheet({
               Enregistrer les rôles
             </button>
             <button className="petit lien" onClick={() => setRoles(member.roles)}>
+              Annuler
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="fiche-partie">
+        <h3>Langues</h3>
+        {member.roles.includes('admin') && (
+          <p className="aide">Admin : travaille dans toutes les langues, cochées ou non.</p>
+        )}
+        <LanguageBoxes languages={languages} value={codes} onChange={setCodes} />
+        {languagesChanged && (
+          <div className="boutons">
+            <button
+              className="petit"
+              disabled={busy}
+              onClick={() => void save({ languages: codes })}
+            >
+              Enregistrer les langues
+            </button>
+            <button className="petit lien" onClick={() => setCodes(member.langues)}>
               Annuler
             </button>
           </div>

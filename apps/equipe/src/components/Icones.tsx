@@ -94,6 +94,19 @@ export const IconeDeconnexion = () => (
   </Icone>
 );
 
+export const IconeLangue = () => (
+  <Icone>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
+  </Icone>
+);
+
+export const IconeCoche = () => (
+  <Icone>
+    <path d="M5 12.5l4.5 4.5L19 7.5" />
+  </Icone>
+);
+
 export const Chevron = () => (
   <svg
     className="chevron"
