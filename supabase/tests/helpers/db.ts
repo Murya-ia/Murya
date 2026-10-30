@@ -46,11 +46,15 @@ export async function asUser<T>(
   }
 }
 
-/** Crée un compte et, si des rôles sont donnés, un membre de l'équipe. Renvoie son identifiant. */
+/**
+ * Crée un compte et, si des rôles sont donnés, un membre de l'équipe (en zarma par défaut).
+ * Renvoie son identifiant.
+ */
 export async function createMember(
   db: PGlite,
   name: string,
   roles: string[] | null,
+  languages: string[] = ['dje'],
 ): Promise<string> {
   const { rows } = await db.query<{ id: string }>(
     `insert into auth.users (email) values ($1) returning id`,
@@ -59,8 +63,9 @@ export async function createMember(
   const id = rows[0]!.id;
   if (roles) {
     await db.query(
-      `insert into public.team_members (user_id, display_name, roles) values ($1, $2, $3)`,
-      [id, name, roles],
+      `insert into public.team_members (user_id, display_name, roles, languages)
+       values ($1, $2, $3, $4)`,
+      [id, name, roles, languages],
     );
   }
   return id;

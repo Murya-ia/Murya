@@ -34,6 +34,8 @@ const BUSINESS_ERRORS: Record<string, number> = {
   deux_admins_max: 409,
   dernier_admin: 409,
   membre_inconnu: 404,
+  langue_non_attribuee: 403,
+  langue_inconnue: 400,
 };
 
 export function businessStatus(code: string): number {

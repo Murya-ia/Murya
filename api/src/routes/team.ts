@@ -87,7 +87,8 @@ team.post('/consentement-oral', async (c) => {
   }
 });
 
-const CONSENT_LANGUAGES = ['dje', 'fr'];
+/** Code de langue (ex. kby) ou « fr » : la base vérifie que la langue existe. */
+const LANGUAGE_CODE_RE = /^[a-z]{2,3}$/;
 const CONSENT_KINDS = ['complet', 'rappel'];
 
 /**
@@ -104,7 +105,7 @@ team.post('/accord-audio', async (c) => {
     !Number.isSafeInteger(version) ||
     version <= 0 ||
     typeof language !== 'string' ||
-    !CONSENT_LANGUAGES.includes(language) ||
+    !LANGUAGE_CODE_RE.test(language) ||
     typeof kind !== 'string' ||
     !CONSENT_KINDS.includes(kind) ||
     !(file instanceof File)
@@ -143,7 +144,7 @@ team.get('/accord-audio/:version/:langue/:type', async (c) => {
   const kind = c.req.param('type');
   if (
     !Number.isSafeInteger(version) ||
-    !CONSENT_LANGUAGES.includes(language) ||
+    !LANGUAGE_CODE_RE.test(language) ||
     !CONSENT_KINDS.includes(kind)
   ) {
     return c.json({ erreur: 'requete_invalide' }, 400);
@@ -219,11 +220,14 @@ team.post('/membres', async (c) => {
     mot_de_passe?: unknown;
     nom?: unknown;
     roles?: unknown;
+    langues?: unknown;
   } | null;
   const email = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : '';
   const password = typeof body?.mot_de_passe === 'string' ? body.mot_de_passe : '';
   const name = typeof body?.nom === 'string' ? body.nom.trim() : '';
   const roles = Array.isArray(body?.roles) ? body.roles : null;
+  // Langues du membre (codes) : absentes = aucune pour l'instant, l'admin les cochera ensuite.
+  const languages = body?.langues === undefined ? [] : body.langues;
   if (
     !EMAIL_RE.test(email) ||
     password.length < 10 ||
@@ -231,7 +235,9 @@ team.post('/membres', async (c) => {
     !name ||
     name.length > 80 ||
     !roles ||
-    !roles.every((r) => typeof r === 'string' && ROLES.includes(r))
+    !roles.every((r) => typeof r === 'string' && ROLES.includes(r)) ||
+    !Array.isArray(languages) ||
+    !languages.every((l) => typeof l === 'string' && LANGUAGE_CODE_RE.test(l))
   ) {
     return c.json({ erreur: 'requete_invalide' }, 400);
   }
@@ -264,6 +270,7 @@ team.post('/membres', async (c) => {
       p_user_id: id,
       p_name: name,
       p_roles: roles,
+      p_languages: languages,
     });
   } catch (error) {
     // La base refuse (ex. déjà deux admins) : on ne laisse pas un compte sans équipe.

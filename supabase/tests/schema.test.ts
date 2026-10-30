@@ -41,9 +41,6 @@ describe('réglages', () => {
 
 describe('numéros de voix', () => {
   it('sont séquentiels et propres à chaque langue', async () => {
-    await db.exec(
-      `insert into public.languages (code, name_fr, active) values ('hau', 'Haoussa', true)`,
-    );
     const recruiter = await createMember(db, 'numeros', ['recruteur']);
     expect((await createSpeaker(db, recruiter, 'dje')).number).toBe('V001');
     expect((await createSpeaker(db, recruiter, 'dje')).number).toBe('V002');

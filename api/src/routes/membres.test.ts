@@ -60,6 +60,7 @@ const member = {
   mot_de_passe: 'provisoire-123',
   nom: 'Awa',
   roles: ['verificateur'],
+  langues: ['ttq'],
 };
 
 describe("création d'un membre (page « Membres »)", () => {
@@ -77,7 +78,12 @@ describe("création d'un membre (page « Membres »)", () => {
     expect(account.headers.get('apikey')).toBe('sb_secret_test');
     const added = calls.find((c) => c.url.endsWith('/rpc/add_team_member'))!;
     expect(added.headers.get('Authorization')).toBe('Bearer jeton-admin');
-    expect(added.body).toEqual({ p_user_id: USER, p_name: 'Awa', p_roles: ['verificateur'] });
+    expect(added.body).toEqual({
+      p_user_id: USER,
+      p_name: 'Awa',
+      p_roles: ['verificateur'],
+      p_languages: ['ttq'],
+    });
   });
 
   it("refuse si la personne connectée n'est pas admin, sans créer de compte", async () => {
@@ -111,9 +117,11 @@ describe("création d'un membre (page « Membres »)", () => {
     expect(removed.url).toMatch(new RegExp(`/auth/v1/admin/users/${USER}$`));
   });
 
-  it('refuse un mot de passe trop court ou un rôle inconnu', async () => {
+  it('refuse un mot de passe trop court, un rôle ou un code de langue invalide', async () => {
     expect((await create({ ...member, mot_de_passe: 'court' })).status).toBe(400);
     expect((await create({ ...member, roles: ['patron'] })).status).toBe(400);
+    expect((await create({ ...member, langues: ['Kanouri'] })).status).toBe(400);
+    expect((await create({ ...member, langues: 'kby' })).status).toBe(400);
     expect(calls).toEqual([]);
   });
 });
