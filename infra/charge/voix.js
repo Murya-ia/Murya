@@ -113,14 +113,20 @@ export default function () {
   };
   // Premier envoi de chaque voix : R2 doit refuser un fichier d'une autre taille que celle signée.
   if (__ITER === 0) {
-    const wrongSize = http.put(prepared.json('url'), `${AUDIO}x`, params);
+    const wrongSize = http.put(prepared.json('url'), `${AUDIO}x`, {
+      ...params,
+      responseCallback: http.expectedStatuses(403),
+    });
     check(wrongSize, { 'taille differente refusee': (r) => r.status === 403 });
   }
   const deposit = http.put(prepared.json('url'), AUDIO, params);
   if (!check(deposit, { 'depot 200': (r) => r.status === 200 })) return;
   // ... et un deuxième envoi sur la même clé : un audio reçu ne se remplace pas.
   if (__ITER === 0) {
-    const replaced = http.put(prepared.json('url'), AUDIO, params);
+    const replaced = http.put(prepared.json('url'), AUDIO, {
+      ...params,
+      responseCallback: http.expectedStatuses(412),
+    });
     check(replaced, { 'remplacement refuse': (r) => r.status === 412 });
   }
   const confirmed = http.post(
