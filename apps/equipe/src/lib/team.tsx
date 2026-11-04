@@ -90,6 +90,7 @@ export function errorText(error: { message?: string } | null | undefined): strin
     langue_non_attribuee:
       'Cette langue ne vous est pas attribuée (ou n’est pas active). Demandez à un admin.',
     langue_inconnue: 'Langue inconnue.',
+    trop_de_requetes: 'Trop de demandes. Attendez une minute puis réessayez.',
   };
   return known[code] ?? 'Une erreur est survenue. Réessayez.';
 }

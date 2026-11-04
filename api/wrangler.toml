@@ -76,6 +76,12 @@ name = "RL_IP"
 namespace_id = "1002"
 simple = { limit = 1200, period = 60 }
 
+# Routes de l'équipe, téléchargements et santé : 300 requêtes par minute et par adresse IP.
+[[env.staging.ratelimits]]
+name = "RL_TEAM"
+namespace_id = "1003"
+simple = { limit = 300, period = 60 }
+
 # ------------------------------------------------------------- production
 [env.production]
 name = "murya-api"
@@ -114,3 +120,8 @@ simple = { limit = 120, period = 60 }
 name = "RL_IP"
 namespace_id = "2002"
 simple = { limit = 1200, period = 60 }
+
+[[env.production.ratelimits]]
+name = "RL_TEAM"
+namespace_id = "2003"
+simple = { limit = 300, period = 60 }

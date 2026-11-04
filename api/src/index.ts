@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+import { Hono, type MiddlewareHandler } from 'hono';
 import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
 import type { Env } from './env';
@@ -22,6 +22,18 @@ app.use('*', (c, next) =>
 );
 // Le jeton des voix est dans l'URL de l'app : aucun « Referer » ne doit le transmettre ailleurs.
 app.use('*', secureHeaders({ referrerPolicy: 'no-referrer' }));
+
+// Routes hors parcours des voix (celles-ci ont leur propre limite, par jeton et par adresse) :
+// limite par adresse IP, pour freiner les essais en série et les envois répétés.
+const limitByIp: MiddlewareHandler<{ Bindings: Env }> = async (c, next) => {
+  const ip = c.req.header('CF-Connecting-IP') ?? 'inconnue';
+  const result = await c.env.RL_TEAM?.limit({ key: ip });
+  if (result?.success === false) return c.json({ erreur: 'trop_de_requetes' }, 429);
+  await next();
+};
+for (const path of ['/sante', '/telechargement/*', '/preuve/*', '/equipe/*']) {
+  app.use(path, limitByIp);
+}
 
 // Page de santé (spec §10, observabilité).
 // `/sante?verifier=r2` vérifie en plus les clés R2 (une lecture, sans rien créer).

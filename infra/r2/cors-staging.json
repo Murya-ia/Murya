@@ -10,7 +10,7 @@
           "https://murya-equipe-staging.murya-api.workers.dev"
         ],
         "methods": ["GET", "PUT"],
-        "headers": ["Content-Type"]
+        "headers": ["Content-Type", "If-None-Match"]
       },
       "exposeHeaders": ["ETag"],
       "maxAgeSeconds": 3600

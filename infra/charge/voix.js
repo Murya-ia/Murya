@@ -104,14 +104,25 @@ export default function () {
   // Lire la phrase, enregistrer, réécouter : environ 6 à 10 secondes par phrase.
   sleep(6 + Math.random() * 4);
   const started = Date.now();
-  const body = JSON.stringify({ id, phrase_id: sentence.id });
+  const body = JSON.stringify({ id, phrase_id: sentence.id, taille: AUDIO.byteLength });
   const prepared = http.post(`${API}/voix/envoi/preparer`, body, headers('preparer'));
   if (!check(prepared, { 'preparer 200': (r) => r.status === 200 })) return;
-  const deposit = http.put(prepared.json('url'), AUDIO, {
-    headers: { 'Content-Type': 'audio/wav' },
+  const params = {
+    headers: { 'Content-Type': 'audio/wav', 'If-None-Match': '*' },
     tags: { etape: 'depot', name: 'depot R2' },
-  });
+  };
+  // Premier envoi de chaque voix : R2 doit refuser un fichier d'une autre taille que celle signée.
+  if (__ITER === 0) {
+    const wrongSize = http.put(prepared.json('url'), `${AUDIO}x`, params);
+    check(wrongSize, { 'taille differente refusee': (r) => r.status === 403 });
+  }
+  const deposit = http.put(prepared.json('url'), AUDIO, params);
   if (!check(deposit, { 'depot 200': (r) => r.status === 200 })) return;
+  // ... et un deuxième envoi sur la même clé : un audio reçu ne se remplace pas.
+  if (__ITER === 0) {
+    const replaced = http.put(prepared.json('url'), AUDIO, params);
+    check(replaced, { 'remplacement refuse': (r) => r.status === 412 });
+  }
   const confirmed = http.post(
     `${API}/voix/envoi/confirmer`,
     JSON.stringify({

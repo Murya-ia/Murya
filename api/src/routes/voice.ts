@@ -6,7 +6,13 @@
 
 import { Hono } from 'hono';
 import type { Env } from '../env';
-import { UPLOAD_URL_SECONDS, WAV_ERROR_STATUS, inspectStoredWav, presignUrl } from '../r2';
+import {
+  MAX_AUDIO_BYTES,
+  UPLOAD_URL_SECONDS,
+  WAV_ERROR_STATUS,
+  inspectStoredWav,
+  presignUrl,
+} from '../r2';
 import { VoiceError, businessStatus, rpc } from '../supabase';
 import { hmacHex, isUuid, safeEqual, sha256Hex } from '../util';
 
@@ -148,9 +154,14 @@ interface Prepared {
  */
 voice.post('/envoi/preparer', async (c) => {
   const body = await readBody(c.req.raw);
+  // Ancienne version de l'app (sans `taille`) : pas définitif, l'audio repartira après sa mise à
+  // jour. Ce code n'est donc pas dans les refus définitifs de la file d'envoi.
+  if (body.taille === undefined) return c.json({ erreur: 'mise_a_jour_requise' }, 426);
+  const size = integer(body.taille);
+  if (size > MAX_AUDIO_BYTES) return c.json({ erreur: 'fichier_trop_gros' }, 413);
   const prepared = await prepare(c.env, c.get('tokenHash'), body);
   if (prepared.statut === 'recu') return c.json({ deja_recu: true, cle: prepared.cle });
-  const url = await presignUrl(c.env, 'PUT', prepared.cle, UPLOAD_URL_SECONDS);
+  const url = await presignUrl(c.env, 'PUT', prepared.cle, UPLOAD_URL_SECONDS, { size });
   const ticket = await uploadTicket(c.env, c.get('tokenHash'), body.id as string, prepared.cle);
   return c.json({
     url,

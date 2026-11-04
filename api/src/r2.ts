@@ -56,11 +56,17 @@ export async function inspectStoredWav(
   }
 }
 
+/**
+ * `upload` : pour l'envoi d'un audio. L'adresse ne vaut alors que pour un fichier de cette taille
+ * exacte (`Content-Length`) et une clé encore vide (`If-None-Match: *`) : on ne peut ni envoyer
+ * un énorme fichier, ni remplacer un audio déjà reçu, même tant que l'adresse est valable.
+ */
 export async function presignUrl(
   env: Env,
   method: 'PUT' | 'GET',
   key: string,
   expiresSeconds: number,
+  upload?: { size: number },
 ): Promise<string> {
   const client = new AwsClient({
     accessKeyId: env.R2_ACCESS_KEY_ID,
@@ -73,7 +79,14 @@ export async function presignUrl(
     `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${env.R2_BUCKET_AUDIO}/${path}`,
   );
   url.searchParams.set('X-Amz-Expires', String(expiresSeconds));
-  const signed = await client.sign(new Request(url, { method }), { aws: { signQuery: true } });
+  const headers = upload
+    ? { 'Content-Length': String(upload.size), 'If-None-Match': '*' }
+    : undefined;
+  const signed = await client.sign(url.toString(), {
+    method,
+    headers,
+    aws: { signQuery: true, allHeaders: Boolean(upload) },
+  });
   return signed.url;
 }
 

@@ -18,7 +18,11 @@ const transport: UploadTransport = {
       deja_recu: boolean;
       cle?: string;
       jeton_envoi?: string;
-    }>('/voix/envoi/preparer', { id: item.id, phrase_id: item.sentenceId });
+    }>('/voix/envoi/preparer', {
+      id: item.id,
+      phrase_id: item.sentenceId,
+      taille: item.wav.size,
+    });
     if (result.deja_recu) return {};
     const receipt: Record<string, string> = {};
     if (result.cle && result.jeton_envoi) {
@@ -28,13 +32,17 @@ const transport: UploadTransport = {
     return { url: result.url, receipt };
   },
   async upload(url, wav) {
-    // Envoi direct dans R2 avec l'URL signée : le fichier ne passe pas par l'API.
+    // Envoi direct dans R2 avec l'URL signée : le fichier ne passe pas par l'API. L'URL n'est
+    // valable que pour une clé vide : 412 veut dire que le fichier est déjà arrivé (l'envoi a
+    // réussi, mais la confirmation s'est perdue). Il ne reste qu'à confirmer.
     const response = await fetch(url, {
       method: 'PUT',
       body: wav,
-      headers: { 'Content-Type': 'audio/wav' },
+      headers: { 'Content-Type': 'audio/wav', 'If-None-Match': '*' },
     });
-    if (!response.ok) throw new ApiError(response.status, `r2_${response.status}`);
+    if (!response.ok && response.status !== 412) {
+      throw new ApiError(response.status, `r2_${response.status}`);
+    }
   },
   confirm(item, receipt) {
     return createApi(item.token).post('/voix/envoi/confirmer', {

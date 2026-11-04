@@ -36,6 +36,7 @@ const BUSINESS_ERRORS: Record<string, number> = {
   membre_inconnu: 404,
   langue_non_attribuee: 403,
   langue_inconnue: 400,
+  requete_invalide: 400,
 };
 
 export function businessStatus(code: string): number {

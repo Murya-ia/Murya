@@ -8,6 +8,7 @@ import { sha256Hex } from '../util';
 const TOKEN = 'A'.repeat(43);
 const RECORDING = '3f0c1d2e-4b5a-4c6d-8e7f-001122334455';
 const KEY = 'dje/varie/V001/dje_V001_T001_1.wav';
+const PREPARE = { id: RECORDING, phrase_id: 7, taille: 40_000 };
 
 /** Appels reçus par le faux Supabase, et réponses à renvoyer par fonction SQL. */
 let calls: { fn: string; args: Record<string, unknown> }[];
@@ -160,16 +161,46 @@ describe('phrases', () => {
 describe('envoi des audios', () => {
   it('prépare un envoi : URL signée vers R2 pour la clé fixée par la base', async () => {
     replies.voice_prepare_upload = { body: { cle: KEY, prise: 1, statut: 'en_envoi' } };
-    const res = await request('POST', '/voix/envoi/preparer', { id: RECORDING, phrase_id: 7 });
+    const res = await request('POST', '/voix/envoi/preparer', PREPARE);
     const body = (await res.json()) as { url: string; cle: string };
     expect(body.cle).toBe(KEY);
     expect(new URL(body.url).pathname).toBe(`/murya-audio-staging/${KEY}`);
     expect(calls[0]!.args).toMatchObject({ p_recording_id: RECORDING, p_sentence_id: 7 });
   });
 
+  it('signe la taille exacte et interdit de remplacer un fichier déjà là', async () => {
+    replies.voice_prepare_upload = { body: { cle: KEY, prise: 1, statut: 'en_envoi' } };
+    const res = await request('POST', '/voix/envoi/preparer', PREPARE);
+    const { url } = (await res.json()) as { url: string };
+    const signed = new URL(url).searchParams.get('X-Amz-SignedHeaders');
+    expect(signed).toBe('content-length;host;if-none-match');
+  });
+
+  it('refuse un fichier annoncé trop gros, sans réserver d’envoi', async () => {
+    const res = await request('POST', '/voix/envoi/preparer', { ...PREPARE, taille: 2_500_001 });
+    expect(res.status).toBe(413);
+    expect(await res.json()).toEqual({ erreur: 'fichier_trop_gros' });
+    expect(calls).toEqual([]);
+  });
+
+  it('refuse une taille invalide', async () => {
+    for (const taille of [0, -1, 1.5, '40000']) {
+      const res = await request('POST', '/voix/envoi/preparer', { ...PREPARE, taille });
+      expect(res.status).toBe(400);
+    }
+    expect(calls).toEqual([]);
+  });
+
+  it('demande la mise à jour de l’app si la taille manque, sans refus définitif', async () => {
+    const res = await request('POST', '/voix/envoi/preparer', { id: RECORDING, phrase_id: 7 });
+    expect(res.status).toBe(426);
+    expect(await res.json()).toEqual({ erreur: 'mise_a_jour_requise' });
+    expect(calls).toEqual([]);
+  });
+
   it('ne redonne pas d’URL pour un audio déjà reçu', async () => {
     replies.voice_prepare_upload = { body: { cle: KEY, prise: 1, statut: 'recu' } };
-    const res = await request('POST', '/voix/envoi/preparer', { id: RECORDING, phrase_id: 7 });
+    const res = await request('POST', '/voix/envoi/preparer', PREPARE);
     expect(await res.json()).toEqual({ deja_recu: true, cle: KEY });
   });
 
@@ -224,9 +255,10 @@ describe('envoi des audios', () => {
 
   it('confirme en un seul appel à la base grâce au jeton d’envoi donné à la préparation', async () => {
     replies.voice_prepare_upload = { body: { cle: KEY, prise: 1, statut: 'en_envoi' } };
-    const prepared = (await (
-      await request('POST', '/voix/envoi/preparer', { id: RECORDING, phrase_id: 7 })
-    ).json()) as { cle: string; jeton_envoi: string };
+    const prepared = (await (await request('POST', '/voix/envoi/preparer', PREPARE)).json()) as {
+      cle: string;
+      jeton_envoi: string;
+    };
     expect(prepared.jeton_envoi).toMatch(/^[0-9a-f]{64}$/);
 
     calls = [];
@@ -258,7 +290,7 @@ describe('envoi des audios', () => {
   });
 
   it('refuse un identifiant d’enregistrement qui n’est pas un UUID', async () => {
-    const res = await request('POST', '/voix/envoi/preparer', { id: '../x', phrase_id: 7 });
+    const res = await request('POST', '/voix/envoi/preparer', { ...PREPARE, id: '../x' });
     expect(res.status).toBe(400);
   });
 });

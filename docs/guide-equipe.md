@@ -30,6 +30,10 @@ Murya enregistre plusieurs langues du Niger : zarma, kanouri (manga) et tamasheq
 sera prête. Chaque membre a **ses langues**, cochées par un admin : il ne travaille que dans
 elles (écoute, liens des voix, phrases…). Les admins ont toutes les langues.
 
+Qui voit quoi : un vérificateur et le responsable qualité écoutent les audios de leurs
+langues, jamais ceux des voix qu'ils ont recrutées. Un recruteur voit ses recrues et n'écoute
+que leur test. Un membre sans rôle ne voit aucune voix.
+
 La langue de travail est affichée en haut à droite, à côté de votre initiale (ex.
 **« Zarma »**). Toutes les pages montrent cette langue. Si vous en avez plusieurs, touchez-la
 pour changer : votre choix est retenu sur ce téléphone.

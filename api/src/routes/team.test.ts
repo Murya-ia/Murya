@@ -8,19 +8,24 @@ const INVITE = '9a8b7c6d-5e4f-4a3b-8c2d-112233445566';
 
 let calls: { fn: string; headers: Headers; args: Record<string, unknown> }[];
 let reply: { status?: number; body: unknown };
+/** Réponses propres à une fonction SQL (sinon, `reply`). */
+let replies: Record<string, { status?: number; body: unknown }>;
 
 beforeEach(() => {
   calls = [];
   reply = { body: null };
+  replies = { is_member: { body: true }, is_admin: { body: true } };
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const fn = String(input).split('/rpc/')[1]!;
       calls.push({
-        fn: String(input).split('/rpc/')[1]!,
+        fn,
         headers: new Headers(init?.headers),
         args: JSON.parse(String(init?.body)),
       });
-      return new Response(JSON.stringify(reply.body), { status: reply.status ?? 200 });
+      const answer = replies[fn] ?? reply;
+      return new Response(JSON.stringify(answer.body), { status: answer.status ?? 200 });
     }),
   );
 });
@@ -28,6 +33,49 @@ afterEach(() => vi.unstubAllGlobals());
 
 const get = (path: string, e: Env = testEnv(), jwt = 'jeton-de-session') =>
   app.request(path, { headers: jwt ? { Authorization: `Bearer ${jwt}` } : {} }, e);
+
+/** Faux bucket qui note chaque écriture et le type de fichier demandé. */
+function spiedBucket() {
+  const bucket = fakeBucket();
+  const writes: { key: string; contentType?: string }[] = [];
+  return Object.assign(bucket, {
+    writes,
+    put: async (
+      key: string,
+      value: ArrayBuffer,
+      options?: { httpMetadata?: { contentType?: string } },
+    ) => {
+      writes.push({ key, contentType: options?.httpMetadata?.contentType });
+      await fakeBucket(bucket.files).put(key, value);
+    },
+  });
+}
+
+describe('limite de requêtes', () => {
+  it('refuse au-delà de la limite, sans appeler la base', async () => {
+    const limited = { limit: async () => ({ success: false }) };
+    const res = await get(`/equipe/audio/${RECORDING}`, testEnv({ RL_TEAM: limited }));
+    expect(res.status).toBe(429);
+    expect(await res.json()).toEqual({ erreur: 'trop_de_requetes' });
+    expect(calls).toEqual([]);
+  });
+
+  it('compte par adresse IP', async () => {
+    const keys: string[] = [];
+    const counted = {
+      limit: async ({ key }: { key: string }) => {
+        keys.push(key);
+        return { success: true };
+      },
+    };
+    await app.request(
+      '/telechargement/README.md',
+      { headers: { 'CF-Connecting-IP': '203.0.113.7' } },
+      testEnv({ RL_TEAM: counted }),
+    );
+    expect(keys).toEqual(['203.0.113.7']);
+  });
+});
 
 describe('écoute des audios', () => {
   it('demande à la base, avec la session du membre, s’il peut écouter cet audio', async () => {
@@ -77,11 +125,33 @@ describe('consentement oral', () => {
     expect(await res.json()).toEqual({ numero: 'V007' });
     const [key] = Object.keys(identites.files);
     expect(key).toMatch(new RegExp(`^consentements-oraux/${INVITE}/[0-9a-f-]+\\.m4a$`));
-    expect(calls[0]).toMatchObject({ fn: 'record_oral_consent', args: { p_audio_key: key } });
+    expect(calls.map((c) => c.fn)).toEqual([
+      'is_member',
+      'check_oral_consent',
+      'record_oral_consent',
+    ]);
+    expect(calls[2]).toMatchObject({ args: { p_audio_key: key } });
   });
 
-  it('supprime le fichier si la base refuse', async () => {
+  it('faux jeton : refusé avant de lire le fichier, rien n’est écrit', async () => {
+    const identites = spiedBucket();
+    replies.is_member = { status: 401, body: { message: 'JWT' } };
+    const res = await send(audio(), testEnv({ IDENTITES: identites as unknown as R2Bucket }));
+    expect(res.status).toBe(401);
+    expect(identites.writes).toEqual([]);
+  });
+
+  it('pas le droit sur ce lien : rien n’est écrit', async () => {
+    const identites = spiedBucket();
+    replies.check_oral_consent = { status: 400, body: { code: 'P0001', message: 'acces_refuse' } };
+    const res = await send(audio(), testEnv({ IDENTITES: identites as unknown as R2Bucket }));
+    expect(res.status).toBe(403);
+    expect(identites.writes).toEqual([]);
+  });
+
+  it('supprime le fichier si la base refuse au dernier moment', async () => {
     const identites = fakeBucket();
+    replies.check_oral_consent = { body: null };
     reply = { status: 400, body: { code: 'P0001', message: 'acces_refuse' } };
     const res = await send(audio(), testEnv({ IDENTITES: identites as unknown as R2Bucket }));
     expect(res.status).toBe(403);
@@ -91,6 +161,30 @@ describe('consentement oral', () => {
   it("refuse un fichier qui n'est pas un audio", async () => {
     const res = await send(new File(['x'], 'photo.jpg', { type: 'image/jpeg' }), testEnv());
     expect(res.status).toBe(400);
+    expect(calls.map((c) => c.fn)).toEqual(['is_member']);
+  });
+
+  it('ne garde pas un type de fichier trompeur', async () => {
+    const identites = spiedBucket();
+    replies.check_oral_consent = { body: null };
+    await send(
+      new File(['<script>'], 'accord.mp3', { type: 'text/html' }),
+      testEnv({ IDENTITES: identites as unknown as R2Bucket }),
+    );
+    expect(identites.writes[0]!.contentType).toBe('application/octet-stream');
+  });
+
+  it('refuse une requête trop grosse sans la lire', async () => {
+    const res = await app.request(
+      '/equipe/consentement-oral',
+      {
+        method: 'POST',
+        body: 'x',
+        headers: { Authorization: 'Bearer jeton', 'Content-Length': '99000000' },
+      },
+      testEnv(),
+    );
+    expect(res.status).toBe(413);
     expect(calls).toEqual([]);
   });
 });
@@ -117,7 +211,8 @@ describe("audios de l'accord", () => {
     expect(res.status).toBe(200);
     const [key] = Object.keys(audioBucket.files);
     expect(key).toMatch(/^accord\/v3\/dje-complet-[0-9a-f-]+\.m4a$/);
-    expect(calls[0]).toMatchObject({
+    expect(calls[0]).toMatchObject({ fn: 'is_admin' });
+    expect(calls[1]).toMatchObject({
       fn: 'set_consent_audio',
       args: {
         p_consent_version_id: 3,
@@ -126,20 +221,28 @@ describe("audios de l'accord", () => {
         p_storage_key: key,
       },
     });
-    expect(calls[0]!.headers.get('Authorization')).toBe('Bearer jeton');
+    expect(calls[1]!.headers.get('Authorization')).toBe('Bearer jeton');
   });
 
-  it('supprime le fichier si la base refuse (pas admin)', async () => {
-    const audioBucket = fakeBucket();
-    reply = { status: 400, body: { code: 'P0001', message: 'acces_refuse' } };
+  it('pas admin : rien n’est écrit', async () => {
+    const audioBucket = spiedBucket();
+    replies.is_admin = { body: false };
     const res = await send(form(), testEnv({ AUDIO: audioBucket as unknown as R2Bucket }));
     expect(res.status).toBe(403);
+    expect(audioBucket.writes).toEqual([]);
+  });
+
+  it('supprime le fichier si la base refuse au dernier moment', async () => {
+    const audioBucket = fakeBucket();
+    reply = { status: 400, body: { code: 'P0001', message: 'requete_invalide' } };
+    const res = await send(form(), testEnv({ AUDIO: audioBucket as unknown as R2Bucket }));
+    expect(res.status).toBe(400);
     expect(audioBucket.files).toEqual({});
   });
 
   it('refuse un type d’audio inconnu', async () => {
     expect((await send(form('autre'), testEnv())).status).toBe(400);
-    expect(calls).toEqual([]);
+    expect(calls.map((c) => c.fn)).toEqual(['is_admin']);
   });
 
   it("donne une adresse d'écoute signée pour l'équipe", async () => {

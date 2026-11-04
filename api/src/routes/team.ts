@@ -18,7 +18,13 @@ export const team = new Hono<TeamContext>();
 const LISTEN_URL_SECONDS = 15 * 60;
 /** Consentement oral : enregistrement du téléphone du recruteur, quelques minutes au plus. */
 const MAX_ORAL_CONSENT_BYTES = 15_000_000;
+/** Requête complète : le fichier et les champs du formulaire. */
+const MAX_UPLOAD_REQUEST_BYTES = MAX_ORAL_CONSENT_BYTES + 100_000;
 const AUDIO_EXTENSIONS = ['m4a', 'mp3', 'ogg', 'opus', 'wav', 'aac', 'amr', '3gp', 'webm'];
+
+/** Le type annoncé par le navigateur n'est gardé que s'il s'agit bien d'un audio. */
+const storedContentType = (file: File) =>
+  file.type.startsWith('audio/') ? file.type : 'application/octet-stream';
 
 team.use('*', async (c, next) => {
   const jwt = c.req.header('Authorization')?.replace(/^Bearer\s+/i, '') ?? '';
@@ -53,6 +59,13 @@ team.get('/audio/:id', async (c) => {
  * fichiers sont rares et petits, et cela évite une deuxième clé d'accès au stockage.
  */
 team.post('/consentement-oral', async (c) => {
+  if (Number(c.req.header('Content-Length') ?? 0) > MAX_UPLOAD_REQUEST_BYTES) {
+    return c.json({ erreur: 'fichier_trop_gros' }, 413);
+  }
+  // Les droits d'abord : rien n'est lu ni écrit pour une session qui n'est pas celle d'un membre.
+  if (!(await rpcAsUser<boolean>(c.env, c.get('jwt'), 'is_member', {}))) {
+    return c.json({ erreur: 'acces_refuse' }, 403);
+  }
   const form = await c.req.formData().catch(() => null);
   const inviteId = form?.get('invite_id');
   const name = form?.get('nom');
@@ -66,11 +79,12 @@ team.post('/consentement-oral', async (c) => {
     return c.json({ erreur: 'pas_un_audio' }, 400);
   }
   if (file.size > MAX_ORAL_CONSENT_BYTES) return c.json({ erreur: 'fichier_trop_gros' }, 413);
+  await rpcAsUser(c.env, c.get('jwt'), 'check_oral_consent', { p_invite_id: inviteId });
 
   const safeExtension = AUDIO_EXTENSIONS.includes(extension) ? extension : 'audio';
   const key = `consentements-oraux/${inviteId}/${crypto.randomUUID()}.${safeExtension}`;
   await c.env.IDENTITES.put(key, await file.arrayBuffer(), {
-    httpMetadata: { contentType: file.type || 'application/octet-stream' },
+    httpMetadata: { contentType: storedContentType(file) },
   });
   try {
     const result = await rpcAsUser(c.env, c.get('jwt'), 'record_oral_consent', {
@@ -96,6 +110,12 @@ const CONSENT_KINDS = ['complet', 'rappel'];
  * un admin l'envoie, il est rangé avec les audios (ce n'est pas une donnée personnelle).
  */
 team.post('/accord-audio', async (c) => {
+  if (Number(c.req.header('Content-Length') ?? 0) > MAX_UPLOAD_REQUEST_BYTES) {
+    return c.json({ erreur: 'fichier_trop_gros' }, 413);
+  }
+  if (!(await rpcAsUser<boolean>(c.env, c.get('jwt'), 'is_admin', {}))) {
+    return c.json({ erreur: 'acces_refuse' }, 403);
+  }
   const form = await c.req.formData().catch(() => null);
   const version = Number(form?.get('version_id'));
   const language = form?.get('langue');
@@ -121,7 +141,7 @@ team.post('/accord-audio', async (c) => {
   const safeExtension = AUDIO_EXTENSIONS.includes(extension) ? extension : 'audio';
   const key = `accord/v${version}/${language}-${kind}-${crypto.randomUUID()}.${safeExtension}`;
   await c.env.AUDIO.put(key, await file.arrayBuffer(), {
-    httpMetadata: { contentType: file.type || 'application/octet-stream' },
+    httpMetadata: { contentType: storedContentType(file) },
   });
   try {
     await rpcAsUser(c.env, c.get('jwt'), 'set_consent_audio', {
