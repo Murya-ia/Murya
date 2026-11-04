@@ -59,6 +59,7 @@ jobs:
         run: |
           [ -f resultat.json ] || exit 0
           jq '{
+            controles: .root_group.checks,
             audios_envoyes: .metrics.audios_envoyes.count,
             audios_par_seconde: .metrics.audios_envoyes.rate,
             erreurs: .metrics.http_req_failed.value,
